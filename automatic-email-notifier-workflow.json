@@ -1,0 +1,139 @@
+{
+  "name": "automatic-email-notifier-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e3ec0451-8988-43a3-a7e5-705f6808f880",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "REPLACE_WITH_IMAP_CREDENTIAL_ID",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/okta_wa",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "628XXXXXXXXXX"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        736,
+        0
+      ],
+      "id": "acc453e4-f9dd-4619-94e4-b246e38d7743",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HTTP_HEADER_AUTH_CREDENTIAL_ID",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst apiKeys = [\n  \"REPLACE_WITH_GEMINI_API_KEY_1\",\n  \"REPLACE_WITH_GEMINI_API_KEY_2\",\n  \"REPLACE_WITH_GEMINI_API_KEY_3\"\n];\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c5ea8f8d-cdb6-4488-bdc8-f7c7ad4d8305",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Lu adalah asisten email pribadi. Ringkas email ini:\\n\\nDARI: ${$json.from.text}\\nSUBJEK: ${$json.subject}\\nISI: ${$json.textPlain}\\n\\nBerikan output dengan format:\\n📧 *ADA EMAIL BARU!*\\n📌 *PENGIRIM:* (Nama Pengirim)\\n📝 *RINGKASAN:* (Ringkasan 1-2 kalimat)\\n🚨 *URGENSI:* (Skor 1-10)`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2257154a-126c-48ce-8789-d2cf4a29c418",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "babc16e5-b8b5-4843-b0a7-b08006b22a26",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REDACTED_INSTANCE_ID"
+  },
+  "id": "GNtnCWmLXbMF5iON",
+  "tags": []
+}
