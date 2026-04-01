@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: notifier_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: "n8n_db,evo_db"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: notifier_n8n
+    restart: always
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      - DB_POSTGRESDB_DATABASE=n8n_db 
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_HOST=oktaavsm.bccdev.id
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://oktaavsm.bccdev.id/n8n/
+      - N8N_PATH=/n8n/
+    ports:
+      - "${N8N_PORT}:5678"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    container_name: notifier_wa_gateway
+    restart: always
+    environment:
+      - SERVER_TYPE=http
+      - SERVER_PORT=8080
+      - AUTHENTICATION_TYPE=apikey
+      - AUTHENTICATION_API_KEY=${WA_API_TOKEN}
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/evo_db?schema=public
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
+      - CACHE_REDIS_ENABLED=false
+    ports:
+      - "${EVO_PORT}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - evolution_instances:/evolution/instances
+
+volumes:
+  postgres_data:
+  evolution_instances:
