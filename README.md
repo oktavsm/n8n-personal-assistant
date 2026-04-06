@@ -1,19 +1,23 @@
 # n8n Personal Assistant
 
-Koleksi workflow n8n untuk personal automation, terutama:
-- Email -> ringkasan AI -> notifikasi WhatsApp/Discord
-- WhatsApp command -> parsing AI -> create Google Calendar event
-- Google Calendar -> reminder otomatis ke WhatsApp
+This is my personal n8n automation workspace.
 
-Repository ini sudah disiapkan agar aman dipublish ke public: nilai sensitif di file workflow telah diganti placeholder.
+It started as an email notifier project, then grew into a broader personal assistant setup with multiple workflows.
 
-## Stack
-- n8n (workflow orchestration)
-- Evolution API (WhatsApp gateway)
-- PostgreSQL (DB untuk n8n + Evolution API)
-- Gemini 2.5 Flash (text generation/summarization)
+Main use cases:
+- Email to AI summary to WhatsApp or Discord
+- WhatsApp command to AI parser to Google Calendar event
+- Google Calendar reminder to WhatsApp
 
-## Struktur Folder
+This repo is public-safe: sensitive values inside exported workflows have been replaced with placeholders.
+
+## Tech Stack
+- n8n
+- Evolution API
+- PostgreSQL
+- Gemini 2.5 Flash
+
+## Project Structure
 
 ```text
 .
@@ -30,9 +34,9 @@ Repository ini sudah disiapkan agar aman dipublish ke public: nilai sensitif di 
             └── automatic-email-notifier-workflow.json
 ```
 
-## Placeholder Di Workflow (Wajib Diganti Setelah Import)
+## Workflow Placeholders
 
-Workflow publik memakai placeholder berikut:
+These placeholders are intentionally left in workflow JSON files and must be replaced after import:
 - `{{GEMINI_API_KEY_PLACEHOLDER}}`
 - `{{WHATSAPP_TARGET_NUMBER}}`
 - `{{WA_INSTANCE_NAME}}`
@@ -44,24 +48,20 @@ Workflow publik memakai placeholder berikut:
 - `{{CONTACT_PERSON_2}}`
 - `{{N8N_INSTANCE_ID}}`
 
-Catatan:
-- Placeholder ini memang sengaja tidak valid untuk menjaga data private.
-- Setelah import ke n8n, update node yang relevan sesuai environment kamu.
-
 ## Quick Start
 
-1. Clone repository
+1. Clone the repository.
 ```bash
 git clone https://github.com/<your-username>/n8n-personal-assistant.git
 cd n8n-personal-assistant
 ```
 
-2. Buat file environment
+2. Create `.env` from template.
 ```bash
 cp .env.example .env
 ```
 
-3. Isi `.env` dengan nilai real, minimal:
+3. Fill real values in `.env` (minimum):
 - `DB_USER`
 - `DB_PASSWORD`
 - `N8N_ENCRYPTION_KEY`
@@ -70,41 +70,63 @@ cp .env.example .env
 - `WA_API_TOKEN`
 - `GEMINI_API_KEY`
 
-4. Jalankan service
+4. Start containers.
 ```bash
 docker compose up -d
 docker compose ps
 ```
 
-## Import Workflow Ke n8n
+## Evolution API Setup (Create Instance + Connect)
 
-1. Buka n8n di `http://localhost:<N8N_PORT>`.
-2. Import workflow dari folder:
-   - `n8n/workflow/email/`
-   - `n8n/workflow/calendar/`
-3. Re-bind credentials di setiap node (IMAP, Google Calendar, HTTP Header Auth, Discord, dll).
-4. Ganti semua placeholder dengan nilai environment kamu.
-5. Test manual (Execute Workflow) sebelum diaktifkan.
-6. Activate workflow.
+After containers are up, create a WhatsApp instance first.
 
-## Evolution API Setup (Contoh)
+1. Create instance (POST)
+```bash
+curl --location --request POST 'http://localhost:<EVO_PORT>/instance/create' \
+  --header 'apikey: <WA_API_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+    "instanceName": "<WA_INSTANCE_NAME>",
+    "qrcode": true,
+    "integration": "WHATSAPP-BAILEYS"
+  }'
+```
 
-Gunakan nama instance sesuai konfigurasi kamu (jangan hardcode dari contoh lama):
-
+2. Get QR data (GET connect)
 ```bash
 curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connect/<WA_INSTANCE_NAME>' \
   --header 'apikey: <WA_API_TOKEN>'
 ```
 
-## Security Checklist
+3. Scan the QR code with your WhatsApp account.
 
-- Jangan commit `.env`.
-- Jangan simpan API key/token real di export workflow.
-- Rotasi credential jika pernah terlanjur ke-push.
-- Batasi akses port n8n dan Evolution API.
-- Gunakan reverse proxy HTTPS untuk deployment publik.
+4. Verify instance status (optional but recommended)
+```bash
+curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connectionState/<WA_INSTANCE_NAME>' \
+  --header 'apikey: <WA_API_TOKEN>'
+```
 
-## Operasional
+If status is connected/open, your instance is ready.
+
+## Import Workflows to n8n
+
+1. Open n8n at `http://localhost:<N8N_PORT>`.
+2. Import workflows from:
+- `n8n/workflow/email/`
+- `n8n/workflow/calendar/`
+3. Re-bind credentials in each workflow node (IMAP, Google Calendar, HTTP Header Auth, Discord, and others you use).
+4. Replace all placeholders with your own values.
+5. Run manual test execution first.
+6. Activate workflows.
+
+## Security Notes
+
+- Never commit `.env`.
+- Never keep real keys/tokens in exported workflow JSON.
+- Rotate credentials immediately if they were ever exposed.
+- Restrict inbound ports and use HTTPS reverse proxy for internet-facing deployment.
+
+## Common Commands
 
 ```bash
 docker compose up -d
@@ -112,9 +134,3 @@ docker compose down
 docker compose logs -f
 docker compose ps
 ```
-
-## Roadmap Singkat
-
-- Standardisasi placeholder lint workflow
-- Versioning workflow per use-case
-- Template onboarding agar import workflow lebih cepat
