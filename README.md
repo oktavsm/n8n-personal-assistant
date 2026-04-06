@@ -177,6 +177,18 @@ curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connectionSt
 
 If the state is `open` or `connected`, the instance is ready.
 
+5. Set Webhook to n8n Router.
+
+```bash
+curl --location --request POST 'http://localhost:<EVO_PORT>/webhook/set/<WA_INSTANCE_NAME>' \
+  --header 'apikey: <WA_API_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+    "webhook": "[http://oktaavsm.bccdev.id/n8n/webhook/wa-assistant](http://oktaavsm.bccdev.id/n8n/webhook/wa-assistant)",
+    "events": ["MESSAGES_UPSERT"]
+  }'
+  ```
+
 ## Import and Configure Workflows
 
 1. Open n8n at `http://localhost:<N8N_PORT>`.
