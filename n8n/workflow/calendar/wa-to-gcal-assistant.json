@@ -1,0 +1,563 @@
+{
+  "name": "wa-to-gcal-assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wa-assistant",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e41ecf4c-d2f6-4db2-bc72-cd4b6b440ae0",
+      "name": "Webhook",
+      "webhookId": "{{WEBHOOK_ID}}"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "99491177-ccd9-49cf-be53-5871a4c22206",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "=/jadwal",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "3302ac2b-a32c-46cd-be10-aaa119ba7a42",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "={{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "83a0e134-330c-4212-8978-351e1c75cdf0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "fb327184-dca2-4c7c-aaa4-fba19c24e24d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah Asisten Jadwal Pribadi yang cerdas. Tugasmu adalah mengekstrak informasi jadwal dari pesan teks user yang diawali dengan \"/jadwal\" dan mengubahnya menjadi format JSON yang valid untuk Google Calendar.\n\nPesan Teks Dari User:  ${$json.body.data.message.conversation}\n\n\nDATA REFERENSI (Standardisasi):\n- PAW: Pengembangan Aplikasi Web\n- PAL: Penyediaan dan Automasi Layanan\n- KAL: Kecerdasan Artifisial Lanjut\n- KI: Keamanan Informasi\n- KWU: Kewirausahaan\n- KWN: Kewarganegaraan\n- PCS: Pancasila\n- DAA: Desain dan Analisis Algoritma\n- TSA: Tanoto Scholars Association (Departemen ComStrat, Divisi CM, TSA)\n- BCC: Basic Computing Community\n- ICN: Information Centric Networking\n- PMK: Persekutuan Mahasiswa Kristen\n- Satuklien: Project Part-time\n- Titipin: Project Pribadi\n\nATURAN LOGIKA:\n1. WAKTU SEKARANG: ${$now.setZone('Asia/Jakarta').toString()}\n2. ZONA WAKTU: Selalu gunakan Asia/Jakarta (WIB).\n3. KATEGORI TUGAS/DEADLINE: Jika user menyebut \"deadline\", \"tugas\", atau \"pengumpulan\", set durasi hanya 2 menit (Contoh: 15:00 sampai 15:02).\n4. KATEGORI ACARA/MEETING: Jika tidak ada durasi spesifik, gunakan default 60 menit (Contoh: 19:00 sampai 20:00).\n5. VALIDASI: Pastikan ada Judul, Tanggal, dan Jam. Jika ada yang kurang, set status: \"error\".\n6. JUDUL: WAJIB gunakan prefix kategori di awal judul. Pilihan kategori HANYA: [Tugas], [Meeting], [Acara], [Project]. \nFormat baku: \"[Kategori] Nama Lengkap (Singkatan) - Detail Tambahan\".\nContoh Benar: \"[Tugas] Pengembangan Aplikasi Web (PAW) - Deadline Laporan\" atau \"[Meeting] Radiv CM (TSA)\".\n7. Deskripsi isikan sesuai pesan user, misal jika user mengatakan lokasi, online/offline, atau misalnya melalui platform Brone (LMS UB) atau classroom. Misal Deskripsi: Pengumpulan di classroom. Note: Jika tidak ada deskripsi khusus kamu bebas mengisi deskripsinya atau tidak mengisi deskripsi nya jika tidak penting\n8. Jika user mengirim pesan \"/cek\", set status: \"check\". \n   Abaikan field data title, start, dan end. Ini artinya user ingin cek jadwal hari ini\n\nFORMAT OUTPUT (WAJIB JSON):\n{\n  \"status\": \"success\" | \"error\",\n  \"data\": {\n    \"title\": \"Judul Event\",\n    \"start\": \"YYYY-MM-DDTHH:mm:ss+07:00\",\n    \"end\": \"YYYY-MM-DDTHH:mm:ss+07:00\",\n    \"description\": \"Catatan tambahan jika ada\"\n  },\n  \"error_message\": \"Alasan jika status error (sebutkan apa yang kurang)\"\n}\n\n\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        -16
+      ],
+      "id": "9798153e-77eb-431b-8524-f46345913a13",
+      "name": "[HTTP] Gemini Brone"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// 1. Ambil raw text dari output struktur array Gemini lu\nlet rawText = $input.first().json.candidates[0].content.parts[0].text;\n\n// 2. Bersihin bungkus markdown ```json dan ```\nlet cleanString = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();\n\n// 3. Parse string yang udah bersih jadi Object JSON beneran\nlet finalData = JSON.parse(cleanString);\n\n// 4. Return datanya biar gampang dibaca node selanjutnya\nreturn finalData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -16
+      ],
+      "id": "435917b5-8515-4225-b60c-ed3512a464f9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "=success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "75463742-e188-4a08-b41c-81f40e1bc9d9"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "50065f18-27e8-44b2-927f-667e73e648fb",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "=error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a0133c97-bc0c-45dc-80cc-3cad9b0c9a30",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "=check",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        -16
+      ],
+      "id": "63ee8a25-10ba-4705-8e85-06832b841a4e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "=⚠️ *Waduh, Gagal Nyatet Nih Bro!*\n\nKayaknya ada data yang kurang:\n❌ {{ $node[\"Code in JavaScript1\"].json[\"error_message\"] }}\n\nCoba kirim ulang dengan detail jam atau tanggal yang jelas ya."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1328,
+        112
+      ],
+      "id": "86e940fe-a7c9-4c87-ac5f-a8b9f83d274f",
+      "name": "[HTTP Whatsapp]1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GEmHpHffIDZKhtvn",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "{{PRIMARY_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "{{PRIMARY_CALENDAR_ID}}"
+        },
+        "start": "={{ $json.data.start }}",
+        "end": "={{ $json.data.end }}",
+        "additionalFields": {
+          "description": "={{ $json.data.description }}",
+          "summary": "={{ $json.data.title }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        -112
+      ],
+      "id": "cb8655fd-ee8a-4348-ae94-2e58a0d9fa26",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "=✅ *Jadwal Berhasil Dicatat!*\n\n📌 *Judul:* {{ $json.summary }}\n⏰ *Waktu:* {{ $node[\"Code in JavaScript1\"].json[\"data\"][\"start\"] }}\n📝 *Catatan:* {{ $json.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        -112
+      ],
+      "id": "53a69f63-7b37-4a98-bacf-74216d1008c8",
+      "name": "[HTTP Whatsapp]",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GEmHpHffIDZKhtvn",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f9afbfbf-cda1-4dc7-b305-60920809c57b",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "/cek",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "16c6c71f-f9ab-4b13-9f8f-b7548b48a4e9",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        240
+      ],
+      "id": "06ba931d-6399-4d33-b3e6-240d01aabfea",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{PRIMARY_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "{{PRIMARY_CALENDAR_ID}}"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+        "timeMax": "={{ $now.setZone('Asia/Jakarta').endOf('day').toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        320
+      ],
+      "id": "f1b43542-97b0-4a43-b4cd-2ec0e8561079",
+      "name": "Get many events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const events = $input.all();\nlet message = \"\";\n\nif (events.length === 0) {\n  message = \"Kosong melompong bro! Nggak ada jadwal masuk buat hari ini. Bisa santai dulu atau lanjutin project Titipin! ☕\";\n} else {\n  message = \"🗓️ *RECAP JADWAL HARI INI*\\n\\n\";\n  events.forEach((event, index) => {\n    const startTime = new Date(event.json.start.dateTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });\n    message += `${index + 1}. *${event.json.summary}*\\n⏰ ${startTime} WIB\\n\\n`;\n  });\n  message += \"Jangan lupa disikat semua ya, semangat! 🔥\";\n}\n\nreturn { message };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        320
+      ],
+      "id": "5a1983d8-e740-4679-afc4-21100864bef0",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1808,
+        320
+      ],
+      "id": "30f4a545-f10e-4043-9b1a-926c4662e539",
+      "name": "[HTTP Whatsapp]2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GEmHpHffIDZKhtvn",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "[HTTP] Gemini Brone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[HTTP] Gemini Brone": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[HTTP Whatsapp]1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "c6cd068f-7dbf-46bf-8e82-b137b55c2067",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "U43zT3sJktIA9LaL",
+  "tags": []
+}

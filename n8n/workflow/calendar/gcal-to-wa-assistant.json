@@ -1,0 +1,685 @@
+{
+  "name": "gcal-to-wa-assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1472,
+        496
+      ],
+      "id": "d3ab51e9-558a-4d5a-a14f-b745f932b492",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{PRIMARY_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "{{PRIMARY_CALENDAR_ID}}"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        -256
+      ],
+      "id": "9c08d99c-8285-41d5-86c4-5d5cd49f6d65",
+      "name": "[15 Menit] Calendar get Events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{PRIMARY_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "{{PRIMARY_CALENDAR_ID}}"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 60}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 61}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        -80
+      ],
+      "id": "683387b9-8e72-48d9-b438-f1917862822d",
+      "name": "[60 Menit] Calendar get Events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        544
+      ],
+      "id": "8dbbc5c9-921d-4a2c-ae2e-63dfc90fc451",
+      "name": "[HTTP Whatsapp]1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GEmHpHffIDZKhtvn",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah asisten pribadi mahasiswa yang cerdas dan serba tahu. Tugasmu adalah mengolah jadwal dari kalender menjadi notifikasi WA yang efektif.\n\nATURAN LOGIKA KONTEKS:\n1. IDENTIFIKASI: Jika nama acara mengandung kata \"Laporan\", \"Praktikum\", \"Modul\", atau \"Tugas\", maka ini adalah **TUGAS/DEADLINE**. Jika tidak, anggap ini **JADWAL KULIAH/ACARA**.\n2. TONE: Pakai bahasa tongkrongan (lu/gue) yang asik. \n   - Kalau TUGAS: Agak cerewet/ngingetin buat buruan dikerjain.\n   - Kalau KULIAH: Ngingetin biar nggak telat atau jangan bolos.\n3. DILARANG KERAS pakai kata pengantar/penutup (\"Baik\", \"Siap\", dll). Langsung output teks pesannya.\n\nFORMAT OUTPUT WAJIB:\n[Emoji Sesuai Konteks] **[KLASIFIKASI ACARA]** [Emoji Sesuai Konteks]\n📌 **Nama:** [Nama Acara]\n🕒 **Waktu:** [Waktu Mulai dalam format Jam:Menit WIB]\n📍 **Lokasi:** [Lokasi atau \"Online/Tidak ada\"]\n💬 **Deskripsi:** [Deskripsi tugas/kegiatan/event]\n\n💬 **Catatan Asisten:** [Hitung selisih waktu dari 'Waktu Sekarang' ke 'Waktu Acara'. Berikan pesan yang relevan. Misal: \"H-1 deadline praktikum nih, udah kelar covernya belum?\" atau \"15 menit lagi kelas mulai, buruan otw!\" pastikan sesuai dengan judul atau deskripsi event/tugasnya biar aku tau ini tuh reminder untuk event/tugas apa]\n\nDATA LOGIKA:\n- Sisa Waktu Menuju Acara: ${$json.menit_tersisa} menit lagi\n- Waktu Acara: ${$json.start?.dateTime || $json.start?.date || \"Tidak diketahui\"}\n- Nama Acara: ${$json.summary || \"Tidak ada judul\"}\n- Lokasi: ${$json.location || \"Online\"}\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        16,
+        544
+      ],
+      "id": "58ee684d-47ac-45ef-8ab6-b8d2a0b802b4",
+      "name": "HTTP Request Gemini"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Kuliah Okta"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 30}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 31}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        288
+      ],
+      "id": "4a218dd6-3522-49e2-bceb-ecc9da2651cd",
+      "name": "[30 Menit] Calendar get Kuliah",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Kuliah Okta"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        112
+      ],
+      "id": "b6baaad3-a68d-4c43-810e-38858d1fa29a",
+      "name": "[15 Menit] Calendar get Kuliah",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Praktikum KAL TIF-A Rabu (12:30-14:10) G1.6"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        464
+      ],
+      "id": "1b7f9b08-dae0-40f5-a99f-c069646fb313",
+      "name": "[12 Jam] Calendar get KAL",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Praktikum KAL TIF-A Rabu (12:30-14:10) G1.6"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        640
+      ],
+      "id": "ac526c77-a7a7-4d6b-b407-2769163dcdfc",
+      "name": "[36 Jam] Calendar get KAL",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Praktikum TIF KI - A Rabu,10.30 - 11.20"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        784
+      ],
+      "id": "219f6484-38fd-4902-a835-998a8223b94c",
+      "name": "[12 Jam] Calendar get KI",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Praktikum TIF KI - A Rabu,10.30 - 11.20"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        960
+      ],
+      "id": "a34034f7-fe9e-45b6-8177-4f5050134620",
+      "name": "[36 Jam] Calendar get KI",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Praktikum PAW TIF-F Teknik Informatika G1.5 || Selasa, 12.30 - 14.10"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        1296
+      ],
+      "id": "ba187800-cbc1-42a4-b980-7a3e1d2bbf01",
+      "name": "[36 Jam] Calendar get PAW",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "{{GOOGLE_CALENDAR_ID}}",
+          "mode": "list",
+          "cachedResultName": "Praktikum PAW TIF-F Teknik Informatika G1.5 || Selasa, 12.30 - 14.10"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+        "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        1120
+      ],
+      "id": "62b83498-040a-4bea-afe2-2ee497fbe9e2",
+      "name": "[12 Jam] Calendar get PAW",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kXkpk4YfItv3zvuT",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst validItems = [];\nconst processedIds = new Set(); // Memori buat nyatet ID event yang udah diproses\nconst now = new Date();\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip kalau event seharian\n\n  const eventId = item.json.id;\n  \n  // FITUR DEDUPLIKASI: Kalau ID ini udah pernah diproses, buang! (Anti data kembar)\n  if (processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // GUE UDAH TAMBAHIN ANGKA 60 DI SINI BRO! 😅 (15m, 30m, 60m, 12h, 36h)\n  const targetMinutes = [15];\n\n  const isTargetTime = targetMinutes.some(target => \n    diffMinutes >= target && diffMinutes <= target\n  );\n\n  if (isTargetTime) {\n    processedIds.add(eventId); // Catat ID-nya biar nggak masuk 2 kali\n    item.json.selected_key = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n    item.json.menit_tersisa = diffMinutes;\n    validItems.push(item);\n  }\n}\n\nreturn validItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        192
+      ],
+      "id": "9c19bc29-9f55-4b7b-bd41-26e9b1ad5bda",
+      "name": "[15 Menit] Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst validItems = [];\nconst processedIds = new Set(); // Memori buat nyatet ID event yang udah diproses\nconst now = new Date();\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip kalau event seharian\n\n  const eventId = item.json.id;\n  \n  // FITUR DEDUPLIKASI: Kalau ID ini udah pernah diproses, buang! (Anti data kembar)\n  if (processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // GUE UDAH TAMBAHIN ANGKA 60 DI SINI BRO! 😅 (15m, 30m, 60m, 12h, 36h)\n  const targetMinutes = [30];\n\n  const isTargetTime = targetMinutes.some(target => \n    diffMinutes >= target && diffMinutes <= target\n  );\n\n  if (isTargetTime) {\n    processedIds.add(eventId); // Catat ID-nya biar nggak masuk 2 kali\n    item.json.selected_key = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n    item.json.menit_tersisa = diffMinutes;\n    validItems.push(item);\n  }\n}\n\nreturn validItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        368
+      ],
+      "id": "6491681d-7011-42d9-ab62-9c62ff22deae",
+      "name": "[30] Menit Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst validItems = [];\nconst processedIds = new Set(); // Memori buat nyatet ID event yang udah diproses\nconst now = new Date();\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip kalau event seharian\n\n  const eventId = item.json.id;\n  \n  // FITUR DEDUPLIKASI: Kalau ID ini udah pernah diproses, buang! (Anti data kembar)\n  if (processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // GUE UDAH TAMBAHIN ANGKA 60 DI SINI BRO! 😅 (15m, 30m, 60m, 12h, 36h)\n  const targetMinutes = [60];\n\n  const isTargetTime = targetMinutes.some(target => \n    diffMinutes >= target  && diffMinutes <= target\n  );\n\n  if (isTargetTime) {\n    processedIds.add(eventId); // Catat ID-nya biar nggak masuk 2 kali\n    item.json.selected_key = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n    item.json.menit_tersisa = diffMinutes;\n    validItems.push(item);\n  }\n}\n\nreturn validItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        544
+      ],
+      "id": "dce06494-adb4-4483-8227-6f464fab2593",
+      "name": "[60 Menit] Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst validItems = [];\nconst processedIds = new Set(); // Memori buat nyatet ID event yang udah diproses\nconst now = new Date();\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip kalau event seharian\n\n  const eventId = item.json.id;\n  \n  // FITUR DEDUPLIKASI: Kalau ID ini udah pernah diproses, buang! (Anti data kembar)\n  if (processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // GUE UDAH TAMBAHIN ANGKA 60 DI SINI BRO! 😅 (15m, 30m, 60m, 12h, 36h)\n  const targetMinutes = [720];\n\n  const isTargetTime = targetMinutes.some(target => \n    diffMinutes >= target && diffMinutes <= target\n  );\n\n  if (isTargetTime) {\n    processedIds.add(eventId); // Catat ID-nya biar nggak masuk 2 kali\n    item.json.selected_key = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n    item.json.menit_tersisa = diffMinutes;\n    validItems.push(item);\n  }\n}\n\nreturn validItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        736
+      ],
+      "id": "1bb47547-315c-4479-a624-5db0ef27dd45",
+      "name": "[12 Jam] Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst validItems = [];\nconst processedIds = new Set(); // Memori buat nyatet ID event yang udah diproses\nconst now = new Date();\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip kalau event seharian\n\n  const eventId = item.json.id;\n  \n  // FITUR DEDUPLIKASI: Kalau ID ini udah pernah diproses, buang! (Anti data kembar)\n  if (processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // GUE UDAH TAMBAHIN ANGKA 60 DI SINI BRO! 😅 (15m, 30m, 60m, 12h, 36h)\n  const targetMinutes = [2160];\n\n  const isTargetTime = targetMinutes.some(target => \n    diffMinutes >= target && diffMinutes <= target\n  );\n\n  if (isTargetTime) {\n    processedIds.add(eventId); // Catat ID-nya biar nggak masuk 2 kali\n    item.json.selected_key = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n    item.json.menit_tersisa = diffMinutes;\n    validItems.push(item);\n  }\n}\n\nreturn validItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        880
+      ],
+      "id": "eb26b5a7-c711-429b-9e58-5c9f1b1f3e27",
+      "name": "[36 Jam] Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "[15 Menit] Calendar get Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[60 Menit] Calendar get Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[15 Menit] Calendar get Kuliah",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[30 Menit] Calendar get Kuliah",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[12 Jam] Calendar get KAL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[36 Jam] Calendar get KAL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[12 Jam] Calendar get KI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[36 Jam] Calendar get KI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[12 Jam] Calendar get PAW",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[36 Jam] Calendar get PAW",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[15 Menit] Calendar get Events": {
+      "main": [
+        [
+          {
+            "node": "[15 Menit] Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[60 Menit] Calendar get Events": {
+      "main": [
+        [
+          {
+            "node": "[60 Menit] Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Gemini": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[30 Menit] Calendar get Kuliah": {
+      "main": [
+        [
+          {
+            "node": "[30] Menit Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[15 Menit] Calendar get Kuliah": {
+      "main": [
+        [
+          {
+            "node": "[15 Menit] Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[12 Jam] Calendar get KAL": {
+      "main": [
+        [
+          {
+            "node": "[12 Jam] Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[36 Jam] Calendar get KAL": {
+      "main": [
+        [
+          {
+            "node": "[36 Jam] Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[12 Jam] Calendar get KI": {
+      "main": [
+        [
+          {
+            "node": "[12 Jam] Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[36 Jam] Calendar get KI": {
+      "main": [
+        [
+          {
+            "node": "[36 Jam] Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[12 Jam] Calendar get PAW": {
+      "main": [
+        [
+          {
+            "node": "[12 Jam] Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[36 Jam] Calendar get PAW": {
+      "main": [
+        [
+          {
+            "node": "[36 Jam] Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[15 Menit] Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[30] Menit Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[60 Menit] Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[12 Jam] Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[36 Jam] Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "b041c9ca-32e6-41e9-954c-67d3ca5b88ce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "eCtWrmeyciUgg8f2",
+  "tags": []
+}

@@ -1,47 +1,67 @@
-# Automatic Email Notifier (AI Assistant)
+# n8n Personal Assistant
 
-Automatic Email Notifier reads incoming email from IMAP, summarizes it with Gemini, then sends the result to WhatsApp through Evolution API.
+Koleksi workflow n8n untuk personal automation, terutama:
+- Email -> ringkasan AI -> notifikasi WhatsApp/Discord
+- WhatsApp command -> parsing AI -> create Google Calendar event
+- Google Calendar -> reminder otomatis ke WhatsApp
 
-This project runs with Docker Compose and uses:
-- n8n for workflow orchestration
-- Evolution API for WhatsApp gateway
-- PostgreSQL for n8n and Evolution data
-- Gemini 2.5 Flash for summarization
+Repository ini sudah disiapkan agar aman dipublish ke public: nilai sensitif di file workflow telah diganti placeholder.
 
-## Features
-- Email-to-WhatsApp automation flow
-- Indonesian summary style with urgency score
-- Multiple Gemini keys (random selection) to reduce rate-limit issues
-- Containerized setup for VPS or local deployment
+## Stack
+- n8n (workflow orchestration)
+- Evolution API (WhatsApp gateway)
+- PostgreSQL (DB untuk n8n + Evolution API)
+- Gemini 2.5 Flash (text generation/summarization)
 
-## Project Files
-- `docker-compose.yaml`: service definitions for PostgreSQL, n8n, and Evolution API
-- `.env.example`: environment variable template
-- `automatic-email-notifier-workflow.json`: n8n workflow export file
-- `init-dbs.sh`: PostgreSQL initialization script for multiple databases
+## Struktur Folder
 
-## Prerequisites
-- Docker and Docker Compose installed
-- 2 WhatsApp accounts (one bot sender, one recipient)
-- IMAP account credentials (email + app password)
-- At least 1 Gemini API key (recommended 3-5 keys)
+```text
+.
+├── docker-compose.yaml
+├── .env.example
+├── init-dbs.sh
+├── brone-auth/
+└── n8n/
+    └── workflow/
+        ├── calendar/
+        │   ├── wa-to-gcal-assistant.json
+        │   └── gcal-to-wa-assistant.json
+        └── email/
+            └── automatic-email-notifier-workflow.json
+```
+
+## Placeholder Di Workflow (Wajib Diganti Setelah Import)
+
+Workflow publik memakai placeholder berikut:
+- `{{GEMINI_API_KEY_PLACEHOLDER}}`
+- `{{WHATSAPP_TARGET_NUMBER}}`
+- `{{WA_INSTANCE_NAME}}`
+- `{{PRIMARY_CALENDAR_ID}}`
+- `{{GOOGLE_CALENDAR_ID}}`
+- `{{WEBHOOK_ID}}`
+- `{{DISCORD_WEBHOOK_USERNAME}}`
+- `{{CONTACT_PERSON_1}}`
+- `{{CONTACT_PERSON_2}}`
+- `{{N8N_INSTANCE_ID}}`
+
+Catatan:
+- Placeholder ini memang sengaja tidak valid untuk menjaga data private.
+- Setelah import ke n8n, update node yang relevan sesuai environment kamu.
 
 ## Quick Start
 
-### 1. Clone and enter project
+1. Clone repository
 ```bash
-git clone https://github.com/oktavsm/automatic-email-notifier.git
-cd automatic-email-notifier
+git clone https://github.com/<your-username>/n8n-personal-assistant.git
+cd n8n-personal-assistant
 ```
 
-### 2. Configure environment
+2. Buat file environment
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set your real values.
-
-Minimal required variables:
+3. Isi `.env` dengan nilai real, minimal:
 - `DB_USER`
 - `DB_PASSWORD`
 - `N8N_ENCRYPTION_KEY`
@@ -50,66 +70,41 @@ Minimal required variables:
 - `WA_API_TOKEN`
 - `GEMINI_API_KEY`
 
-Notes:
-- `GEMINI_API_KEY` supports comma-separated values if you want multiple keys.
-- Keep `.env` private and never commit it.
-
-### 3. Start services
+4. Jalankan service
 ```bash
 docker compose up -d
-```
-
-### 4. Verify containers
-```bash
 docker compose ps
 ```
 
-## Configure Evolution API (WhatsApp)
+## Import Workflow Ke n8n
 
-Generate connection data for instance `okta_wa`:
+1. Buka n8n di `http://localhost:<N8N_PORT>`.
+2. Import workflow dari folder:
+   - `n8n/workflow/email/`
+   - `n8n/workflow/calendar/`
+3. Re-bind credentials di setiap node (IMAP, Google Calendar, HTTP Header Auth, Discord, dll).
+4. Ganti semua placeholder dengan nilai environment kamu.
+5. Test manual (Execute Workflow) sebelum diaktifkan.
+6. Activate workflow.
+
+## Evolution API Setup (Contoh)
+
+Gunakan nama instance sesuai konfigurasi kamu (jangan hardcode dari contoh lama):
+
 ```bash
-curl --location --request GET 'http://localhost:9001/instance/connect/okta_wa' \
-   --header 'apikey: YOUR_EVOLUTION_API_KEY'
+curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connect/<WA_INSTANCE_NAME>' \
+  --header 'apikey: <WA_API_TOKEN>'
 ```
-
-Scan QR from the response with the WhatsApp account used as bot sender.
-
-## Configure n8n Workflow
-
-1. Open n8n at `http://localhost:<N8N_PORT>`.
-2. Import `automatic-email-notifier-workflow.json`.
-3. Configure credentials used by nodes:
-    - IMAP credential: monitored mailbox and app password.
-    - HTTP Header Auth credential: Evolution API key header (`apikey`).
-4. Update destination WhatsApp number in the send-text node.
-5. Replace placeholder Gemini keys in the code node.
-6. Activate the workflow.
 
 ## Security Checklist
 
-- Do not store secrets in workflow JSON files.
-- Keep `.env` in `.gitignore`.
-- Rotate keys immediately if they were ever committed.
-- Use long random values for `DB_PASSWORD` and `N8N_ENCRYPTION_KEY`.
-- Put n8n and Evolution API behind HTTPS reverse proxy in production.
-- Restrict inbound ports with firewall rules.
+- Jangan commit `.env`.
+- Jangan simpan API key/token real di export workflow.
+- Rotasi credential jika pernah terlanjur ke-push.
+- Batasi akses port n8n dan Evolution API.
+- Gunakan reverse proxy HTTPS untuk deployment publik.
 
-## Troubleshooting
-
-- `db` keeps restarting:
-   - Check database credentials in `.env`.
-   - Review logs with `docker compose logs db`.
-- n8n cannot connect to PostgreSQL:
-   - Ensure `db` is healthy via `docker compose ps`.
-   - Confirm `DB_USER` and `DB_PASSWORD` are correct.
-- WhatsApp message not sent:
-   - Re-check Evolution API instance connection status.
-   - Verify `WA_API_TOKEN` and header auth credential.
-- Gemini request fails:
-   - Validate API key format and quota.
-   - Confirm node URL and model name are still valid.
-
-## Operational Commands
+## Operasional
 
 ```bash
 docker compose up -d
@@ -118,6 +113,8 @@ docker compose logs -f
 docker compose ps
 ```
 
-## Contributing
+## Roadmap Singkat
 
-Pull requests are welcome. For major changes, open an issue first to discuss the proposal.
+- Standardisasi placeholder lint workflow
+- Versioning workflow per use-case
+- Template onboarding agar import workflow lebih cepat

@@ -1,0 +1,172 @@
+{
+  "name": "automatic-email-notifier-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -336
+      ],
+      "id": "e3ec0451-8988-43a3-a7e5-705f6808f880",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "nErFrs1Ibk9WyEK3",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -336
+      ],
+      "id": "c5ea8f8d-cdb6-4488-bdc8-f7c7ad4d8305",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $json.candidates[0].content.parts[0].text }}",
+        "options": {
+          "username": "{{DISCORD_WEBHOOK_USERNAME}}"
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -400
+      ],
+      "id": "0f37462b-be51-4ead-a83c-83f248179399",
+      "name": "Discord",
+      "webhookId": "{{WEBHOOK_ID}}",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "cB3xD9X8Fu2L49x1",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        -240
+      ],
+      "id": "acc453e4-f9dd-4619-94e4-b246e38d7743",
+      "name": "[HTTP Whatsapp]",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GEmHpHffIDZKhtvn",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah asisten email pribadi yang cerdas dan kontekstual. Tugas mu adalah merangkum email dan memberikan insight berdasarkan siapa pengirimnya.\n\nBerikut email yang masuk:\n\nDARI: ${$json.from}\nSUBJEK: ${$json.subject}\nISI: ${$json.textPlain}\n\nInstruksi:\n1. Ringkas isi email jadi 1–2 kalimat yang jelas dan padat.\n2. Tentukan tingkat urgensi dari 1–10 (10 paling urgent).\n3. Kenali siapa pengirimnya dan berikan sentuhan personal sesuai kategori berikut:\n\n- Jika dari \"{{CONTACT_PERSON_1}}\":\n  → Tambahkan kalimat lucu / gemes / couple vibes karena ini adalah pacarku <3, oh ya berikan urgensi paling tinggi ya (10).\n\n- Jika dari \"{{CONTACT_PERSON_2}}\":\n  → Tandai bahwa ini email dari diri sendiri (self-reminder / system / testing)\n\n- Jika dari Google Classroom / praktikan / mahasiswa:\n  → Fokus ke tugas, deadline, atau hal yang perlu dicek sebagai asisten praktikum\n\n- Jika dari LinkedIn:\n  → Identifikasi apakah itu job opportunity, koneksi baru, atau notifikasi karir\n\n- Jika dari Tanoto Foundation:\n  → Tandai sebagai hal penting terkait beasiswa / program TELADAN\n\n- Selain itu:\n  → Gunakan tone profesional biasa\n\n4. PRIORITAS:\n- Jika urgensi ≥ 8 → tambahkan label: 🔥 *CEK SEKARANG!*\n- Jika urgensi 5–7 → tambahkan label: ⏳ *SEGERA*\n- Jika urgensi ≤ 4 → tambahkan label: 💤 *SANTAI*\n\nOutput WAJIB dalam format berikut:\n\n📧 *ADA EMAIL BARU!*\n📌 *PENGIRIM:* (Nama Pengirim + keterangan personal kalau ada)\n📝 *RINGKASAN:* (Ringkasan 1–2 kalimat)\n🚨 *URGENSI:* (Skor 1–10)\n⚡ *PRIORITAS:* (Label prioritas sesuai aturan)\n💡 *CATATAN:* (Insight / tindakan yang disarankan, opsional tapi diusahakan ada)\n\nGunakan bahasa santai tapi tetap jelas dan informatif.`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        304,
+        -336
+      ],
+      "id": "2257154a-126c-48ce-8789-d2cf4a29c418",
+      "name": "[HTTP] Gemini Email"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "[HTTP] Gemini Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[HTTP] Gemini Email": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "c5d49a56-16e7-40ad-8fae-391a63dadc8f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "GNtnCWmLXbMF5iON",
+  "tags": []
+}
