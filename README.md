@@ -6,6 +6,26 @@ It started as a single email notifier, then evolved into a multi-workflow person
 
 All exported workflows in this repo are sanitized for public sharing.
 
+## 📸 Project Showcase
+
+### 1. User Experience (WhatsApp Bot View)
+Here is how the assistant interacts on WhatsApp.
+
+| 🤖 Main Menu (`/help`) | 🚨 Auto-Notifier (SIAM/Brone) | 📅 GCal Integration |
+| :---: | :---: | :---: |
+| <img src="./assets/screenshot/help.jpeg" width="250"> | <img src="./assets/screenshot/pengumuman.jpeg" width="250"> | <img src="./assets/screenshot/jadwal.jpeg" width="250"> |
+| *List of available commands.* | *The bot sends attendance/announcement notifications.* | *The bot manages schedule creation via chat.* |
+
+<br>
+
+### 2. Under the Hood (n8n Architecture)
+The backend architecture uses a *Master-Sub Workflow* approach to avoid *webhook* conflicts and make scaling easier.
+
+| Master Router (Main Entry Point) | SIAM Automation Logic (Puppeteer + API) |
+| :---: | :---: |
+| <img src="./assets/screenshot/master-router.png" width="400"> | <img src="./assets/screenshot/siam-announcement.png" width="400"> |
+| *Receives messages, filters keywords, and executes sub-workflows.* | *Loops and filters SIAM schedule/announcement data.* |
+
 ## Tech Stack
 
 - n8n
