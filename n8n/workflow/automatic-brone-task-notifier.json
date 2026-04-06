@@ -160,7 +160,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

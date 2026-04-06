@@ -14,6 +14,17 @@ All exported workflows in this repo are sanitized for public sharing.
 - Gemini 2.5 Flash
 - Custom `brone-auth` helper service
 
+## Services Overview
+
+- `db` (PostgreSQL)
+  - Stores data for both n8n (`n8n_db`) and Evolution API (`evo_db`).
+- `n8n`
+  - Workflow orchestrator and webhook entrypoint.
+- `evolution-api`
+  - WhatsApp gateway used by notification and command workflows.
+- `brone-auth`
+  - Internal helper API (Puppeteer-based) that logs in to Brone/SIAM and fetches academic data for n8n workflows.
+
 ## Current Workflows
 
 Located in `n8n/workflow/`:
@@ -93,18 +104,43 @@ cp .env.example .env
 Minimum required:
 - `DB_USER`
 - `DB_PASSWORD`
+- `BRONE_USERNAME`
+- `BRONE_PASSWORD`
 - `N8N_ENCRYPTION_KEY`
 - `N8N_PORT`
 - `EVO_PORT`
 - `WA_API_TOKEN`
 - `GEMINI_API_KEY`
 
+Important compose notes:
+- `docker-compose.yaml` currently sets `N8N_HOST` and `WEBHOOK_URL` to a fixed domain (`oktaavsm.bccdev.id`).
+- If you run locally or on another server, update those values in `docker-compose.yaml` first.
+- Named volumes are configured as external:
+  - `email-notifier_postgres_data`
+  - `email-notifier_evolution_instances`
+  Create them before first run if they do not exist.
+
 4. Start services.
 
 ```bash
+docker volume create email-notifier_postgres_data
+docker volume create email-notifier_evolution_instances
 docker compose up -d --build
 docker compose ps
 ```
+
+## brone-auth API Endpoints
+
+`brone-auth` is consumed internally by n8n workflows and exposes these endpoints:
+
+- `POST /get-cookies`
+  - Logs in to Brone and returns `cookieString` plus `sesskey`.
+- `POST /get-siam-pengumuman`
+  - Logs in to SIAM and returns filtered class announcements.
+- `POST /get-siam-presensi`
+  - Logs in to SIAM and returns active attendance/presence data.
+
+These endpoints run on the internal Docker network (`http://brone-auth:3000`) and are not meant to be exposed publicly.
 
 ## Evolution API Instance Setup
 
@@ -150,9 +186,10 @@ If the state is `open` or `connected`, the instance is ready.
    - Google Calendar OAuth2
    - HTTP Header Auth (Evolution API)
    - Discord Webhook (if used)
-4. Replace placeholder values in each workflow.
-5. Run manual test execution for each workflow.
-6. Activate workflows.
+4. For Brone/SIAM workflows, make sure request bodies include valid credentials (`BRONE_USERNAME`, `BRONE_PASSWORD`) and required course metadata where applicable.
+5. Replace placeholder values in each workflow.
+6. Run manual test execution for each workflow.
+7. Activate workflows.
 
 ## Security Notes
 

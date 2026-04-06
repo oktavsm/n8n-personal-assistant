@@ -1,2 +1,27 @@
 .env
-./brone-auth/node_modules
+.env.local
+.env.*.local
+
+# Node dependencies
+node_modules/
+brone-auth/node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Runtime/temp files
+tmp/
+temp/
+*.tmp
+
+# Python cache (if any helper scripts are added)
+__pycache__/
+*.pyc

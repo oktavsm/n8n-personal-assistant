@@ -1,4 +1,5 @@
 services:
+
   db:
     image: postgres:16-alpine
     container_name: notifier_db
@@ -24,8 +25,11 @@ services:
       - DB_POSTGRESDB_HOST=db
       - DB_POSTGRESDB_USER=${DB_USER}
       - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
-      - DB_POSTGRESDB_DATABASE=n8n_db 
+      - DB_POSTGRESDB_DATABASE=n8n_db
+      - BRONE_USERNAME=${BRONE_USERNAME}
+      - BRONE_PASSWORD=${BRONE_PASSWORD}
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - N8N_HOST=oktaavsm.bccdev.id
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
@@ -36,6 +40,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+
 
   evolution-api:
     image: evoapicloud/evolution-api:latest
@@ -59,6 +65,18 @@ services:
     volumes:
       - evolution_instances:/evolution/instances
 
+  brone-auth:
+    build: ./brone-auth 
+    container_name: notifier_brone_auth
+    restart: always
+    expose:
+      - "3000"
+
+
 volumes:
   postgres_data:
+    name: email-notifier_postgres_data
+    external: true
   evolution_instances:
+    name: email-notifier_evolution_instances
+    external: true
