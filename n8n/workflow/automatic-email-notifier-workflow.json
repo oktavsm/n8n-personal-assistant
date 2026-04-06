@@ -15,7 +15,7 @@
       "name": "Email Trigger (IMAP)",
       "credentials": {
         "imap": {
-          "id": "nErFrs1Ibk9WyEK3",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "IMAP account"
         }
       }
@@ -52,7 +52,7 @@
       "webhookId": "{{WEBHOOK_ID}}",
       "credentials": {
         "discordWebhookApi": {
-          "id": "cB3xD9X8Fu2L49x1",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Discord Webhook account"
         }
       }
@@ -88,7 +88,7 @@
       "name": "[HTTP Whatsapp]",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "GEmHpHffIDZKhtvn",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Header Auth account"
         }
       }

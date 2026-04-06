@@ -1,0 +1,264 @@
+{
+  "name": "siam-announcement-notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://brone-auth:3000/get-siam-pengumuman",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\",\n  \"courses\": [\n    { \"nama\": \"Penyediaan dan Automasi Layanan\", \"kode_mk\": \"CIF62231\", \"kelas\": \"A\" },\n    { \"nama\": \"Desain dan Analisis Algoritma\", \"kode_mk\": \"CIF64112\", \"kelas\": \"G\" },\n    { \"nama\": \"Pengembangan Aplikasi Web\", \"kode_mk\": \"CIF64114\", \"kelas\": \"F\" },\n    { \"nama\": \"Keamanan Informasi\", \"kode_mk\": \"CIF64213\", \"kelas\": \"A\" },\n    { \"nama\": \"Kecerdasan Artifisial Lanjut\", \"kode_mk\": \"CIF64311\", \"kelas\": \"A\" },\n    { \"nama\": \"Kewarganegaraan\", \"kode_mk\": \"MPK60006\", \"kelas\": \"N6A\" },\n    { \"nama\": \"Pancasila\", \"kode_mk\": \"MPK60008\", \"kelas\": \"N8N\" },\n    { \"nama\": \"Kewirausahaan\", \"kode_mk\": \"UBU60003\", \"kelas\": \"D\" }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -272,
+        -240
+      ],
+      "id": "c159d9d4-f05b-4127-9b73-4fd8f6f9c406",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -672,
+        -304
+      ],
+      "id": "858d3917-5870-426c-b2ce-eb01b4263c5a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        -128
+      ],
+      "id": "a4b87d19-e7c3-45eb-8449-3a4db76d5444",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "99491177-ccd9-49cf-be53-5871a4c22206",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "=/pengumuman",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "3302ac2b-a32c-46cd-be10-aaa119ba7a42",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "={{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -464,
+        -128
+      ],
+      "id": "f2133919-7f24-485d-83b8-cb6036372756",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2171a5eb-87c5-4634-9fcf-32ba8b8b7fba",
+              "leftValue": "={{ $json.data.length }}",
+              "rightValue": "={{ 0 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        -240
+      ],
+      "id": "2b86d34a-4dbc-4a65-bfc0-91ab84e3f3fc",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const panen = $input.item.json.data;\nlet textMsg = \"🎓 *Update Pengumuman SIAM Samuel*\\n\\n\";\n\npanen.forEach(item => {\n    textMsg += `📚 *${item.matkul} (Kelas ${item.kelas})*\\n`;\n    item.daftar_pengumuman.forEach(p => {\n        textMsg += `🗓️ ${p.tanggal}\\n💬 _\"${p.isi}\"_\\n\\n`;\n    });\n    textMsg += `〰️〰️〰️〰️〰️〰️\\n`;\n});\n\ntextMsg += \"Semangat nugasnya, bro! 🔥\";\n\nreturn { json: { text: textMsg } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -336
+      ],
+      "id": "dc0a4c5c-68ab-408c-85e3-65010508b10f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        -336
+      ],
+      "id": "6f1ce5c3-9504-438d-bf7d-f1cf8e1308f6",
+      "name": "[HTTP Whatsapp]1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "{{N8N_CREDENTIAL_ID}}",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "285582ce-af42-4b21-8e42-8b62f5c12846",
+  "meta": {
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "OOvaMsCEOkqLuIL8",
+  "tags": []
+}

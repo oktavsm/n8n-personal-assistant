@@ -1,0 +1,372 @@
+{
+  "name": "automatic-brone-task-notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://brone.ub.ac.id/lib/ajax/service.php?sesskey={{ $json.sesskey }}&info=core_calendar_get_action_events_by_timesort",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cookieString }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n    {\n        \"index\": 0,\n        \"methodname\": \"core_calendar_get_action_events_by_timesort\",\n        \"args\": {\n            \"limitnum\": 6,\n            \"timesortfrom\": {{ Math.floor(Date.now() / 1000) }},\n            \"limittononsuspendedevents\": true\n        }\n    }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        16,
+        -704
+      ],
+      "id": "a0f427b1-9aa1-4433-b83b-3c8b39eda273",
+      "name": "[HTTP] Brone"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=data.events",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -704
+      ],
+      "id": "5170283b-e9e5-47db-a9d2-4baff0cfcf7a",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah sistem bot notifikasi otomatis untuk WhatsApp & Discord. Tugasmu meringkas data JSON tugas kuliah menjadi pesan notifikasi yang singkat, padat, dan *punchy*. Tapi kamu juga adalah asisten kuliah yang membantuku memahami dan menginformasikan tugas kuliah yang ada di data JSON. Jadi, kamu harus membaca dan memahami data JSON dengan baik, lalu menyajikan informasi pentingnya dalam format pesan yang menarik dan mudah dipahami.\n\nATURAN SANGAT KETAT (WAJIB DIPATUHI):\n1. DILARANG KERAS menggunakan kalimat basa-basi, pengantar, atau penutup (CONTOH YANG DILARANG: \"Baik, ini pesannya\", \"Siap!\", \"Berikut adalah notifikasi\", \"Semoga sukses!\").\n2. LANGSUNG KELUARKAN hasil teks pesan jadinya saja.\n3. Gunakan bahasa tongkrongan mahasiswa yang asik tapi tetap informatif.\n4. Baca bagian \"Deskripsi\", buang semua tag HTML, dan ambil poin intinya saja (misal: harus format PDF, tugas kelompok, dilarang copas) jadikan bullet points pendek.\n\nFormat Pesan (Gunakan template ini sebagai acuan):\n**Reminder Tugas Brone!!**\n🚨 **DEADLINE TUGAS: [Nama Mata Kuliah]** 🚨\n📚 **Tugas:** [Nama Tugas]\n⏰ **Batas Waktu:** [Due Date]\n\n📌 **Catatan Penting:**\n- [Poin intisari 1 dari deskripsi]\n- [Poin intisari 2 dari deskripsi]\n\n🔗 **Kumpul di sini:** ${$json.action.url}\n\n---\nBerikut data mentahnya:\n- Nama tugas: ${$json.name || $json.eventname || $json.summary || \"Tidak tersedia\"}\n- Mata kuliah: ${$json.coursefullname || $json.coursename || $json.course.fullname || $json.courseid || \"Tidak tersedia\"}\n- Due date: ${$json.formattedtime || \"Tidak tersedia\"}\n- URL tugas: ${$json.url || \"Tidak tersedia\"}\n- Deskripsi: ${$json.description || $json.details || $json.intro || \"-\"}\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        688,
+        -704
+      ],
+      "id": "372a55b2-72d8-4375-b886-bfe6c4d63f5e",
+      "name": "[HTTP] Gemini Brone"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $json.candidates[0].content.parts[0].text }}",
+        "options": {
+          "username": "{{DISCORD_WEBHOOK_USERNAME}}"
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -752
+      ],
+      "id": "c190a1b5-e835-4432-91a9-015024dec002",
+      "name": "Discord1",
+      "webhookId": "{{WEBHOOK_ID}}",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "{{N8N_CREDENTIAL_ID}}",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        -592
+      ],
+      "id": "4753dfe4-c520-4ba3-b1f1-6f71aca74370",
+      "name": "[HTTP Whatsapp]1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "{{N8N_CREDENTIAL_ID}}",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 19
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        -592
+      ],
+      "id": "48c0127b-8e73-456d-8a4f-7e9c03d49561",
+      "name": "Schedule Trigger [7 Malam]"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        -784
+      ],
+      "id": "c8c3bbdc-bec2-40c3-aeac-fb616bccade8",
+      "name": "Schedule Trigger [7 Pagi]"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -704
+      ],
+      "id": "14a5db3e-2a9c-418e-9718-da23f3cc5f7a",
+      "name": "Javascript Randomize API Key "
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "99491177-ccd9-49cf-be53-5871a4c22206",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "=/brone",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "3302ac2b-a32c-46cd-be10-aaa119ba7a42",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "={{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        -336
+      ],
+      "id": "17cf1b2c-b87d-4b25-9885-1ff847fd121b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -656,
+        -336
+      ],
+      "id": "5c196043-4e11-449d-9ba3-237e88c2a388",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://brone-auth:3000/get-cookies",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -288,
+        -704
+      ],
+      "id": "3f098a5d-6eee-4920-977d-149064283e0f",
+      "name": "HTTP Get Cookie and Sess Key"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[HTTP] Brone": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Javascript Randomize API Key ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[HTTP] Gemini Brone": {
+      "main": [
+        [
+          {
+            "node": "Discord1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[HTTP Whatsapp]1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger [7 Malam]": {
+      "main": [
+        [
+          {
+            "node": "HTTP Get Cookie and Sess Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger [7 Pagi]": {
+      "main": [
+        [
+          {
+            "node": "HTTP Get Cookie and Sess Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Javascript Randomize API Key ": {
+      "main": [
+        [
+          {
+            "node": "[HTTP] Gemini Brone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Get Cookie and Sess Key",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Get Cookie and Sess Key": {
+      "main": [
+        [
+          {
+            "node": "[HTTP] Brone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "e3d18633-5f1a-4bd3-828d-0ae96d918f75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "hpEygIQDgIYN7IVy",
+  "tags": []
+}

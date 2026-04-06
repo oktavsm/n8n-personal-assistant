@@ -45,7 +45,7 @@
       "name": "[15 Menit] Calendar get Events",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -74,7 +74,7 @@
       "name": "[60 Menit] Calendar get Events",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -110,7 +110,7 @@
       "name": "[HTTP Whatsapp]1",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "GEmHpHffIDZKhtvn",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Header Auth account"
         }
       }
@@ -157,7 +157,7 @@
       "name": "[30 Menit] Calendar get Kuliah",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -186,7 +186,7 @@
       "name": "[15 Menit] Calendar get Kuliah",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -215,7 +215,7 @@
       "name": "[12 Jam] Calendar get KAL",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -244,7 +244,7 @@
       "name": "[36 Jam] Calendar get KAL",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -273,7 +273,7 @@
       "name": "[12 Jam] Calendar get KI",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -302,7 +302,7 @@
       "name": "[36 Jam] Calendar get KI",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -331,7 +331,7 @@
       "name": "[36 Jam] Calendar get PAW",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }
@@ -360,7 +360,7 @@
       "name": "[12 Jam] Calendar get PAW",
       "credentials": {
         "googleCalendarOAuth2Api": {
-          "id": "kXkpk4YfItv3zvuT",
+          "id": "{{N8N_CREDENTIAL_ID}}",
           "name": "Google Calendar account"
         }
       }

@@ -1,23 +1,39 @@
 # n8n Personal Assistant
 
-This is my personal n8n automation workspace.
+This repository is my personal automation hub built on n8n.
 
-It started as an email notifier project, then grew into a broader personal assistant setup with multiple workflows.
+It started as a single email notifier, then evolved into a multi-workflow personal assistant for daily reminders, campus tasks, and WhatsApp-driven automation.
 
-Main use cases:
-- Email to AI summary to WhatsApp or Discord
-- WhatsApp command to AI parser to Google Calendar event
-- Google Calendar reminder to WhatsApp
-
-This repo is public-safe: sensitive values inside exported workflows have been replaced with placeholders.
+All exported workflows in this repo are sanitized for public sharing.
 
 ## Tech Stack
+
 - n8n
-- Evolution API
+- Evolution API (WhatsApp gateway)
 - PostgreSQL
 - Gemini 2.5 Flash
+- Custom `brone-auth` helper service
 
-## Project Structure
+## Current Workflows
+
+Located in `n8n/workflow/`:
+
+- `automatic-email-notifier-workflow.json`
+  - Reads incoming email, summarizes with Gemini, and sends notification to WhatsApp/Discord.
+- `wa-to-gcal-assistant.json`
+  - Reads WhatsApp command and creates Google Calendar events.
+- `gcal-to-wa-assistant.json`
+  - Periodically checks calendar windows and sends smart reminders to WhatsApp.
+- `automatic-brone-task-notifier.json`
+  - Monitors Brone task updates and sends notifications.
+- `siam-announcement-notifier.json`
+  - Sends SIAM announcement reminders to WhatsApp.
+- `siam-presensi-notifier.json`
+  - Sends SIAM attendance/presence reminders to WhatsApp.
+- `router-webhook.json`
+  - Central webhook router for WhatsApp command routing and response handling.
+
+## Repository Structure
 
 ```text
 .
@@ -25,18 +41,24 @@ This repo is public-safe: sensitive values inside exported workflows have been r
 ├── .env.example
 ├── init-dbs.sh
 ├── brone-auth/
+│   ├── Dockerfile
+│   ├── package.json
+│   └── server.js
 └── n8n/
     └── workflow/
-        ├── calendar/
-        │   ├── wa-to-gcal-assistant.json
-        │   └── gcal-to-wa-assistant.json
-        └── email/
-            └── automatic-email-notifier-workflow.json
+        ├── automatic-brone-task-notifier.json
+        ├── automatic-email-notifier-workflow.json
+        ├── gcal-to-wa-assistant.json
+        ├── router-webhook.json
+        ├── siam-announcement-notifier.json
+        ├── siam-presensi-notifier.json
+        └── wa-to-gcal-assistant.json
 ```
 
-## Workflow Placeholders
+## Sanitized Placeholders
 
-These placeholders are intentionally left in workflow JSON files and must be replaced after import:
+Sensitive values were replaced with placeholders in workflow exports:
+
 - `{{GEMINI_API_KEY_PLACEHOLDER}}`
 - `{{WHATSAPP_TARGET_NUMBER}}`
 - `{{WA_INSTANCE_NAME}}`
@@ -47,21 +69,28 @@ These placeholders are intentionally left in workflow JSON files and must be rep
 - `{{CONTACT_PERSON_1}}`
 - `{{CONTACT_PERSON_2}}`
 - `{{N8N_INSTANCE_ID}}`
+- `{{N8N_CREDENTIAL_ID}}`
 
-## Quick Start
+Replace these values after importing workflows into your own n8n instance.
 
-1. Clone the repository.
+## Setup
+
+1. Clone repository.
+
 ```bash
 git clone https://github.com/<your-username>/n8n-personal-assistant.git
 cd n8n-personal-assistant
 ```
 
-2. Create `.env` from template.
+2. Create environment file.
+
 ```bash
 cp .env.example .env
 ```
 
-3. Fill real values in `.env` (minimum):
+3. Fill required variables in `.env`.
+
+Minimum required:
 - `DB_USER`
 - `DB_PASSWORD`
 - `N8N_ENCRYPTION_KEY`
@@ -70,17 +99,19 @@ cp .env.example .env
 - `WA_API_TOKEN`
 - `GEMINI_API_KEY`
 
-4. Start containers.
+4. Start services.
+
 ```bash
-docker compose up -d
+docker compose up -d --build
 docker compose ps
 ```
 
-## Evolution API Setup (Create Instance + Connect)
+## Evolution API Instance Setup
 
-After containers are up, create a WhatsApp instance first.
+After containers are running, create and connect your WhatsApp instance.
 
-1. Create instance (POST)
+1. Create instance.
+
 ```bash
 curl --location --request POST 'http://localhost:<EVO_PORT>/instance/create' \
   --header 'apikey: <WA_API_TOKEN>' \
@@ -92,44 +123,48 @@ curl --location --request POST 'http://localhost:<EVO_PORT>/instance/create' \
   }'
 ```
 
-2. Get QR data (GET connect)
+2. Request connect data / QR.
+
 ```bash
 curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connect/<WA_INSTANCE_NAME>' \
   --header 'apikey: <WA_API_TOKEN>'
 ```
 
-3. Scan the QR code with your WhatsApp account.
+3. Scan the QR from your WhatsApp app.
 
-4. Verify instance status (optional but recommended)
+4. Verify connection status.
+
 ```bash
 curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connectionState/<WA_INSTANCE_NAME>' \
   --header 'apikey: <WA_API_TOKEN>'
 ```
 
-If status is connected/open, your instance is ready.
+If the state is `open` or `connected`, the instance is ready.
 
-## Import Workflows to n8n
+## Import and Configure Workflows
 
 1. Open n8n at `http://localhost:<N8N_PORT>`.
-2. Import workflows from:
-- `n8n/workflow/email/`
-- `n8n/workflow/calendar/`
-3. Re-bind credentials in each workflow node (IMAP, Google Calendar, HTTP Header Auth, Discord, and others you use).
-4. Replace all placeholders with your own values.
-5. Run manual test execution first.
+2. Import all files from `n8n/workflow/`.
+3. Recreate or rebind credentials in n8n:
+   - IMAP
+   - Google Calendar OAuth2
+   - HTTP Header Auth (Evolution API)
+   - Discord Webhook (if used)
+4. Replace placeholder values in each workflow.
+5. Run manual test execution for each workflow.
 6. Activate workflows.
 
 ## Security Notes
 
-- Never commit `.env`.
-- Never keep real keys/tokens in exported workflow JSON.
-- Rotate credentials immediately if they were ever exposed.
-- Restrict inbound ports and use HTTPS reverse proxy for internet-facing deployment.
+- Keep `.env` private.
+- Do not commit real secrets into workflow exports.
+- Rotate credentials immediately if previously exposed.
+- Put n8n and Evolution API behind HTTPS reverse proxy for public deployments.
 
-## Common Commands
+## Useful Commands
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 docker compose down
 docker compose logs -f
 docker compose ps

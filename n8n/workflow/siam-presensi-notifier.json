@@ -1,0 +1,215 @@
+{
+  "name": "siam-presensi-notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://brone-auth:3000/get-siam-presensi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        -16
+      ],
+      "id": "f28fb11b-e8fc-4327-aff4-4721b6c5b64d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        -80
+      ],
+      "id": "f1da348b-d400-4c55-8cac-a5be9be0746d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        96
+      ],
+      "id": "c98d9581-7c1c-4607-807a-1d365f665f00",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "99491177-ccd9-49cf-be53-5871a4c22206",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "=/presensi",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "3302ac2b-a32c-46cd-be10-aaa119ba7a42",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "={{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        96
+      ],
+      "id": "af8917d6-7ece-4c43-a769-b2a4c7bc2ac8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const presensi = $input.item.json.data;\n\n// 1. Kalau datanya kosong (kayak JSON kamu di atas), kita STOP workflow-nya di sini.\n// Workflow nggak akan lanjut ngirim WA. Nggak ada spam!\nif (!presensi || presensi.length === 0) {\n    return []; \n}\n\nlet textMsg = \"🚨 *ALERT: PRESENSI DIBUKA!* 🚨\\n\\n\";\nlet adaYangBuka = false;\n\n// 2. Kalau ada isinya, kita cek satu-satu jadwalnya\npresensi.forEach(p => {\n    // Pastikan status IS_BUKA = \"1\" (Dosen beneran udah klik tombol buka presensi)\n    if (p.IS_BUKA === \"1\") {\n        adaYangBuka = true;\n        textMsg += `📚 *${p.MATA_KULIAH} (Kelas ${p.KELAS})*\\n`;\n        textMsg += `👨‍🏫 Dosen: ${p.USERID}\\n`;\n        textMsg += `📝 Materi: ${p.MATERI}\\n`;\n        textMsg += `⏳ Tutup Jam: ${p.JAM_SELESAI}\\n\\n`;\n    }\n});\n\n// 3. Kalau ternyata ada matkul yang IS_BUKA = \"1\", baru kita kirim data teksnya ke node WhatsApp\nif (adaYangBuka) {\n    textMsg += \"Gas login SIAM dan absen sekarang bro! 🏃💨\";\n    return { json: { text: textMsg } };\n} else {\n    // Kalau misal ada jadwal kelas tapi dosen belum buka absen (IS_BUKA = \"0\"), STOP juga.\n    return []; \n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -16
+      ],
+      "id": "aa28f619-0e68-4c44-9b31-76024ac414e8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        464,
+        -16
+      ],
+      "id": "540390d0-98de-444c-9ffe-6c5fae6f0e50",
+      "name": "[HTTP Whatsapp]1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "{{N8N_CREDENTIAL_ID}}",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "21f08c72-4ad4-4830-8e70-e5419c07b524",
+  "meta": {
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "H5lVT2ani2aaNkyV",
+  "tags": []
+}

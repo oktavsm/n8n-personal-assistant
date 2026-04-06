@@ -1,0 +1,645 @@
+{
+  "name": "router-webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wa-assistant",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        96
+      ],
+      "id": "a74c5659-fa90-4885-b690-00f15cd1c601",
+      "name": "Webhook",
+      "webhookId": "{{WEBHOOK_ID}}"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.data.message.conversation }}",
+                    "rightValue": "/jadwal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "e9b54299-e9d3-4a26-afc6-a3ee93785e29"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "buat_jadwal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "aa6477c9-1adf-40db-a1b0-ac967c105d37",
+                    "leftValue": "={{ $json.body.data.message.conversation }}",
+                    "rightValue": "/cek",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cek_jadwal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "49170118-d0c1-463a-afde-796c94bcf5e4",
+                    "leftValue": "={{ $json.body.data.message.conversation }}",
+                    "rightValue": "/brone",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cek_brone"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "628635fe-fd47-4415-a03a-d018b767bd9e",
+                    "leftValue": "={{ $json.body.data.message.conversation }}",
+                    "rightValue": "/pengumuman",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cek_pengumuman"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "77b486dc-e2d6-48b8-a97b-8957a5448767",
+                    "leftValue": "={{ $json.body.data.message.conversation }}",
+                    "rightValue": "/presensi",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cek_presensi"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "74e6a077-6397-4f04-8dd5-c59dd96f2b9d",
+                    "leftValue": "={{ $json.body.data.message.conversation }}",
+                    "rightValue": "/help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "help"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        96
+      ],
+      "id": "e178771d-3f43-4a8c-92c4-0d32e36162b7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "U43zT3sJktIA9LaL",
+          "mode": "list",
+          "cachedResultUrl": "/n8n/workflow/U43zT3sJktIA9LaL",
+          "cachedResultName": "wa-to-gcal-assistant"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        0
+      ],
+      "id": "6c3c5b6f-3122-47b2-b9d8-2fd75604b5ac",
+      "name": "Call 'wa-to-gcal-assistant'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "hpEygIQDgIYN7IVy",
+          "mode": "list",
+          "cachedResultUrl": "/n8n/workflow/hpEygIQDgIYN7IVy",
+          "cachedResultName": "automatic-brone-task-notifier"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        160
+      ],
+      "id": "9fba4d5c-0336-49f7-9a64-d86d3c0b46ac",
+      "name": "Call 'automatic-brone-task-notifier'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e4bdd2b9-c6b9-4b4a-8f90-dbd5017398f4",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        160
+      ],
+      "id": "8a827b6c-fb4f-4da7-a512-4d957e55bd65",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e4bdd2b9-c6b9-4b4a-8f90-dbd5017398f4",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        288,
+        16
+      ],
+      "id": "5227befd-950c-4f78-8bdd-340a1883cfbb",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e4bdd2b9-c6b9-4b4a-8f90-dbd5017398f4",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        304
+      ],
+      "id": "d2a9aa48-7714-40c6-b403-c476b9801a7b",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e4bdd2b9-c6b9-4b4a-8f90-dbd5017398f4",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        448
+      ],
+      "id": "c1acfe56-e240-4025-8fc8-5a630967854a",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "OOvaMsCEOkqLuIL8",
+          "mode": "list",
+          "cachedResultUrl": "/n8n/workflow/OOvaMsCEOkqLuIL8",
+          "cachedResultName": "siam-announcement-notifier"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        352
+      ],
+      "id": "d2e45d27-5e40-4a84-bbe1-0b78935c5d61",
+      "name": "Call 'siam-pengumuman'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "H5lVT2ani2aaNkyV",
+          "mode": "list",
+          "cachedResultUrl": "/n8n/workflow/H5lVT2ani2aaNkyV",
+          "cachedResultName": "siam-presensi-notifier"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        512
+      ],
+      "id": "86fcd75a-8d7f-4dff-9cc3-a645d786a2f4",
+      "name": "Call 'siam-presensi-notifier'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e4bdd2b9-c6b9-4b4a-8f90-dbd5017398f4",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        656
+      ],
+      "id": "6ed9b7ec-2374-49de-8723-8f4c641f3497",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const textMsg = `🤖 *Menu Asisten Pribadi Samuel* 🤖\n\nHalo bos! Berikut adalah daftar perintah yang bisa kamu gunakan:\n\n📅 *Google Calendar*\n• */jadwal [keterangan]* : Bikin jadwal/agenda baru ke GCal.\n• */cek [keterangan]* : Cek jadwal yang udah ada di GCal.\n\n🎓 *Akademik (FILKOM UB)*\n• */brone* : Tarik tugas terbaru dari Brone.\n• */pengumuman* : Cek pengumuman terbaru di SIAM (3 hari terakhir).\n• */presensi* : Cek apakah ada dosen yang lagi buka absen di SIAM saat ini.\n\n❓ *Lainnya*\n• */help* : Menampilkan menu bantuan ini.\n\nKetik perintahnya langsung ya bro! 🔥`;\n\nreturn { json: { text: textMsg } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        688
+      ],
+      "id": "13e03357-ef48-4be5-8927-6de1e756b7d4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "=httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "{{WHATSAPP_TARGET_NUMBER}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        784,
+        688
+      ],
+      "id": "335a8cde-9fc3-4386-94ed-563db62aa81d",
+      "name": "[HTTP Whatsapp]1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "{{N8N_CREDENTIAL_ID}}",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Call 'automatic-brone-task-notifier'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Call 'wa-to-gcal-assistant'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Call 'siam-pengumuman'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Call 'siam-presensi-notifier'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "[HTTP Whatsapp]1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bd04b4d4-09fa-4968-b34a-e13a939a66cd",
+  "meta": {
+    "instanceId": "{{N8N_INSTANCE_ID}}"
+  },
+  "id": "yViHMhfkTHv6uNFC",
+  "tags": []
+}
