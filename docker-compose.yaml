@@ -1,3 +1,9 @@
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "${DOCKER_LOG_MAX_SIZE:-10m}"
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
 services:
 
   db:
@@ -15,6 +21,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging: *default-logging
+    restart: always
 
   n8n:
     image: n8nio/n8n:latest
@@ -32,14 +40,15 @@ services:
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - N8N_HOST=oktaavsm.bccdev.id
       - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://oktaavsm.bccdev.id/n8n/
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://oktaavsm.bccdev.id/n8n/
       - N8N_PATH=/n8n/
     ports:
       - "${N8N_PORT}:5678"
     depends_on:
       db:
         condition: service_healthy
+    logging: *default-logging
 
 
 
@@ -64,13 +73,18 @@ services:
         condition: service_healthy
     volumes:
       - evolution_instances:/evolution/instances
+    logging: *default-logging
 
   brone-auth:
     build: ./brone-auth 
     container_name: notifier_brone_auth
     restart: always
+    init: true
     expose:
       - "3000"
+    security_opt:
+      - seccomp:unconfined
+    logging: *default-logging
 
 
 volumes:

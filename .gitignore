@@ -5,6 +5,7 @@
 # Node dependencies
 node_modules/
 brone-auth/node_modules/
+brone-auth/public/
 
 # Logs
 *.log

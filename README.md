@@ -230,6 +230,34 @@ curl --location --request POST 'http://localhost:<EVO_PORT>/webhook/set/<WA_INST
 - Rotate credentials immediately if previously exposed.
 - Put n8n and Evolution API behind HTTPS reverse proxy for public deployments.
 
+## Storage Full Prevention
+
+This repo now includes two built-in protections:
+
+- Docker log rotation on every service (`max-size` + `max-file`) via `docker-compose.yaml`
+- `ops/storage-guard.sh` for threshold-based cleanup of unused Docker artifacts
+
+Run manually:
+
+```bash
+bash ops/storage-guard.sh
+```
+
+Recommended weekly cron on host:
+
+```bash
+0 3 * * 0 cd /path/to/n8n-personal-assistant && /usr/bin/env bash ops/storage-guard.sh >> /var/log/storage-guard.log 2>&1
+```
+
+Optional environment knobs for the guard script:
+
+- `DISK_THRESHOLD_PERCENT` (default `85`)
+- `CONTAINER_PRUNE_UNTIL` (default `168h`)
+- `IMAGE_PRUNE_UNTIL` (default `240h`)
+- `BUILDER_PRUNE_UNTIL` (default `240h`)
+- `JOURNAL_RETENTION` (default `7d`)
+- `ENABLE_VOLUME_PRUNE` (default `false`, keep this off unless you really want dangling volumes removed)
+
 ## Useful Commands
 
 ```bash
