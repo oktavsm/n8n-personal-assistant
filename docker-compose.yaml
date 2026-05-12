@@ -75,6 +75,17 @@ services:
       - evolution_instances:/evolution/instances
     logging: *default-logging
 
+  evolution-manager:
+    image: evoapicloud/evolution-manager:latest
+    container_name: notifier_wa_manager
+    restart: always
+    ports:
+      - "8082:80"
+    depends_on:
+      - evolution-api
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sed -i 's/ must-revalidate//g' /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"]
+
   brone-auth:
     build: ./brone-auth 
     container_name: notifier_brone_auth

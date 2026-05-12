@@ -26,3 +26,5 @@ temp/
 # Python cache (if any helper scripts are added)
 __pycache__/
 *.pyc
+
+.agent/
