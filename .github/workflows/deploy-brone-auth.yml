@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 11023 }}
           script: |
-            cd /home/oktaavsm/Documents/Work/n8n-personal-assistant || cd ~/n8n-personal-assistant
+            cd /home/dev/projects/docker/n8n-personal-assistant || cd ~/projects/docker/n8n-personal-assistant
             git pull origin ${{ github.ref_name }}
             docker compose pull brone-auth
             docker compose up -d brone-auth
