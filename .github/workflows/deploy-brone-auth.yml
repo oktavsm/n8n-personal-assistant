@@ -54,6 +54,7 @@ jobs:
           port: ${{ secrets.VPS_PORT || 11023 }}
           script: |
             cd /home/dev/projects/docker/n8n-personal-assistant || cd ~/projects/docker/n8n-personal-assistant
-            git pull origin ${{ github.ref_name }}
+            git fetch origin ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
             docker compose pull brone-auth
             docker compose up -d brone-auth
