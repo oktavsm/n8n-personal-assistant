@@ -13,8 +13,9 @@ Documented updates and architecture improvements implemented for local developme
   - Running `HEADLESS=false npm run dev` locally opens a visual Google Chrome window to debug DOM changes, login flows, and scraping in real-time.
   - Made `executablePath` optional in `server.js` (only passed when `PUPPETEER_EXECUTABLE_PATH` env is defined, e.g., in Docker), allowing local Node to use bundled Chromium without path errors.
 
-- **Multi-Strategy Token Capture & Robust Authentication**:
+- **Multi-Strategy Token Capture & Dynamic KRS Auto-Fetch**:
   - Enhanced `extractBearerTokenFromRuntime` to intercept background network requests (`getPertanyaanSurvey`, `getProfil`, `getJadwal`, etc.), inspect Keycloak SSO JSON responses (`/protocol/openid-connect/token`), and scan `window.Sso_ub.KEYCLOAK.token`, `localStorage` (`dataAuth`), and `sessionStorage`.
+  - Added **Dynamic KRS Auto-Fetch** in `POST /get-siam-pengumuman`: If the `courses` list payload is omitted in n8n, `brone-auth` dynamically calls `https://api.ub.ac.id/siam/mahasiswa/getKRS` to extract the student's active semester courses, class codes, year, and semester automatically! No manual course array hardcoding required in n8n.
   - Refactored `POST /get-siam-pengumuman` and `POST /get-siam-presensi` endpoints to use `runWithSiamRetries` and `getSiamAuth`, preventing `Failed to capture Bearer token` HTTP 500 errors.
 
 - **Developer Tooling**:
