@@ -567,83 +567,86 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                 return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
             },
             operation: async ({ page, token }) => {
-                const hasilPanen = [];
-                const hasilPerMatkul = await page.evaluate(async (customCourses, bearerToken) => {
-                    let activeCourses = [];
+                let activeCourses = [];
 
-                    if (Array.isArray(customCourses) && customCourses.length > 0) {
-                        activeCourses = customCourses.map(c => ({
-                            nama: c.nama || c.NAMA,
-                            kode_mk: c.kode_mk || c.K_MK,
-                            kelas: c.kelas || c.KELAS,
-                            tahun: c.tahun || c.TAHUN || 2026,
-                            is_ganjil: c.is_ganjil !== undefined ? c.is_ganjil : (c.IS_GANJIL || '1'),
-                            is_pendek: c.is_pendek !== undefined ? c.is_pendek : (c.IS_PENDEK || '0')
-                        }));
-                    } else {
-                        // Dynamic fetch active KRS from SIAM API
-                        try {
-                            let krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS', {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': bearerToken,
-                                    'Accept': 'application/json, text/plain, */*'
-                                }
-                            });
-
-                            if (!krsRes.ok) {
-                                krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS?tahun=2026&is_ganjil=1', {
-                                    method: 'GET',
-                                    headers: {
-                                        'Authorization': bearerToken,
-                                        'Accept': 'application/json, text/plain, */*'
-                                    }
-                                });
+                if (Array.isArray(courses) && courses.length > 0) {
+                    activeCourses = courses.map(c => ({
+                        nama: c.nama || c.NAMA,
+                        kode_mk: c.kode_mk || c.K_MK,
+                        kelas: c.kelas || c.KELAS,
+                        tahun: c.tahun || c.TAHUN || 2026,
+                        is_ganjil: c.is_ganjil !== undefined ? c.is_ganjil : (c.IS_GANJIL || '1'),
+                        is_pendek: c.is_pendek !== undefined ? c.is_pendek : (c.IS_PENDEK || '0')
+                    }));
+                } else {
+                    // Dynamic fetch active KRS directly from Node.js using native fetch
+                    try {
+                        let krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS?tahun=2026&is_ganjil=1', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': token,
+                                'Accept': 'application/json, text/plain, */*',
+                                'User-Agent': SIAM_USER_AGENT
                             }
+                        });
 
-                            const krsData = await krsRes.json();
-                            const mkList = Array.isArray(krsData?.mk_krs) ? krsData.mk_krs : [];
-
-                            activeCourses = mkList.map(item => ({
-                                nama: item.NAMA,
-                                kode_mk: item.K_MK,
-                                kelas: item.KELAS,
-                                tahun: item.TAHUN || 2026,
-                                is_ganjil: item.IS_GANJIL || '1',
-                                is_pendek: item.IS_PENDEK || '0'
-                            }));
-                        } catch (err) {
-                            console.error('Failed fetching dynamic KRS from SIAM API:', err.message);
-                        }
-                    }
-
-                    if (!activeCourses || activeCourses.length === 0) {
-                        return [];
-                    }
-
-                    const tasks = activeCourses.map(async (matkul) => {
-                        const tahun = matkul.tahun || 2026;
-                        const isGanjil = matkul.is_ganjil !== undefined ? matkul.is_ganjil : '1';
-                        const isPendek = matkul.is_pendek !== undefined ? matkul.is_pendek : '0';
-
-                        const url = `https://api.ub.ac.id/siam/mahasiswa/getPengumumanKelas?tahun=${tahun}&is_ganjil=${isGanjil}&is_pendek=${isPendek}&kelas=${encodeURIComponent(matkul.kelas)}&kode_mk=${encodeURIComponent(matkul.kode_mk)}`;
-                        try {
-                            const response = await fetch(url, {
+                        if (!krsRes.ok) {
+                            krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS', {
                                 method: 'GET',
                                 headers: {
-                                    'Authorization': bearerToken,
-                                    'Accept': 'application/json'
+                                    'Authorization': token,
+                                    'Accept': 'application/json, text/plain, */*',
+                                    'User-Agent': SIAM_USER_AGENT
                                 }
                             });
-                            const data = await response.json();
-                            return { matkul, data: Array.isArray(data) ? data : [] };
-                        } catch (error) {
-                            return { matkul, error: error.message, data: [] };
                         }
-                    });
-                    return Promise.all(tasks);
-                }, courses, token);
 
+                        const krsData = await krsRes.json();
+                        const mkList = Array.isArray(krsData?.mk_krs) ? krsData.mk_krs : [];
+
+                        activeCourses = mkList.map(item => ({
+                            nama: item.NAMA,
+                            kode_mk: item.K_MK,
+                            kelas: item.KELAS,
+                            tahun: item.TAHUN || 2026,
+                            is_ganjil: item.IS_GANJIL || '1',
+                            is_pendek: item.IS_PENDEK || '0'
+                        }));
+                        console.log(`[INFO][SIAM][get-siam-pengumuman][${requestId}] Dynamic KRS fetched successfully. totalCourses=${activeCourses.length}`);
+                    } catch (err) {
+                        console.error(`[ERROR][SIAM][get-siam-pengumuman][${requestId}] Failed fetching dynamic KRS:`, err.message);
+                    }
+                }
+
+                if (!activeCourses || activeCourses.length === 0) {
+                    return [];
+                }
+
+                // Fetch pengumuman for each course directly in Node.js
+                const tasks = activeCourses.map(async (matkul) => {
+                    const tahun = matkul.tahun || 2026;
+                    const isGanjil = matkul.is_ganjil !== undefined ? matkul.is_ganjil : '1';
+                    const isPendek = matkul.is_pendek !== undefined ? matkul.is_pendek : '0';
+
+                    const url = `https://api.ub.ac.id/siam/mahasiswa/getPengumumanKelas?tahun=${tahun}&is_ganjil=${isGanjil}&is_pendek=${isPendek}&kelas=${encodeURIComponent(matkul.kelas)}&kode_mk=${encodeURIComponent(matkul.kode_mk)}`;
+                    try {
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': token,
+                                'Accept': 'application/json, text/plain, */*',
+                                'User-Agent': SIAM_USER_AGENT
+                            }
+                        });
+                        const data = await response.json();
+                        return { matkul, data: Array.isArray(data) ? data : [] };
+                    } catch (error) {
+                        return { matkul, error: error.message, data: [] };
+                    }
+                });
+
+                const hasilPerMatkul = await Promise.all(tasks);
+                const hasilPanen = [];
                 const hariIni = new Date();
                 hariIni.setHours(0, 0, 0, 0);
 
@@ -667,11 +670,12 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                             return true;
                         }
 
-                        // Recent announcement check (posted within last 7 days)
+                        // Recent announcement check (posted within last 14 days)
                         const diffMs = hariIni.getTime() - tglAwal.getTime();
                         const selisihHari = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                        return selisihHari >= -1 && selisihHari <= 7;
+                        return selisihHari >= -1 && selisihHari <= 14;
                     });
+
                     if (pengumumanBaru.length > 0) {
                         hasilPanen.push({
                             matkul: matkul.nama,
@@ -684,6 +688,7 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                         });
                     }
                 }
+
                 return hasilPanen;
             }
         });
