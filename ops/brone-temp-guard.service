@@ -1,0 +1,14 @@
+[Unit]
+Description=Remove stale Brone Puppeteer temporary profiles safely
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+Environment=CONTAINER_NAME=notifier_brone_auth
+Environment=PROFILE_ROOT=/tmp/brone-puppeteer
+Environment=RUNTIME_ROOT=/tmp/brone-runtime
+Environment=STALE_MINUTES=30
+Environment=WARN_DISK_PERCENT=75
+Environment=CRITICAL_DISK_PERCENT=85
+ExecStart=/usr/local/sbin/brone-temp-guard.sh

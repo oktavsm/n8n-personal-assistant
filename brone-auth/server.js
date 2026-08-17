@@ -1,6 +1,12 @@
 const express = require('express');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const {
+    BrowserSlotPool,
+    DEFAULT_PROFILE_ROOT,
+    closeBrowserSession,
+    createBrowserSession
+} = require('./browser-session');
 
 puppeteer.use(StealthPlugin());
 
@@ -23,34 +29,50 @@ const CHROME_ARGS = [
 
 const SHORT_WAIT_MS = 800;
 
-function createLaunchOptions() {
-    return {
-        headless: 'new',
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
+function createLaunchOptions(profileDir) {
+    const isHeadless = process.env.HEADLESS === 'false' ? false : (process.env.HEADLESS || 'new');
+    const opts = {
+        headless: isHeadless,
+        userDataDir: profileDir,
         args: CHROME_ARGS
     };
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        opts.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+    return opts;
 }
 
-const activeBrowsers = new Set();
+const browserProfileRoot = process.env.BRONE_BROWSER_PROFILE_ROOT || DEFAULT_PROFILE_ROOT;
+const browserRuntimeDir = process.env.TMPDIR || '/tmp';
+const browserPool = new BrowserSlotPool(
+    process.env.BRONE_BROWSER_CONCURRENCY || 1,
+    process.env.BRONE_BROWSER_QUEUE_TIMEOUT_MS || 60000
+);
+const browserCloseTimeoutMs = Number(process.env.BRONE_BROWSER_CLOSE_TIMEOUT_MS || 10000);
+const activeBrowserSessions = new Set();
 
-function trackBrowser(browser) {
-    activeBrowsers.add(browser);
-    browser.once('disconnected', () => activeBrowsers.delete(browser));
-    return browser;
+async function launchBrowserSession() {
+    const session = await createBrowserSession({
+        profileRoot: browserProfileRoot,
+        runtimeDir: browserRuntimeDir,
+        pool: browserPool,
+        createLaunchOptions,
+        launch: (options) => puppeteer.launch(options)
+    });
+    activeBrowserSessions.add(session);
+    return session;
 }
 
-async function closeBrowserSafely(browser, context = '[BROWSER]') {
-    if (!browser) return;
+async function closeBrowserSafely(session, context = '[BROWSER]') {
+    if (!session) return;
     try {
-        await browser.close();
-    } catch (error) {
-        console.error(`${context} Failed to close browser cleanly:`, error.message);
-        const processHandle = browser.process?.();
-        if (processHandle?.pid) {
-            process.kill(processHandle.pid, 'SIGKILL');
-        }
+        await closeBrowserSession(session, {
+            context,
+            closeTimeoutMs: browserCloseTimeoutMs,
+            logger: console
+        });
     } finally {
-        activeBrowsers.delete(browser);
+        activeBrowserSessions.delete(session);
     }
 }
 
@@ -62,10 +84,13 @@ async function shutdown(signal) {
     shuttingDown = true;
     console.log(`[INFO][BOOT] Received ${signal}, shutting down gracefully...`);
     if (server) {
-        await new Promise((resolve) => server.close(resolve));
+        await Promise.race([
+            new Promise((resolve) => server.close(resolve)),
+            sleep(30000)
+        ]);
     }
     await Promise.allSettled(
-        Array.from(activeBrowsers).map((browser) => closeBrowserSafely(browser, '[INFO][BOOT]'))
+        Array.from(activeBrowserSessions).map((session) => closeBrowserSafely(session, '[INFO][BOOT]'))
     );
     process.exit(0);
 }
@@ -228,18 +253,39 @@ async function extractBearerTokenFromRuntime(page) {
         if (keycloakToken) return keycloakToken;
 
         const rawDataAuth = localStorage.getItem('dataAuth');
-        if (!rawDataAuth) return null;
-
-        try {
-            let decoded = rawDataAuth;
-            if (typeof isDevel !== 'undefined' && isDevel === '0' && typeof CryptoJS !== 'undefined' && typeof secret !== 'undefined') {
-                decoded = CryptoJS.AES.decrypt(rawDataAuth, secret).toString(CryptoJS.enc.Utf8);
-            }
-            const parsed = JSON.parse(decoded);
-            return parsed?.token || null;
-        } catch {
-            return null;
+        if (rawDataAuth) {
+            try {
+                let decoded = rawDataAuth;
+                if (typeof isDevel !== 'undefined' && isDevel === '0' && typeof CryptoJS !== 'undefined' && typeof secret !== 'undefined') {
+                    decoded = CryptoJS.AES.decrypt(rawDataAuth, secret).toString(CryptoJS.enc.Utf8);
+                }
+                const parsed = JSON.parse(decoded);
+                if (parsed?.token) return parsed.token;
+            } catch {}
         }
+
+        const scanStorage = (storage) => {
+            try {
+                for (let i = 0; i < storage.length; i++) {
+                    const key = storage.key(i);
+                    const val = storage.getItem(key);
+                    if (typeof val === 'string' && (val.includes('eyJ') || val.toLowerCase().includes('bearer'))) {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (parsed?.token) return parsed.token;
+                            if (parsed?.access_token) return parsed.access_token;
+                            if (parsed?.id_token) return parsed.id_token;
+                        } catch {
+                            if (val.startsWith('Bearer ')) return val;
+                            if (val.startsWith('eyJ')) return val;
+                        }
+                    }
+                }
+            } catch {}
+            return null;
+        };
+
+        return scanStorage(localStorage) || scanStorage(sessionStorage);
     });
 
     if (!token) return null;
@@ -383,9 +429,10 @@ async function runWithSiamRetries(options) {
     let lastError = null;
 
     for (let attempt = 1; attempt <= SIAM_AUTH_MAX_ATTEMPTS; attempt += 1) {
-        let browser;
+        let session;
         try {
-            browser = trackBrowser(await puppeteer.launch(createLaunchOptions()));
+            session = await launchBrowserSession();
+            const { browser } = session;
             const page = await browser.newPage();
             await prepareSiamPage(page);
 
@@ -410,7 +457,7 @@ async function runWithSiamRetries(options) {
                 await sleep(retryDelayMs(attempt));
             }
         } finally {
-            await closeBrowserSafely(browser, `[INFO][SIAM][${endpoint}][${requestId}]`);
+            await closeBrowserSafely(session, `[INFO][SIAM][${endpoint}][${requestId}]`);
         }
     }
 
@@ -431,10 +478,11 @@ async function runWithSiamRetries(options) {
 
 app.post('/get-cookies', async (req, res) => {
     const { username, password } = req.body;
-    let browser;
+    let session;
 
     try {
-        browser = trackBrowser(await puppeteer.launch(createLaunchOptions()));
+        session = await launchBrowserSession();
+        const { browser } = session;
 
         const page = await browser.newPage();
         await page.evaluateOnNewDocument(() => {
@@ -487,7 +535,7 @@ app.post('/get-cookies', async (req, res) => {
         res.status(500).json({ error: error.message });
     } finally {
         console.log('[INFO][BRONE] Closing browser session.');
-        await closeBrowserSafely(browser, '[INFO][BRONE]');
+        await closeBrowserSafely(session, '[INFO][BRONE]');
     }
 });
 
@@ -496,153 +544,8 @@ app.post('/get-cookies', async (req, res) => {
 
 
 app.post('/get-siam-pengumuman', async (req, res) => {
-    
-    const { username, password, courses } = req.body; 
-    let browser;
-
-    try {
-        browser = trackBrowser(await puppeteer.launch(createLaunchOptions()));
-
-        const page = await browser.newPage();
-        await page.evaluateOnNewDocument(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => false });
-        });
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36');
-
-        let bearerToken = null;
-
-        await page.setRequestInterception(true);
-        page.on('request', (request) => {
-            const headers = request.headers();
-            if (headers['authorization'] && headers['authorization'].toLowerCase().includes('bearer')) {
-                bearerToken = headers['authorization'];
-            }
-            request.continue();
-        });
-
-        console.log('[INFO][SIAM] Opening SIAM landing page...');
-        await page.goto('https://siam.ub.ac.id', { waitUntil: 'networkidle2' });
-
-        console.log('[INFO][SIAM] Clicking LOGIN UB button...');
-        try {
-            await page.waitForSelector('button.btn-primary', { visible: true, timeout: 15000 });
-            await page.click('button.btn-primary');
-        } catch (error) {
-            throw new Error('Failed to click LOGIN UB button.');
-        }
-
-        console.log('[INFO][SIAM] Filling SSO credentials...');
-        await page.waitForSelector('#username', { visible: true, timeout: 30000 });
-        await page.type('#username', username, { delay: 30 });
-        await page.type('#password', password, { delay: 30 });
-
-        console.log('[INFO][SIAM] Logging in and waiting for redirect...');
-        await Promise.all([
-            page.waitForFunction("window.location.hostname === 'siam.ub.ac.id'", { timeout: 45000 }),
-            page.click('#kc-login')
-        ]);
-
-        await new Promise(resolve => setTimeout(resolve, SHORT_WAIT_MS));
-
-        console.log('[INFO][SIAM] Triggering token capture from perkuliahan page...');
-        await page.goto('https://siam.ub.ac.id/mahasiswa/perkuliahan', { waitUntil: 'domcontentloaded' });
-        await new Promise(resolve => setTimeout(resolve, SHORT_WAIT_MS));
-
-        if (!bearerToken) {
-            throw new Error('Failed to capture Bearer token.');
-        }
-
-        console.log('[INFO][SIAM] Bearer token captured. Starting announcement fetch workflow...');
-        const hasilPanen = [];
-
-        
-        if (courses && courses.length > 0) {
-            const hasilPerMatkul = await page.evaluate(async (courseList, token) => {
-                const baseUrl = 'https://api.ub.ac.id/siam/mahasiswa/getPengumumanKelas?tahun=2025&is_ganjil=0&is_pendek=0';
-
-                const tasks = courseList.map(async (matkul) => {
-                    const url = `${baseUrl}&kelas=${encodeURIComponent(matkul.kelas)}&kode_mk=${encodeURIComponent(matkul.kode_mk)}`;
-                    try {
-                        const response = await fetch(url, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': token,
-                                'Accept': 'application/json'
-                            }
-                        });
-                        const data = await response.json();
-                        return {
-                            matkul,
-                            data: Array.isArray(data) ? data : []
-                        };
-                    } catch (error) {
-                        return {
-                            matkul,
-                            error: error.message,
-                            data: []
-                        };
-                    }
-                });
-
-                return Promise.all(tasks);
-            }, courses, bearerToken);
-
-            const batasHariMundur = 1;
-            const hariIni = new Date();
-            hariIni.setHours(0, 0, 0, 0);
-
-            for (const result of hasilPerMatkul) {
-                const { matkul, data, error } = result;
-                console.log(`[INFO][SIAM] Checking course: ${matkul.nama} (${matkul.kode_mk}-${matkul.kelas})`);
-
-                if (error) {
-                    console.error(`[ERROR][SIAM] Failed fetching announcements for ${matkul.nama}:`, error);
-                    continue;
-                }
-
-                const pengumumanBaru = data.filter(item => {
-                    if (!item.TGL_AWAL) return false;
-
-                    const tglAwal = new Date(item.TGL_AWAL);
-                    tglAwal.setHours(0, 0, 0, 0);
-
-                    const selisihHari = (hariIni - tglAwal) / (1000 * 60 * 60 * 24);
-                    return selisihHari <= batasHariMundur;
-                });
-
-                if (pengumumanBaru.length > 0) {
-                    hasilPanen.push({
-                        matkul: matkul.nama,
-                        kode: matkul.kode_mk,
-                        kelas: matkul.kelas,
-                        daftar_pengumuman: pengumumanBaru.map(p => ({
-                            tanggal: p.TGL_AWAL,
-                            isi: p.PENGUMUMAN
-                        }))
-                    });
-                }
-            }
-        }
-
-        console.log('[INFO][SIAM] Announcement fetch workflow completed.');
-        res.json({ success: true, data: hasilPanen });
-
-    } catch (error) {
-        console.error('[ERROR][SIAM]', error.message);
-        res.status(500).json({ error: error.message });
-    } finally {
-        console.log('[INFO][SIAM] Closing browser session.');
-        await closeBrowserSafely(browser, '[INFO][SIAM]');
-    }
-});
-
-
-
-
-app.post('/get-siam-presensi', async (req, res) => {
-    const { username, password } = req.body;
-    const requestId = createRequestId('presensi-get');
-    let browser;
+    const { username, password, courses } = req.body;
+    const requestId = createRequestId('pengumuman-get');
 
     try {
         if (!username || !password) {
@@ -654,116 +557,164 @@ app.post('/get-siam-presensi', async (req, res) => {
             );
         }
 
-        browser = trackBrowser(await puppeteer.launch(createLaunchOptions()));
-        const page = await browser.newPage();
-        await prepareSiamPage(page);
+        const result = await runWithSiamRetries({
+            requestId,
+            endpoint: 'get-siam-pengumuman',
+            username,
+            password,
+            shouldRetry: (error) => {
+                if (error instanceof ServiceError && error.statusCode < 500) return false;
+                return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
+            },
+            operation: async ({ page, token }) => {
+                const hasilPanen = [];
+                if (courses && courses.length > 0) {
+                    const hasilPerMatkul = await page.evaluate(async (courseList, bearerToken) => {
+                        const baseUrl = 'https://api.ub.ac.id/siam/mahasiswa/getPengumumanKelas?tahun=2025&is_ganjil=0&is_pendek=0';
+                        const tasks = courseList.map(async (matkul) => {
+                            const url = `${baseUrl}&kelas=${encodeURIComponent(matkul.kelas)}&kode_mk=${encodeURIComponent(matkul.kode_mk)}`;
+                            try {
+                                const response = await fetch(url, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': bearerToken,
+                                        'Accept': 'application/json'
+                                    }
+                                });
+                                const data = await response.json();
+                                return { matkul, data: Array.isArray(data) ? data : [] };
+                            } catch (error) {
+                                return { matkul, error: error.message, data: [] };
+                            }
+                        });
+                        return Promise.all(tasks);
+                    }, courses, token);
 
-        let bearerToken = null;
-        await page.setRequestInterception(true);
-        page.on('request', (request) => {
-            const headers = request.headers();
-            const authHeader = headers.authorization || headers.Authorization;
-            if (!bearerToken && typeof authHeader === 'string' && /^bearer\s+/i.test(authHeader)) {
-                bearerToken = authHeader;
+                    const batasHariMundur = 1;
+                    const hariIni = new Date();
+                    hariIni.setHours(0, 0, 0, 0);
+
+                    for (const resObj of hasilPerMatkul) {
+                        const { matkul, data, error } = resObj;
+                        if (error) continue;
+                        const pengumumanBaru = data.filter(item => {
+                            if (!item.TGL_AWAL) return false;
+                            const tglAwal = new Date(item.TGL_AWAL);
+                            tglAwal.setHours(0, 0, 0, 0);
+                            const selisihHari = (hariIni - tglAwal) / (1000 * 60 * 60 * 24);
+                            return selisihHari <= batasHariMundur;
+                        });
+                        if (pengumumanBaru.length > 0) {
+                            hasilPanen.push({
+                                matkul: matkul.nama,
+                                kode: matkul.kode_mk,
+                                kelas: matkul.kelas,
+                                daftar_pengumuman: pengumumanBaru.map(p => ({
+                                    tanggal: p.TGL_AWAL,
+                                    isi: p.PENGUMUMAN
+                                }))
+                            });
+                        }
+                    }
+                }
+                return hasilPanen;
             }
-            if (typeof request.isInterceptResolutionHandled === 'function' && request.isInterceptResolutionHandled()) {
-                return;
-            }
-            request.continue().catch((interceptError) => {
-                console.warn(
-                    `[WARN][PRESENSI][get-siam-presensi][${requestId}] requestContinueFailed=${interceptError.message}`
-                );
-            });
         });
 
-        console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Opening SIAM landing page...`);
-        await page.goto('https://siam.ub.ac.id', { waitUntil: 'networkidle2' });
+        res.json({ success: true, data: result.data });
+    } catch (error) {
+        const normalized = normalizeError(error, 'SIAM_PENGUMUMAN_FAILED', 500);
+        res.status(normalized.statusCode || 500).json({ error: normalized.message, code: normalized.code });
+    }
+});
 
-        console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Clicking LOGIN UB button...`);
-        await page.waitForSelector('button.btn-primary', { visible: true, timeout: 15000 });
-        await page.click('button.btn-primary');
+app.post('/get-siam-presensi', async (req, res) => {
+    const { username, password } = req.body;
+    const requestId = createRequestId('presensi-get');
 
-        console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Filling SSO credentials...`);
-        await page.waitForSelector('#username', { visible: true, timeout: 30000 });
-        await page.type('#username', username, { delay: 20 });
-        await page.type('#password', password, { delay: 20 });
-
-        console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Logging in and waiting for redirect...`);
-        await Promise.all([
-            page.waitForFunction("window.location.hostname === 'siam.ub.ac.id'", { timeout: 45000 }),
-            page.click('#kc-login')
-        ]);
-
-        await sleep(SHORT_WAIT_MS);
-
-        console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Triggering token capture from perkuliahan page...`);
-        await page.goto('https://siam.ub.ac.id/mahasiswa/perkuliahan', { waitUntil: 'domcontentloaded' });
-        await sleep(SHORT_WAIT_MS);
-
-        if (!bearerToken) {
+    try {
+        if (!username || !password) {
             throw new ServiceError(
-                'SIAM_TOKEN_MISSING',
-                'Failed to capture Bearer token.',
-                { endpoint: 'get-siam-presensi' },
-                502
+                'SIAM_AUTH_INVALID_PAYLOAD',
+                'username and password are required.',
+                { username: Boolean(username), password: Boolean(password) },
+                400
             );
         }
 
-        const response = await page.evaluate(async (token) => {
-            const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
-                method: 'GET',
-                headers: {
-                    Authorization: token,
-                    Accept: 'application/json, text/plain, */*'
+        const result = await runWithSiamRetries({
+            requestId,
+            endpoint: 'get-siam-presensi',
+            username,
+            password,
+            shouldRetry: (error) => {
+                if (error instanceof ServiceError && error.statusCode < 500) return false;
+                return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
+            },
+            operation: async ({ page, token }) => {
+                const response = await page.evaluate(async (bearerToken) => {
+                    const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
+                        method: 'GET',
+                        headers: {
+                            Authorization: bearerToken,
+                            Accept: 'application/json, text/plain, */*'
+                        }
+                    });
+                    const bodyText = await apiResponse.text();
+                    let bodyJson = null;
+                    try {
+                        bodyJson = bodyText ? JSON.parse(bodyText) : null;
+                    } catch {
+                        bodyJson = null;
+                    }
+                    return {
+                        ok: apiResponse.ok,
+                        status: apiResponse.status,
+                        statusText: apiResponse.statusText,
+                        bodyJson,
+                        bodyText
+                    };
+                }, token);
+
+                if (!response.ok) {
+                    throw new ServiceError(
+                        'SIAM_PRESENSI_FETCH_FAILED',
+                        `Failed to fetch SIAM attendance data (HTTP ${response.status}).`,
+                        {
+                            endpoint: 'get-siam-presensi',
+                            status: response.status,
+                            statusText: response.statusText,
+                            responseBody: response.bodyJson || response.bodyText
+                        },
+                        response.status >= 500 ? 502 : 400
+                    );
                 }
-            });
-            const bodyText = await apiResponse.text();
-            let bodyJson = null;
-            try {
-                bodyJson = bodyText ? JSON.parse(bodyText) : null;
-            } catch {
-                bodyJson = null;
+
+                return Array.isArray(response.bodyJson)
+                    ? response.bodyJson
+                    : (response.bodyJson ?? []);
             }
-            return {
-                ok: apiResponse.ok,
-                status: apiResponse.status,
-                statusText: apiResponse.statusText,
-                bodyJson,
-                bodyText
-            };
-        }, bearerToken);
+        });
 
-        if (!response.ok) {
-            throw new ServiceError(
-                'SIAM_PRESENSI_FETCH_FAILED',
-                `Failed to fetch SIAM attendance data (HTTP ${response.status}).`,
-                {
-                    endpoint: 'get-siam-presensi',
-                    status: response.status,
-                    statusText: response.statusText,
-                    responseBody: response.bodyJson || response.bodyText
-                },
-                response.status >= 500 ? 502 : 400
-            );
-        }
-
-        const dataPresensi = Array.isArray(response.bodyJson)
-            ? response.bodyJson
-            : (response.bodyJson ?? []);
-
-        console.log(
-            `[INFO][PRESENSI][get-siam-presensi][${requestId}] Attendance data fetched successfully. activeCount=${Array.isArray(dataPresensi) ? dataPresensi.length : 0}`
-        );
-        res.json({ success: true, requestId, data: dataPresensi });
+        res.json({ success: true, requestId, data: result.data });
     } catch (error) {
         const normalized = normalizeError(error, 'SIAM_PRESENSI_FETCH_FAILED', 502);
         console.error(
             `[ERROR][PRESENSI][get-siam-presensi][${requestId}] code=${normalized.code} message=${normalized.message}`
         );
         sendError(res, requestId, normalized, 502);
-    } finally {
-        await closeBrowserSafely(browser, `[INFO][PRESENSI][get-siam-presensi][${requestId}]`);
     }
+});
+
+app.get('/health', (_req, res) => {
+    res.json({
+        status: 'ok',
+        browserProfiles: {
+            root: browserProfileRoot,
+            active: activeBrowserSessions.size,
+            ...browserPool.status()
+        }
+    });
 });
 
 // ==========================================

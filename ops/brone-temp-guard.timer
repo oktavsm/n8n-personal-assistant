@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Brone temporary-profile guard every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+RandomizedDelaySec=20s
+Persistent=true
+Unit=brone-temp-guard.service
+
+[Install]
+WantedBy=timers.target

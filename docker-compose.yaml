@@ -36,6 +36,8 @@ services:
       - DB_POSTGRESDB_DATABASE=n8n_db
       - BRONE_USERNAME=${BRONE_USERNAME}
       - BRONE_PASSWORD=${BRONE_PASSWORD}
+      - ARTICLE_GENERATE_SECRET=${ARTICLE_GENERATE_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - N8N_HOST=oktaavsm.bccdev.id
@@ -87,12 +89,20 @@ services:
     command: ["sed -i 's/ must-revalidate//g' /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"]
 
   brone-auth:
+    image: ghcr.io/oktavsm/n8n-personal-assistant/brone-auth:latest
     build: ./brone-auth 
     container_name: notifier_brone_auth
     restart: always
     init: true
+    stop_grace_period: 45s
     expose:
       - "3000"
+    environment:
+      BRONE_BROWSER_PROFILE_ROOT: /tmp/brone-puppeteer
+      TMPDIR: /tmp/brone-runtime
+      BRONE_BROWSER_CONCURRENCY: "${BRONE_BROWSER_CONCURRENCY:-1}"
+      BRONE_BROWSER_QUEUE_TIMEOUT_MS: "${BRONE_BROWSER_QUEUE_TIMEOUT_MS:-60000}"
+      BRONE_BROWSER_CLOSE_TIMEOUT_MS: "${BRONE_BROWSER_CLOSE_TIMEOUT_MS:-10000}"
     security_opt:
       - seccomp:unconfined
     logging: *default-logging
