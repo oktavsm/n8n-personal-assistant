@@ -719,59 +719,85 @@ app.post('/get-siam-presensi', async (req, res) => {
                 return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
             },
             operation: async ({ page, token, attempt }) => {
-                await warmupSiamPresensiPage(page, { endpoint: 'get-siam-presensi', requestId, attempt });
-
-                const response = await page.evaluate(async (bearerToken) => {
-                    try {
-                        const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
-                            method: 'GET',
-                            headers: {
-                                Authorization: bearerToken,
-                                Accept: 'application/json, text/plain, */*'
-                            }
-                        });
-                        const bodyText = await apiResponse.text();
-                        let bodyJson = null;
-                        try {
-                            bodyJson = bodyText ? JSON.parse(bodyText) : null;
-                        } catch {
-                            bodyJson = null;
+                // Primary: Fetch directly from Node.js using native fetch to bypass Chromium browser CORS restrictions
+                let responseData = null;
+                try {
+                    const nodeRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': token,
+                            'Accept': 'application/json, text/plain, */*',
+                            'User-Agent': SIAM_USER_AGENT
                         }
-                        return {
-                            ok: apiResponse.ok,
-                            status: apiResponse.status,
-                            statusText: apiResponse.statusText,
-                            bodyJson,
-                            bodyText
-                        };
-                    } catch (fetchErr) {
-                        return {
-                            ok: false,
-                            status: 0,
-                            statusText: fetchErr.message || 'Failed to fetch',
-                            bodyJson: null,
-                            bodyText: ''
-                        };
-                    }
-                }, token);
+                    });
+                    const bodyText = await nodeRes.text();
+                    let bodyJson = null;
+                    try { bodyJson = bodyText ? JSON.parse(bodyText) : null; } catch { bodyJson = null; }
+                    responseData = {
+                        ok: nodeRes.ok,
+                        status: nodeRes.status,
+                        statusText: nodeRes.statusText,
+                        bodyJson,
+                        bodyText
+                    };
+                } catch (nodeErr) {
+                    console.warn(`[WARN][PRESENSI][get-siam-presensi][${requestId}] Direct Node fetch failed (${nodeErr.message}). Falling back to browser evaluate...`);
+                }
 
-                if (!response.ok) {
+                // Fallback to Puppeteer browser page evaluate if direct Node fetch failed
+                if (!responseData || !responseData.ok) {
+                    await warmupSiamPresensiPage(page, { endpoint: 'get-siam-presensi', requestId, attempt });
+                    responseData = await page.evaluate(async (bearerToken) => {
+                        try {
+                            const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
+                                method: 'GET',
+                                headers: {
+                                    Authorization: bearerToken,
+                                    Accept: 'application/json, text/plain, */*'
+                                }
+                            });
+                            const bodyText = await apiResponse.text();
+                            let bodyJson = null;
+                            try { bodyJson = bodyText ? JSON.parse(bodyText) : null; } catch { bodyJson = null; }
+                            return {
+                                ok: apiResponse.ok,
+                                status: apiResponse.status,
+                                statusText: apiResponse.statusText,
+                                bodyJson,
+                                bodyText
+                            };
+                        } catch (fetchErr) {
+                            return {
+                                ok: false,
+                                status: 0,
+                                statusText: fetchErr.message || 'Failed to fetch',
+                                bodyJson: null,
+                                bodyText: ''
+                            };
+                        }
+                    }, token);
+                }
+
+                if (!responseData.ok) {
+                    if (responseData.status === 404) {
+                        return [];
+                    }
                     throw new ServiceError(
                         'SIAM_PRESENSI_FETCH_FAILED',
-                        `Failed to fetch SIAM attendance data: ${response.statusText} (HTTP ${response.status}).`,
+                        `Failed to fetch SIAM attendance data: ${responseData.statusText} (HTTP ${responseData.status}).`,
                         {
                             endpoint: 'get-siam-presensi',
-                            status: response.status,
-                            statusText: response.statusText,
-                            responseBody: response.bodyJson || response.bodyText
+                            status: responseData.status,
+                            statusText: responseData.statusText,
+                            responseBody: responseData.bodyJson || responseData.bodyText
                         },
-                        502
+                        responseData.status >= 500 ? 502 : 400
                     );
                 }
 
-                return Array.isArray(response.bodyJson)
-                    ? response.bodyJson
-                    : (response.bodyJson ?? []);
+                return Array.isArray(responseData.bodyJson)
+                    ? responseData.bodyJson
+                    : (responseData.bodyJson ?? []);
             }
         });
 

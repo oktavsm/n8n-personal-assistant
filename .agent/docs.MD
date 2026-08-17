@@ -16,7 +16,7 @@ Documented updates and architecture improvements implemented for local developme
 - **Multi-Strategy Token Capture & Dynamic KRS Auto-Fetch**:
   - Enhanced `extractBearerTokenFromRuntime` to intercept background network requests (`getPertanyaanSurvey`, `getProfil`, `getJadwal`, etc.), inspect Keycloak SSO JSON responses (`/protocol/openid-connect/token`), and scan `window.Sso_ub.KEYCLOAK.token`, `localStorage` (`dataAuth`), and `sessionStorage`.
   - Added **Dynamic KRS Auto-Fetch** in `POST /get-siam-pengumuman`: If the `courses` list payload is omitted in n8n, `brone-auth` dynamically calls `https://api.ub.ac.id/siam/mahasiswa/getKRS` to extract the student's active semester courses, class codes, year, and semester automatically! No manual course array hardcoding required in n8n.
-  - Enhanced **Announcement Filtering**: Updated filtering logic in `server.js` to include all currently active announcements (`today` falls between `TGL_AWAL` and `TGL_AKHIR`) as well as recent announcements (posted within last 7 days).
+  - Added **Direct Node.js Native Fetch** in `POST /get-siam-presensi`: Switched to calling `https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1` directly via Node.js native `fetch` with Bearer token, bypassing Chromium browser CORS / HTTP 0 origin restrictions completely. Gracefully returns empty array `[]` when no active attendance sessions exist.
   - Cleaned [n8n/workflow/siam-announcement-notifier.json](file:///home/oktaavsm/Documents/Work/n8n-personal-assistant/n8n/workflow/siam-announcement-notifier.json) to remove old hardcoded 2025 semester course arrays.
 
 - **Developer Tooling**:
