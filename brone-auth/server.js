@@ -644,7 +644,6 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                     return Promise.all(tasks);
                 }, courses, token);
 
-                const batasHariMundur = 1;
                 const hariIni = new Date();
                 hariIni.setHours(0, 0, 0, 0);
 
@@ -652,11 +651,26 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                     const { matkul, data, error } = resObj;
                     if (error) continue;
                     const pengumumanBaru = data.filter(item => {
-                        if (!item.TGL_AWAL) return false;
+                        if (!item.TGL_AWAL && !item.PENGUMUMAN) return false;
+                        if (!item.TGL_AWAL) return true;
+
                         const tglAwal = new Date(item.TGL_AWAL);
                         tglAwal.setHours(0, 0, 0, 0);
-                        const selisihHari = (hariIni - tglAwal) / (1000 * 60 * 60 * 24);
-                        return selisihHari <= batasHariMundur;
+
+                        const tglAkhir = item.TGL_AKHIR ? new Date(item.TGL_AKHIR) : null;
+                        if (tglAkhir) {
+                            tglAkhir.setHours(23, 59, 59, 999);
+                        }
+
+                        // Active announcement check (current date falls within active period)
+                        if (tglAkhir && hariIni >= tglAwal && hariIni <= tglAkhir) {
+                            return true;
+                        }
+
+                        // Recent announcement check (posted within last 7 days)
+                        const diffMs = hariIni.getTime() - tglAwal.getTime();
+                        const selisihHari = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        return selisihHari >= -1 && selisihHari <= 7;
                     });
                     if (pengumumanBaru.length > 0) {
                         hasilPanen.push({

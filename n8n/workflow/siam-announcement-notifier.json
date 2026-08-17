@@ -7,7 +7,7 @@
         "url": "http://brone-auth:3000/get-siam-pengumuman",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\",\n  \"courses\": [\n    { \"nama\": \"Penyediaan dan Automasi Layanan\", \"kode_mk\": \"CIF62231\", \"kelas\": \"A\" },\n    { \"nama\": \"Desain dan Analisis Algoritma\", \"kode_mk\": \"CIF64112\", \"kelas\": \"G\" },\n    { \"nama\": \"Pengembangan Aplikasi Web\", \"kode_mk\": \"CIF64114\", \"kelas\": \"F\" },\n    { \"nama\": \"Keamanan Informasi\", \"kode_mk\": \"CIF64213\", \"kelas\": \"A\" },\n    { \"nama\": \"Kecerdasan Artifisial Lanjut\", \"kode_mk\": \"CIF64311\", \"kelas\": \"A\" },\n    { \"nama\": \"Kewarganegaraan\", \"kode_mk\": \"MPK60006\", \"kelas\": \"N6A\" },\n    { \"nama\": \"Pancasila\", \"kode_mk\": \"MPK60008\", \"kelas\": \"N8N\" },\n    { \"nama\": \"Kewirausahaan\", \"kode_mk\": \"UBU60003\", \"kelas\": \"D\" }\n  ]\n}",
+        "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
