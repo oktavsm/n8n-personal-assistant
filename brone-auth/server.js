@@ -740,12 +740,13 @@ app.post('/get-siam-presensi', async (req, res) => {
                         bodyJson,
                         bodyText
                     };
+                    console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Direct Node fetch status=${nodeRes.status} bodySnippet=${bodyText.slice(0, 150)}`);
                 } catch (nodeErr) {
                     console.warn(`[WARN][PRESENSI][get-siam-presensi][${requestId}] Direct Node fetch failed (${nodeErr.message}). Falling back to browser evaluate...`);
                 }
 
-                // Fallback to Puppeteer browser page evaluate if direct Node fetch failed
-                if (!responseData || !responseData.ok) {
+                // Fallback to Puppeteer browser page evaluate ONLY if direct Node fetch threw network error
+                if (!responseData) {
                     await warmupSiamPresensiPage(page, { endpoint: 'get-siam-presensi', requestId, attempt });
                     responseData = await page.evaluate(async (bearerToken) => {
                         try {
@@ -778,26 +779,29 @@ app.post('/get-siam-presensi', async (req, res) => {
                     }, token);
                 }
 
-                if (!responseData.ok) {
-                    if (responseData.status === 404) {
-                        return [];
-                    }
-                    throw new ServiceError(
-                        'SIAM_PRESENSI_FETCH_FAILED',
-                        `Failed to fetch SIAM attendance data: ${responseData.statusText} (HTTP ${responseData.status}).`,
-                        {
-                            endpoint: 'get-siam-presensi',
-                            status: responseData.status,
-                            statusText: responseData.statusText,
-                            responseBody: responseData.bodyJson || responseData.bodyText
-                        },
-                        responseData.status >= 500 ? 502 : 400
-                    );
+                if (responseData.ok || responseData.status === 200) {
+                    return Array.isArray(responseData.bodyJson)
+                        ? responseData.bodyJson
+                        : (responseData.bodyJson ?? []);
                 }
 
-                return Array.isArray(responseData.bodyJson)
-                    ? responseData.bodyJson
-                    : (responseData.bodyJson ?? []);
+                // If SIAM API returns 404 / 400 or empty response when no active presensi sessions exist:
+                if (responseData.status === 404 || responseData.status === 400) {
+                    console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] SIAM API returned HTTP ${responseData.status} (${responseData.statusText}). Returning empty presensi list.`);
+                    return [];
+                }
+
+                throw new ServiceError(
+                    'SIAM_PRESENSI_FETCH_FAILED',
+                    `Failed to fetch SIAM attendance data: ${responseData.statusText} (HTTP ${responseData.status}).`,
+                    {
+                        endpoint: 'get-siam-presensi',
+                        status: responseData.status,
+                        statusText: responseData.statusText,
+                        responseBody: responseData.bodyJson || responseData.bodyText
+                    },
+                    responseData.status >= 500 ? 502 : 400
+                );
             }
         });
 
