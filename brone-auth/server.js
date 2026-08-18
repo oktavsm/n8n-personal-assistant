@@ -591,30 +591,26 @@ app.post('/get-siam-presensi', async (req, res) => {
                 if (error instanceof ServiceError && error.statusCode < 500) return false;
                 return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
             },
-            operation: async ({ page, token, attempt }) => {
-                const responseData = await page.evaluate(async (bearerToken) => {
-                        try {
-                            const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
-                                method: 'GET',
-                                headers: {
-                                    Authorization: bearerToken,
-                                    Accept: 'application/json, text/plain, */*'
-                                }
-                            });
-                            const bodyText = await apiResponse.text();
-                            let bodyJson = null;
-                            try { bodyJson = bodyText ? JSON.parse(bodyText) : null; } catch { bodyJson = null; }
-                            return {
-                                ok: apiResponse.ok,
-                                status: apiResponse.status,
-                                statusText: apiResponse.statusText,
-                                bodyJson,
-                                bodyText
-                            };
-                        } catch (fetchErr) {
-                            return { ok: false, status: 0, statusText: fetchErr.message || 'Failed to fetch', bodyJson: null, bodyText: '' };
-                        }
-                    }, token);
+            operation: async ({ page, token, auth, attempt, requestId }) => {
+                const fetchUrl = 'https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1';
+                console.log(`[API-REQ][GET] ${fetchUrl}`);
+
+                const responseData = await page.evaluate(async (bearerToken, url) => {
+                    try {
+                        const apiResponse = await fetch(url, {
+                            method: 'GET',
+                            headers: { Authorization: bearerToken, Accept: 'application/json' }
+                        });
+                        const bodyText = await apiResponse.text();
+                        let bodyJson = null;
+                        try { bodyJson = bodyText ? JSON.parse(bodyText) : null; } catch { bodyJson = null; }
+                        return { ok: apiResponse.ok, status: apiResponse.status, statusText: apiResponse.statusText, bodyJson, bodyText };
+                    } catch (fetchErr) {
+                        return { ok: false, status: 0, statusText: fetchErr.message || 'Failed to fetch', bodyJson: null, bodyText: '' };
+                    }
+                }, token, fetchUrl);
+
+                console.log(`[API-RES][GET] ${fetchUrl} -> Status: ${responseData.status} BodySnippet: ${(responseData.bodyText || '').slice(0, 200)}`);
 
                 if (responseData.ok || responseData.status === 200) {
                     return Array.isArray(responseData.bodyJson)
@@ -689,55 +685,45 @@ app.post('/submit-siam-presensi', async (req, res) => {
                 if (error instanceof ServiceError && error.statusCode < 500) return false;
                 return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
             },
-            operation: async ({ token, auth, attempt }) => {
-                const formData = new FormData();
-                formData.append('kode_materi', kode_materi);
-                formData.append('kode_absensi', kode_absensi);
-                formData.append('keterangan', '');
-                formData.append('is_daring', String(is_daring ?? '0'));
-                formData.append('catatan', '');
+            operation: async ({ page, token, auth, attempt, requestId }) => {
+                const fetchUrl = 'https://api.ub.ac.id/siam/mahasiswa/prosesPresensiPerkuliahan';
+                console.log(`[API-REQ][POST] ${fetchUrl} | Payload: kode_materi=${kode_materi}, kode_absensi=${kode_absensi}, is_daring=${is_daring}`);
 
-                console.log(`[INFO][PRESENSI][submit-siam-presensi][${requestId}] attempt=${attempt} Using direct Node fetch...`);
+                const responseData = await page.evaluate(async (bearerToken, url, materi, absensi, daring) => {
+                    const fd = new FormData();
+                    fd.append('kode_materi', materi);
+                    fd.append('kode_absensi', absensi);
+                    fd.append('keterangan', '');
+                    fd.append('is_daring', String(daring ?? '0'));
+                    fd.append('catatan', '');
 
-                const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/prosesPresensiPerkuliahan', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': token,
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': SIAM_USER_AGENT
-                    },
-                    body: formData
-                });
+                    try {
+                        const apiResponse = await fetch(url, {
+                            method: 'POST',
+                            headers: { Authorization: bearerToken, Accept: 'application/json' },
+                            body: fd
+                        });
+                        const bodyText = await apiResponse.text();
+                        let bodyJson = null;
+                        try { bodyJson = bodyText ? JSON.parse(bodyText) : null; } catch { bodyJson = null; }
+                        return { ok: apiResponse.ok, status: apiResponse.status, statusText: apiResponse.statusText, bodyJson, bodyText };
+                    } catch (fetchErr) {
+                        return { ok: false, status: 0, statusText: fetchErr.message || 'Failed to fetch', bodyJson: null, bodyText: '' };
+                    }
+                }, token, fetchUrl, kode_materi, kode_absensi, is_daring);
 
-                const bodyText = await apiResponse.text();
-                let bodyJson = null;
-                try {
-                    bodyJson = bodyText ? JSON.parse(bodyText) : null;
-                } catch {
-                    bodyJson = null;
-                }
+                console.log(`[API-RES][POST] ${fetchUrl} -> Status: ${responseData.status} BodySnippet: ${(responseData.bodyText || '').slice(0, 200)}`);
 
-                console.log(
-                    `[INFO][PRESENSI][submit-siam-presensi][${requestId}] attempt=${attempt} authSource=${auth.source} status=${apiResponse.status}`
-                );
-
-                if (!apiResponse.ok) {
+                if (!responseData.ok) {
                     throw new ServiceError(
                         'SIAM_PRESENSI_SUBMIT_FAILED',
-                        `Failed to submit SIAM attendance (HTTP ${apiResponse.status}).`,
-                        {
-                            status: apiResponse.status,
-                            statusText: apiResponse.statusText,
-                            authSource: auth.source,
-                            kode_materi,
-                            kode_absensi,
-                            responseBody: bodyJson || bodyText
-                        },
-                        apiResponse.status >= 500 ? 502 : 400
+                        `Failed to submit SIAM attendance (HTTP ${responseData.status}).`,
+                        { status: responseData.status, statusText: responseData.statusText, kode_materi, kode_absensi, responseBody: responseData.bodyText },
+                        responseData.status >= 500 ? 502 : 400
                     );
                 }
 
-                return bodyJson || bodyText;
+                return responseData.bodyJson || responseData.bodyText;
             }
         });
 
