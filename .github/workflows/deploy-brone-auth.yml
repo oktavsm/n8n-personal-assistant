@@ -60,5 +60,12 @@ jobs:
             cd /home/dev/projects/docker/n8n-personal-assistant || cd ~/projects/docker/n8n-personal-assistant
             git fetch origin ${{ github.ref_name }}
             git reset --hard origin/${{ github.ref_name }}
+            
+            # [Auto-Cleanup] Prevent disk full error by pruning old images > 48 hours
+            docker image prune -af --filter "until=48h" || true
+            
             docker compose pull brone-auth
             docker compose up -d brone-auth
+            
+            # [Auto-Cleanup] Clean up any dangling images left after pulling the new one
+            docker image prune -f || true
