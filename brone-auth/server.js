@@ -163,7 +163,7 @@ async function warmupSiamPresensiPage(page, meta = {}) {
     const endpoint = meta.endpoint || 'unknown';
     const requestId = meta.requestId || createRequestId('presensi');
     const attempt = meta.attempt || 1;
-    const warmupTimeoutMs = Number(process.env.SIAM_PRESENSI_WARMUP_TIMEOUT_MS || 15000);
+    const warmupTimeoutMs = Number(process.env.SIAM_PRESENSI_WARMUP_TIMEOUT_MS || 45000);
 
     console.log(`[INFO][PRESENSI][${endpoint}][${requestId}] attempt=${attempt} Warmup presensi page...`);
     try {
@@ -339,17 +339,17 @@ async function getSiamAuth(page, username, password, meta = {}) {
         page.on('response', onResponse);
 
         console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Starting authentication flow...`);
-        await page.goto('https://siam.ub.ac.id', { waitUntil: 'networkidle2' });
+        await page.goto('https://siam.ub.ac.id', { waitUntil: 'networkidle2', timeout: 45000 });
 
-        await page.waitForSelector('button.btn-primary', { visible: true, timeout: 15000 });
+        await page.waitForSelector('button.btn-primary', { visible: true, timeout: 30000 });
         await page.click('button.btn-primary');
 
-        await page.waitForSelector('#username', { visible: true, timeout: 30000 });
+        await page.waitForSelector('#username', { visible: true, timeout: 45000 });
         await page.type('#username', username, { delay: 20 });
         await page.type('#password', password, { delay: 20 });
 
         await Promise.all([
-            page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 45000 }),
+            page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
             page.click('#kc-login')
         ]);
 
@@ -366,7 +366,7 @@ async function getSiamAuth(page, username, password, meta = {}) {
         }
 
         if (!capturedToken) {
-            await page.goto('https://siam.ub.ac.id/mahasiswa/presensi', { waitUntil: 'domcontentloaded' }).catch(() => null);
+            await page.goto('https://siam.ub.ac.id/mahasiswa/presensi', { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => null);
             await sleep(SHORT_WAIT_MS);
             const runtimeToken = await extractBearerTokenFromRuntime(page);
             if (runtimeToken) {
