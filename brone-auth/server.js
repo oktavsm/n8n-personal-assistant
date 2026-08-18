@@ -27,6 +27,11 @@ const CHROME_ARGS = [
     '--no-zygote'
 ];
 
+if (process.env.USE_WARP_PROXY === 'true') {
+    const proxyIp = process.env.PROXY_IP || '172.17.0.1';
+    CHROME_ARGS.push(`--proxy-server=socks5://${proxyIp}:40000`);
+}
+
 const SHORT_WAIT_MS = 800;
 
 function createLaunchOptions(profileDir) {
