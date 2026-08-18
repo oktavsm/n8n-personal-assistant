@@ -159,27 +159,6 @@ function isLikelyTransientNetworkError(error) {
     );
 }
 
-async function warmupSiamPresensiPage(page, meta = {}) {
-    const endpoint = meta.endpoint || 'unknown';
-    const requestId = meta.requestId || createRequestId('presensi');
-    const attempt = meta.attempt || 1;
-    const warmupTimeoutMs = Number(process.env.SIAM_PRESENSI_WARMUP_TIMEOUT_MS || 45000);
-
-    console.log(`[INFO][PRESENSI][${endpoint}][${requestId}] attempt=${attempt} Warmup presensi page...`);
-    try {
-        await page.goto('https://siam.ub.ac.id/mahasiswa/presensi', {
-            waitUntil: 'domcontentloaded',
-            timeout: warmupTimeoutMs
-        });
-        await sleep(SHORT_WAIT_MS);
-    } catch (error) {
-        const normalized = normalizeError(error, 'SIAM_PRESENSI_WARMUP_FAILED', 502);
-        console.warn(
-            `[WARN][PRESENSI][${endpoint}][${requestId}] attempt=${attempt} warmupSkipped=true code=${normalized.code} message=${normalized.message}`
-        );
-    }
-}
-
 function sendError(res, requestId, error, fallbackStatus = 500) {
     const normalized = normalizeError(error, 'INTERNAL_ERROR', fallbackStatus);
     const body = {
@@ -293,132 +272,39 @@ async function extractBearerTokenFromRuntime(page) {
     return `Bearer ${token}`;
 }
 
-async function getSiamAuth(page, username, password, meta = {}) {
+async function getSiamAuth(username, password, meta = {}) {
     const requestId = meta.requestId || createRequestId('siam');
     const attempt = meta.attempt || 1;
-    let capturedToken = null;
-    let tokenSource = null;
-    let tokenEndpointStatus = null;
-    let accountEndpointStatus = null;
-    let finalUiState = null;
-
-    const onRequest = (request) => {
-        const headers = request.headers();
-        const authHeader = headers.authorization || headers.Authorization;
-        if (!capturedToken && typeof authHeader === 'string' && /^bearer\s+/i.test(authHeader)) {
-            capturedToken = authHeader;
-            tokenSource = `request_header:${request.url()}`;
-        }
-    };
-
-    const onResponse = async (response) => {
-        const url = response.url();
-
-        if (url.includes('/protocol/openid-connect/token')) {
-            tokenEndpointStatus = response.status();
-            if (!capturedToken && response.status() === 200) {
-                try {
-                    const data = await response.json();
-                    if (data?.access_token) {
-                        capturedToken = `Bearer ${data.access_token}`;
-                        tokenSource = 'keycloak_token_response';
-                    }
-                } catch {
-                    // ignored
-                }
-            }
-        }
-
-        if (url.endsWith('/auth/realms/ub/account')) {
-            accountEndpointStatus = response.status();
-        }
-    };
-
-    try {
-        page.on('request', onRequest);
-        page.on('response', onResponse);
-
-        console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Starting authentication flow...`);
-        await page.goto('https://siam.ub.ac.id', { waitUntil: 'networkidle2', timeout: 45000 });
-
-        await page.waitForSelector('button.btn-primary', { visible: true, timeout: 30000 });
-        await page.click('button.btn-primary');
-
-        await page.waitForSelector('#username', { visible: true, timeout: 45000 });
-        await page.type('#username', username, { delay: 20 });
-        await page.type('#password', password, { delay: 20 });
-
-        await Promise.all([
-            page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
-            page.click('#kc-login')
-        ]);
-
-        for (let i = 0; i < SIAM_TOKEN_POLL_COUNT; i += 1) {
-            if (!capturedToken) {
-                const runtimeToken = await extractBearerTokenFromRuntime(page);
-                if (runtimeToken) {
-                    capturedToken = runtimeToken;
-                    tokenSource = tokenSource || 'runtime_keycloak_or_dataAuth';
-                }
-            }
-            if (capturedToken) break;
-            await sleep(SIAM_TOKEN_POLL_INTERVAL_MS);
-        }
-
-        if (!capturedToken) {
-            await page.goto('https://siam.ub.ac.id/mahasiswa/presensi', { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => null);
-            await sleep(SHORT_WAIT_MS);
-            const runtimeToken = await extractBearerTokenFromRuntime(page);
-            if (runtimeToken) {
-                capturedToken = runtimeToken;
-                tokenSource = tokenSource || 'runtime_after_presensi_navigation';
-            }
-        }
-
-        finalUiState = await getSiamUiState(page);
-        console.log(
-            `[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} tokenCaptured=${Boolean(capturedToken)} tokenSource=${tokenSource || 'none'} tokenEndpointStatus=${tokenEndpointStatus || 'n/a'} accountEndpointStatus=${accountEndpointStatus || 'n/a'} url=${finalUiState.currentUrl}`
-        );
-
-        if (!capturedToken) {
-            if (tokenEndpointStatus === 200 && accountEndpointStatus === 403) {
-                throw new ServiceError(
-                    'SIAM_AUTH_NOT_ESTABLISHED',
-                    'SIAM login completed but account authorization did not establish a usable session.',
-                    {
-                        tokenEndpointStatus,
-                        accountEndpointStatus,
-                        currentUrl: finalUiState.currentUrl,
-                        loginButtonVisible: finalUiState.loginButtonVisible
-                    },
-                    502
-                );
-            }
-
-            throw new ServiceError(
-                'SIAM_TOKEN_MISSING',
-                'Failed to capture SIAM bearer token.',
-                {
-                    tokenEndpointStatus,
-                    accountEndpointStatus,
-                    currentUrl: finalUiState.currentUrl,
-                    loginButtonVisible: finalUiState.loginButtonVisible
-                },
-                502
-            );
-        }
-
+    
+    console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Requesting Keycloak token via direct API...`);
+    
+    const response = await fetch('https://iam.ub.ac.id/auth/realms/ub/protocol/openid-connect/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: 'siam',
+            grant_type: 'password',
+            username,
+            password
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (data.access_token) {
+        console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Token successfully retrieved!`);
         return {
-            token: capturedToken,
-            source: tokenSource || 'unknown',
-            tokenEndpointStatus,
-            accountEndpointStatus,
-            uiState: finalUiState
+            token: `Bearer ${data.access_token}`,
+            source: 'keycloak_password_grant'
         };
-    } finally {
-        page.off('request', onRequest);
-        page.off('response', onResponse);
     }
+    
+    throw new ServiceError(
+        'SIAM_AUTH_FAILED',
+        `Failed to retrieve SIAM token via API: ${data.error_description || data.error}`,
+        { error: data },
+        401
+    );
 }
 
 async function runWithSiamRetries(options) {
@@ -436,7 +322,11 @@ async function runWithSiamRetries(options) {
             const page = await browser.newPage();
             await prepareSiamPage(page);
 
-            const auth = await getSiamAuth(page, username, password, { requestId, endpoint, attempt });
+            const auth = await getSiamAuth(username, password, { requestId, endpoint, attempt });
+            
+            // Bypass Cloudflare and CORS by navigating to the API origin
+            await page.goto('https://api.ub.ac.id/favicon.ico', { waitUntil: 'domcontentloaded', timeout: 30000 });
+            
             const data = await operation({ page, token: auth.token, auth, attempt });
 
             registerSiamSuccess();
@@ -579,40 +469,32 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                         is_pendek: c.is_pendek !== undefined ? c.is_pendek : (c.IS_PENDEK || '0')
                     }));
                 } else {
-                    // Dynamic fetch active KRS directly from Node.js using native fetch
+                    // Fetch active KRS via Puppeteer to bypass Cloudflare
                     try {
-                        let krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS?tahun=2026&is_ganjil=1', {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': token,
-                                'Accept': 'application/json, text/plain, */*',
-                                'User-Agent': SIAM_USER_AGENT
-                            }
-                        });
-
-                        if (!krsRes.ok) {
-                            krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS', {
+                        const krsData = await page.evaluate(async (bearerToken) => {
+                            let krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS?tahun=2026&is_ganjil=1', {
                                 method: 'GET',
-                                headers: {
-                                    'Authorization': token,
-                                    'Accept': 'application/json, text/plain, */*',
-                                    'User-Agent': SIAM_USER_AGENT
-                                }
+                                headers: { Authorization: bearerToken, Accept: 'application/json, text/plain, */*' }
                             });
-                        }
-
-                        const krsData = await krsRes.json();
-                        const mkList = Array.isArray(krsData?.mk_krs) ? krsData.mk_krs : [];
-
+                            if (!krsRes.ok) {
+                                krsRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getKRS', {
+                                    method: 'GET',
+                                    headers: { Authorization: bearerToken, Accept: 'application/json, text/plain, */*' }
+                                });
+                            }
+                            const bodyText = await krsRes.text();
+                            return bodyText ? JSON.parse(bodyText) : null;
+                        }, token);
+                        
+                        const mkList = Array.isArray(krsData?.mk_krs) ? krsData.mk_krs : (Array.isArray(krsData) ? krsData : []);
                         activeCourses = mkList.map(item => ({
-                            nama: item.NAMA,
-                            kode_mk: item.K_MK,
-                            kelas: item.KELAS,
-                            tahun: item.TAHUN || 2026,
-                            is_ganjil: item.IS_GANJIL || '1',
-                            is_pendek: item.IS_PENDEK || '0'
+                            nama: item.NAMA || item.nama || item.NAMA_MK,
+                            kode_mk: item.K_MK || item.kode_mk,
+                            kelas: item.KELAS || item.kelas,
+                            tahun: item.TAHUN || item.tahun || item.THN_MK || 2026,
+                            is_ganjil: item.IS_GANJIL || item.is_ganjil || '1',
+                            is_pendek: item.IS_PENDEK || item.is_pendek || '0'
                         }));
-                        console.log(`[INFO][SIAM][get-siam-pengumuman][${requestId}] Dynamic KRS fetched successfully. totalCourses=${activeCourses.length}`);
                     } catch (err) {
                         console.error(`[ERROR][SIAM][get-siam-pengumuman][${requestId}] Failed fetching dynamic KRS:`, err.message);
                     }
@@ -622,23 +504,24 @@ app.post('/get-siam-pengumuman', async (req, res) => {
                     return [];
                 }
 
-                // Fetch pengumuman for each course directly in Node.js
+                // Fetch pengumuman for each course directly via Puppeteer page.evaluate
                 const tasks = activeCourses.map(async (matkul) => {
                     const tahun = matkul.tahun || 2026;
                     const isGanjil = matkul.is_ganjil !== undefined ? matkul.is_ganjil : '1';
                     const isPendek = matkul.is_pendek !== undefined ? matkul.is_pendek : '0';
 
                     const url = `https://api.ub.ac.id/siam/mahasiswa/getPengumumanKelas?tahun=${tahun}&is_ganjil=${isGanjil}&is_pendek=${isPendek}&kelas=${encodeURIComponent(matkul.kelas)}&kode_mk=${encodeURIComponent(matkul.kode_mk)}`;
+                    
                     try {
-                        const response = await fetch(url, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': token,
-                                'Accept': 'application/json, text/plain, */*',
-                                'User-Agent': SIAM_USER_AGENT
-                            }
-                        });
-                        const data = await response.json();
+                        const data = await page.evaluate(async (fetchUrl, bearerToken) => {
+                            const response = await fetch(fetchUrl, {
+                                method: 'GET',
+                                headers: { Authorization: bearerToken, Accept: 'application/json, text/plain, */*' }
+                            });
+                            const bodyText = await response.text();
+                            return bodyText ? JSON.parse(bodyText) : [];
+                        }, url, token);
+                        
                         return { matkul, data: Array.isArray(data) ? data : [] };
                     } catch (error) {
                         return { matkul, error: error.message, data: [] };
@@ -724,36 +607,7 @@ app.post('/get-siam-presensi', async (req, res) => {
                 return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
             },
             operation: async ({ page, token, attempt }) => {
-                // Primary: Fetch directly from Node.js using native fetch to bypass Chromium browser CORS restrictions
-                let responseData = null;
-                try {
-                    const nodeRes = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': token,
-                            'Accept': 'application/json, text/plain, */*',
-                            'User-Agent': SIAM_USER_AGENT
-                        }
-                    });
-                    const bodyText = await nodeRes.text();
-                    let bodyJson = null;
-                    try { bodyJson = bodyText ? JSON.parse(bodyText) : null; } catch { bodyJson = null; }
-                    responseData = {
-                        ok: nodeRes.ok,
-                        status: nodeRes.status,
-                        statusText: nodeRes.statusText,
-                        bodyJson,
-                        bodyText
-                    };
-                    console.log(`[INFO][PRESENSI][get-siam-presensi][${requestId}] Direct Node fetch status=${nodeRes.status} bodySnippet=${bodyText.slice(0, 150)}`);
-                } catch (nodeErr) {
-                    console.warn(`[WARN][PRESENSI][get-siam-presensi][${requestId}] Direct Node fetch failed (${nodeErr.message}). Falling back to browser evaluate...`);
-                }
-
-                // Fallback to Puppeteer browser page evaluate ONLY if direct Node fetch threw network error
-                if (!responseData) {
-                    await warmupSiamPresensiPage(page, { endpoint: 'get-siam-presensi', requestId, attempt });
-                    responseData = await page.evaluate(async (bearerToken) => {
+                const responseData = await page.evaluate(async (bearerToken) => {
                         try {
                             const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/getPresensiPerkuliahan?is_aktif=1', {
                                 method: 'GET',
@@ -773,16 +627,9 @@ app.post('/get-siam-presensi', async (req, res) => {
                                 bodyText
                             };
                         } catch (fetchErr) {
-                            return {
-                                ok: false,
-                                status: 0,
-                                statusText: fetchErr.message || 'Failed to fetch',
-                                bodyJson: null,
-                                bodyText: ''
-                            };
+                            return { ok: false, status: 0, statusText: fetchErr.message || 'Failed to fetch', bodyJson: null, bodyText: '' };
                         }
                     }, token);
-                }
 
                 if (responseData.ok || responseData.status === 200) {
                     return Array.isArray(responseData.bodyJson)
