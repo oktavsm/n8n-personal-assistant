@@ -95,7 +95,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const presensi = $input.item.json.data;\n\nif (!presensi || presensi.length === 0) {\n    return []; \n}\n\nlet textMsg = \"🚨 *ALERT: PRESENSI DIBUKA!* 🚨\\n\\n\";\nlet adaYangBuka = false;\n\npresensi.forEach(p => {\n\n    if (p.IS_BUKA === \"1\") {\n        adaYangBuka = true;\n        textMsg += `📚 *${p.MATA_KULIAH} (Kelas ${p.KELAS})*\\n`;\n        textMsg += `👨‍🏫 Dosen: ${p.USERID}\\n`;\n        textMsg += `📝 Materi: ${p.MATERI}\\n`;\n        textMsg += `⏳ Tutup Jam: ${p.JAM_SELESAI}\\n\\n`;\n    }\n});\n\nif (adaYangBuka) {\n    textMsg += \"Gas login SIAM dan absen sekarang bro! 🏃💨\";\n    return { json: { text: textMsg } };\n} else {\n\n    return []; \n}"
+        "jsCode": "\nconst presensi = $input.item.json.data;\nconst itemsToSubmit = [];\n\nif (presensi && presensi.length > 0) {\n    presensi.forEach(p => {\n        if (p.IS_BUKA === \"1\" || p.IS_BUKA === 1) {\n            itemsToSubmit.push({\n                json: {\n                    matkul: p.MATA_KULIAH,\n                    kelas: p.KELAS,\n                    dosen: p.USERID,\n                    materi: p.MATERI,\n                    jam_selesai: p.JAM_SELESAI,\n                    K_MATERI_AJAR: p.K_MATERI_AJAR,\n                    IS_DARING: p.IS_DARING || '0'\n                }\n            });\n        }\n    });\n}\n\nreturn itemsToSubmit;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -130,7 +130,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        464,
+        850,
         -16
       ],
       "id": "540390d0-98de-444c-9ffe-6c5fae6f0e50",
@@ -141,6 +141,37 @@
           "name": "Header Auth account"
         }
       }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://brone-auth:3000/submit-siam-presensi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\",\n  \"kode_materi\": \"{{ $json.K_MATERI_AJAR }}\",\n  \"kode_absensi\": \"H\",\n  \"is_daring\": \"{{ $json.IS_DARING }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        450,
+        -16
+      ],
+      "id": "submit-presensi-node-1234",
+      "name": "Submit Absen"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst submitResults = $input.all();\nconst originalItems = $(\"Code in JavaScript\").all();\n\nlet textMsg = \"✅ *AUTO-ABSEN BERHASIL!* 🎉\\n\\n\";\n\nfor (let i = 0; i < submitResults.length; i++) {\n    const p = originalItems[i].json;\n    textMsg += \"📚 *\" + p.matkul + \" (Kelas \" + p.kelas + \")*\\n\";\n    textMsg += \"📝 Materi: \" + p.materi + \"\\n\\n\";\n}\n\ntextMsg += \"Santai aja bro, absen aman! 😎\";\n\nreturn { json: { text: textMsg } };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        -16
+      ],
+      "id": "format-msg-node-5678",
+      "name": "Format Success Message"
     }
   ],
   "pinData": {},
@@ -190,6 +221,28 @@
       ]
     },
     "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Submit Absen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Absen": {
+      "main": [
+        [
+          {
+            "node": "Format Success Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Message": {
       "main": [
         [
           {
