@@ -857,62 +857,55 @@ app.post('/submit-siam-presensi', async (req, res) => {
                 if (error instanceof ServiceError && error.statusCode < 500) return false;
                 return isLikelyTransientNetworkError(error) || error.statusCode >= 500;
             },
-            operation: async ({ page, token, auth, attempt }) => {
-                await warmupSiamPresensiPage(page, { endpoint: 'submit-siam-presensi', requestId, attempt });
+            operation: async ({ token, auth, attempt }) => {
+                const formData = new FormData();
+                formData.append('kode_materi', kode_materi);
+                formData.append('kode_absensi', kode_absensi);
+                formData.append('keterangan', '');
+                formData.append('is_daring', String(is_daring ?? '0'));
+                formData.append('catatan', '');
 
-                const response = await page.evaluate(async (bearer, materi, absensi, daring) => {
-                    const formData = new FormData();
-                    formData.append('kode_materi', materi);
-                    formData.append('kode_absensi', absensi);
-                    formData.append('keterangan', '');
-                    formData.append('is_daring', String(daring ?? ''));
-                    formData.append('catatan', '');
+                console.log(`[INFO][PRESENSI][submit-siam-presensi][${requestId}] attempt=${attempt} Using direct Node fetch...`);
 
-                    const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/prosesPresensiPerkuliahan', {
-                        method: 'POST',
-                        headers: {
-                            Authorization: bearer,
-                            Accept: 'application/json, text/plain, */*'
-                        },
-                        body: formData
-                    });
-                    const bodyText = await apiResponse.text();
-                    let bodyJson = null;
-                    try {
-                        bodyJson = bodyText ? JSON.parse(bodyText) : null;
-                    } catch {
-                        bodyJson = null;
-                    }
-                    return {
-                        ok: apiResponse.ok,
-                        status: apiResponse.status,
-                        statusText: apiResponse.statusText,
-                        bodyText,
-                        bodyJson
-                    };
-                }, token, kode_materi, kode_absensi, is_daring);
+                const apiResponse = await fetch('https://api.ub.ac.id/siam/mahasiswa/prosesPresensiPerkuliahan', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Accept': 'application/json, text/plain, */*',
+                        'User-Agent': SIAM_USER_AGENT
+                    },
+                    body: formData
+                });
+
+                const bodyText = await apiResponse.text();
+                let bodyJson = null;
+                try {
+                    bodyJson = bodyText ? JSON.parse(bodyText) : null;
+                } catch {
+                    bodyJson = null;
+                }
 
                 console.log(
-                    `[INFO][PRESENSI][submit-siam-presensi][${requestId}] attempt=${attempt} authSource=${auth.source} status=${response.status}`
+                    `[INFO][PRESENSI][submit-siam-presensi][${requestId}] attempt=${attempt} authSource=${auth.source} status=${apiResponse.status}`
                 );
 
-                if (!response.ok) {
+                if (!apiResponse.ok) {
                     throw new ServiceError(
                         'SIAM_PRESENSI_SUBMIT_FAILED',
-                        `Failed to submit SIAM attendance (HTTP ${response.status}).`,
+                        `Failed to submit SIAM attendance (HTTP ${apiResponse.status}).`,
                         {
-                            status: response.status,
-                            statusText: response.statusText,
+                            status: apiResponse.status,
+                            statusText: apiResponse.statusText,
                             authSource: auth.source,
                             kode_materi,
                             kode_absensi,
-                            responseBody: response.bodyJson || response.bodyText
+                            responseBody: bodyJson || bodyText
                         },
-                        response.status >= 500 ? 502 : 400
+                        apiResponse.status >= 500 ? 502 : 400
                     );
                 }
 
-                return response.bodyJson || response.bodyText;
+                return bodyJson || bodyText;
             }
         });
 
