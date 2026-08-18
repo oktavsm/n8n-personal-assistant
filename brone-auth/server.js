@@ -272,9 +272,17 @@ async function extractBearerTokenFromRuntime(page) {
     return `Bearer ${token}`;
 }
 
+const tokenCache = new Map();
+
 async function getSiamAuth(username, password, meta = {}) {
     const requestId = meta.requestId || createRequestId('siam');
     const attempt = meta.attempt || 1;
+    
+    const cached = tokenCache.get(username);
+    if (cached && cached.expiresAt > Date.now()) {
+        console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Using cached Keycloak token!`);
+        return { token: cached.token, source: 'keycloak_password_grant_cached' };
+    }
     
     console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Requesting Keycloak token via direct API...`);
     
@@ -292,7 +300,13 @@ async function getSiamAuth(username, password, meta = {}) {
     const data = await response.json();
     
     if (data.access_token) {
-        console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Token successfully retrieved!`);
+        const expiresInMs = (data.expires_in || 300) * 1000;
+        tokenCache.set(username, {
+            token: `Bearer ${data.access_token}`,
+            expiresAt: Date.now() + expiresInMs - 15000 // 15s safety margin
+        });
+        
+        console.log(`[INFO][SIAM][AUTH][${requestId}] attempt=${attempt} Token successfully retrieved and cached!`);
         return {
             token: `Bearer ${data.access_token}`,
             source: 'keycloak_password_grant'
@@ -324,8 +338,9 @@ async function runWithSiamRetries(options) {
 
             const auth = await getSiamAuth(username, password, { requestId, endpoint, attempt });
             
-            // Bypass Cloudflare and CORS by navigating to the API origin
-            await page.goto('https://api.ub.ac.id/favicon.ico', { waitUntil: 'domcontentloaded', timeout: 30000 });
+            // 2. Navigate to api.ub.ac.id briefly to clear Cloudflare challenges via Puppeteer
+            // Increasing timeout to 90s to give Cloudflare's heavy turnstile scripts more time on Datacenter IPs
+            await page.goto('https://api.ub.ac.id/favicon.ico', { waitUntil: 'domcontentloaded', timeout: 90000 });
             
             const data = await operation({ page, token: auth.token, auth, attempt });
 
