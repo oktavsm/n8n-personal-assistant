@@ -317,7 +317,7 @@
                   "conditions": [
                     {
                       "id": "fa2de863-8fbc-431c-8740-9aae3ec82ca2",
-                      "leftValue": "={{ true }}",
+                      "leftValue": "={{ !$('Normalize WA Context').item.json.wa.isManda }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",
@@ -1044,7 +1044,7 @@
                   "conditions": [
                     {
                       "id": "dc1193ba-d8c0-4c9e-ab17-f52a48ab1fa7",
-                      "leftValue": "={{ true }}",
+                      "leftValue": "={{ !$('Normalize WA Context').item.json.wa.isScheduleQuery && !$('Normalize WA Context').item.json.wa.isAnnouncementQuery && !$('Normalize WA Context').item.json.wa.isPresensiQuery && !$('Normalize WA Context').item.json.wa.isNotesQuery && !$('Normalize WA Context').item.json.wa.isExpenseQuery }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",

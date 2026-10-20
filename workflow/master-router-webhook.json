@@ -448,7 +448,7 @@
                   "conditions": [
                     {
                       "id": "4bed6907-c663-4c73-968c-54cf3f259638",
-                      "leftValue": "={{ (() => {\n  const data = $json.body?.data || {};\n  const msg = data.message || {};\n  const raw = (msg.conversation || msg.extendedTextMessage?.text || \"\").trim();\n  const cleaned = raw.replace(/@[a-zA-Z0-9_\\-\\.]+\\s*/g, \"\").trim().toLowerCase();\n  const jid = data.key?.remoteJid || \"\";\n  const ctx = msg.extendedTextMessage?.contextInfo || {};\n  const mentionedJid = ctx.mentionedJid || [];\n  const botNumbers = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", $env.MY_WA_NUMBER];\n\n  // If this is an agent or vps command, do NOT consume it here; let Rule 21 handle it\n  if (cleaned.startsWith(\"/agent\") || cleaned.startsWith(\"/vps\")) {\n    return false;\n  }\n\n  // If this is a presensi command, do NOT consume it here; let Rule 8 handle it\n  if (cleaned.startsWith(\"/presensi\") || [\"hadir\", \"absen\"].includes(cleaned)) {\n    return false;\n  }\n\n  const isAsk = cleaned.startsWith(\"/ask\");\n  const isMention = botNumbers.some(b => b && raw.includes(\"@\" + b)) ||\n                    mentionedJid.some(j => botNumbers.some(b => b && j.includes(b))) ||\n                    raw.toLowerCase().includes(\"@n8n\") ||\n                    raw.toLowerCase().includes(\"@bot\");\n  const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\");\n  const isDoneCmd = cleaned.startsWith(\"/done\") || cleaned.startsWith(\"/selesai\") || cleaned.startsWith(\"/hapus-jadwal\");\n  const isExpenseCmd = cleaned.startsWith(\"/expense\") || cleaned.startsWith(\"/pengeluaran\");\n\n  return Boolean(isAsk || isMention || isNoteCmd || isDoneCmd || isExpenseCmd);\n})() }}",
+                      "leftValue": "={{ (() => {\n  const data = $json.body?.data || {};\n  const msg = data.message || {};\n  const raw = (msg.conversation || msg.extendedTextMessage?.text || msg.imageMessage?.caption || msg.videoMessage?.caption || msg.documentMessage?.caption || \"\").trim();\n  const cleaned = raw.replace(/@[a-zA-Z0-9_\\-\\.]+\\s*/g, \"\").trim().toLowerCase();\n  const jid = data.key?.remoteJid || \"\";\n  const isGroup = jid.endsWith(\"@g.us\");\n\n  const ctx = data.contextInfo ||\n    msg.extendedTextMessage?.contextInfo ||\n    msg.imageMessage?.contextInfo ||\n    msg.videoMessage?.contextInfo ||\n    msg.documentMessage?.contextInfo ||\n    msg.audioMessage?.contextInfo ||\n    {};\n  const mentionedJid = ctx.mentionedJid || [];\n  const botNumbers = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", $env.MY_WA_NUMBER];\n\n  // 1. Explicit commands handled by other switch rules: DO NOT consume here!\n  const explicitCommands = [\n    \"/agenda\", \"/besok\", \"/tugas\", \"/jadwal\", \"/cek\", \"/uas\",\n    \"/brone\", \"/pengumuman\", \"/presensi\", \"/help\", \"/stiker\", \"/sticker\",\n    \"/agent\", \"/vps\"\n  ];\n  if (explicitCommands.some(cmd => cleaned.startsWith(cmd))) {\n    return false;\n  }\n  if ([\"hadir\", \"absen\", \"absen hadir\", \"hadir daring\", \"hadir online\"].includes(cleaned)) {\n    return false;\n  }\n\n  // 2. Ask command\n  const isAsk = cleaned.startsWith(\"/ask\");\n\n  // 3. Mentions in group\n  const isMention = botNumbers.some(b => b && raw.includes(\"@\" + b)) ||\n                    mentionedJid.some(j => botNumbers.some(b => b && j.includes(b))) ||\n                    raw.toLowerCase().includes(\"@n8n\") ||\n                    raw.toLowerCase().includes(\"@bot\");\n\n  // 4. Swipe / Quoted reply to bot in group\n  const quotedParticipant = ctx.participant || ctx.quotedMessageSender || \"\";\n  const isReplyingToBot = isGroup && botNumbers.some(b => b && quotedParticipant.includes(b));\n\n  // 5. Notes, Done, Expense commands\n  const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\");\n  const isDoneCmd = cleaned.startsWith(\"/done\") || cleaned.startsWith(\"/selesai\") || cleaned.startsWith(\"/hapus-jadwal\");\n  const isExpenseCmd = cleaned.startsWith(\"/expense\") || cleaned.startsWith(\"/pengeluaran\");\n\n  // 6. Voice note in dev group\n  const isDevGroup = jid === ($env.WA_GROUP_DEV || \"120363336434287340@g.us\");\n  const hasAudio = Boolean(msg.audioMessage || ctx.quotedMessage?.audioMessage);\n  const isDevAudio = Boolean(isDevGroup && hasAudio);\n\n  return Boolean(isAsk || isMention || isReplyingToBot || isNoteCmd || isDoneCmd || isExpenseCmd || isDevAudio);\n})() }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",
@@ -1905,40 +1905,6 @@
             },
             "conditions": [
               {
-                "id": "mention-check-1",
-                "leftValue": "={{ (() => {\n  const body = $json.body || {};\n  const data = body.data || {};\n  const msg = data.message || {};\n  const remoteJid = data.key?.remoteJid || '';\n  const isGroup = remoteJid.endsWith('@g.us');\n\n  const text = (\n    msg.conversation ||\n    msg.extendedTextMessage?.text ||\n    msg.imageMessage?.caption ||\n    msg.videoMessage?.caption ||\n    msg.documentMessage?.caption ||\n    ''\n  ).toLowerCase().trim();\n\n  // If explicit command handled by switch, let switch handle it\n  if (text.startsWith('/ask') || text.startsWith('/vps') || text.startsWith('/agent')) return false;\n\n  const ctx = data.contextInfo ||\n    msg.extendedTextMessage?.contextInfo ||\n    msg.imageMessage?.contextInfo ||\n    msg.videoMessage?.contextInfo ||\n    msg.documentMessage?.contextInfo ||\n    msg.audioMessage?.contextInfo ||\n    {};\n\n  const botLids = ['195095164887244', '171619058196619', '158613192614132', '6283130151476', $env.MY_WA_NUMBER];\n\n  // 1. Tag / Mention check\n  const jids = ctx.mentionedJid || [];\n  const isMentioned = jids.some(j => botLids.some(b => j.includes(b))) ||\n    botLids.some(b => text.includes('@' + b));\n\n  // 2. Quoted / Swipe-reply check (user replied to the bot's message)\n  const quotedParticipant = ctx.participant || ctx.quotedMessageSender || '';\n  const isReplyingToBot = botLids.some(b => quotedParticipant.includes(b));\n\n  // 3. Dev Group check\n  const isDevGroup = remoteJid === ($env.WA_GROUP_DEV || '120363336434287340@g.us');\n\n  // 4. Audio check\n  const hasAudio = Boolean(msg.audioMessage || ctx.quotedMessage?.audioMessage);\n\n  if (isGroup) {\n    return Boolean(isMentioned || isReplyingToBot || (isDevGroup && (hasAudio || text.startsWith('/bot') || text.startsWith('@bot'))));\n  }\n\n  return false;\n})() }}",
-                "rightValue": "",
-                "operator": {
-                  "type": "boolean",
-                  "operation": "true",
-                  "singleValue": true
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {}
-        },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.3,
-        "position": [
-          272,
-          736
-        ],
-        "id": "27fe9432-2a71-4dfb-ad36-2bb166daebbd",
-        "name": "mentioned"
-      },
-      {
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "strict",
-              "version": 3
-            },
-            "conditions": [
-              {
                 "id": "3f8709eb-dd6a-4503-beb1-11dc54f7fe7c",
                 "leftValue": "={{ [\n  '/cek manda',\n  '/besok manda',\n  '/tugas manda',\n  '/agenda manda'\n].includes($json.body.data.message.conversation.toLowerCase().trim()) }}",
                 "rightValue": "manda",
@@ -2179,11 +2145,6 @@
           [
             {
               "node": "Switch",
-              "type": "main",
-              "index": 0
-            },
-            {
-              "node": "mentioned",
               "type": "main",
               "index": 0
             }
@@ -2644,17 +2605,6 @@
           [
             {
               "node": "[HTTP Whatsapp] Send Message17",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "mentioned": {
-        "main": [
-          [
-            {
-              "node": "Call 'wa-conversation'",
               "type": "main",
               "index": 0
             }
