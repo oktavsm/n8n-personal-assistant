@@ -1276,7 +1276,7 @@
                   "conditions": [
                     {
                       "id": "okta-cond-update",
-                      "leftValue": "={{ $json.decision }}",
+                      "leftValue": "={{ $('Process Safe Calendar Action').first().json.decision }}",
                       "rightValue": "EXECUTE_UPDATE",
                       "operator": {
                         "type": "string",
@@ -1300,7 +1300,7 @@
                   "conditions": [
                     {
                       "id": "okta-cond-delete",
-                      "leftValue": "={{ $json.decision }}",
+                      "leftValue": "={{ $('Process Safe Calendar Action').first().json.decision }}",
                       "rightValue": "EXECUTE_DELETE",
                       "operator": {
                         "type": "string",
@@ -1324,7 +1324,7 @@
                   "conditions": [
                     {
                       "id": "okta-cond-reply",
-                      "leftValue": "={{ $json.decision }}",
+                      "leftValue": "={{ $('Process Safe Calendar Action').first().json.decision }}",
                       "rightValue": "REPLY_ONLY",
                       "operator": {
                         "type": "string",
