@@ -17,8 +17,8 @@
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 2.1,
         "position": [
-          -176,
-          96
+          -180,
+          80
         ],
         "id": "a74c5659-fa90-4885-b690-00f15cd1c601",
         "name": "Webhook",
@@ -617,8 +617,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          288,
-          96
+          180,
+          80
         ],
         "id": "e178771d-3f43-4a8c-92c4-0d32e36162b7",
         "name": "Switch"
@@ -645,8 +645,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          1920,
-          -128
+          1140,
+          -60
         ],
         "id": "6c3c5b6f-3122-47b2-b9d8-2fd75604b5ac",
         "name": "Call 'wa-to-gcal-assistant'"
@@ -673,8 +673,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          896,
-          208
+          640,
+          240
         ],
         "id": "9fba4d5c-0336-49f7-9a64-d86d3c0b46ac",
         "name": "Call 'automatic-brone-task-notifier'"
@@ -701,8 +701,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          800,
-          352
+          880,
+          240
         ],
         "id": "d2e45d27-5e40-4a84-bbe1-0b78935c5d61",
         "name": "Call 'siam-pengumuman'"
@@ -729,8 +729,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          800,
-          512
+          1140,
+          240
         ],
         "id": "86fcd75a-8d7f-4dff-9cc3-a645d786a2f4",
         "name": "Call 'siam-presensi-notifier'"
@@ -759,8 +759,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1040,
-          960
+          880,
+          480
         ],
         "id": "335a8cde-9fc3-4386-94ed-563db62aa81d",
         "name": "[HTTP Whatsapp] Send Message",
@@ -781,8 +781,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          832,
-          960
+          640,
+          480
         ],
         "id": "13e03357-ef48-4be5-8927-6de1e756b7d4",
         "name": "[Script] Message Builder"
@@ -823,8 +823,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -2928,
-          3696
+          -180,
+          860
         ],
         "id": "22a29be3-8ec3-4cb1-bf87-b7c416693d39",
         "name": "sender check6"
@@ -843,8 +843,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1904,
-          3920
+          780,
+          900
         ],
         "id": "d4ee4987-96e8-4d94-b4f1-39fc4a188228",
         "name": "[HTTP Whatsapp] Send Message1",
@@ -872,8 +872,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -2608,
-          3776
+          60,
+          860
         ],
         "id": "fadbed41-9dbe-443c-94ee-f8235718ab2f",
         "name": "HTTP Request"
@@ -885,8 +885,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2352,
-          3808
+          300,
+          860
         ],
         "id": "99e572fd-7f40-4b0a-9f54-a4cc2e1c1653",
         "name": "Code in JavaScript"
@@ -950,8 +950,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          -2144,
-          3808
+          540,
+          860
         ],
         "id": "ab425c11-dd3b-48ec-98e3-6030f6295c63",
         "name": "Switch1"
@@ -970,8 +970,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1904,
-          3728
+          780,
+          820
         ],
         "id": "6b8ef5c3-ba54-4b27-80bc-02cdda474ddb",
         "name": "[HTTP Whatsapp] Send Message2",
@@ -999,8 +999,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -848,
-          3408
+          1020,
+          1040
         ],
         "id": "f57439a3-679d-414c-9f63-4c3408c4aa74",
         "name": "[HTTP Whatsapp] Send Message3",
@@ -1028,8 +1028,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1792,
-          3296
+          60,
+          1000
         ],
         "id": "c8119e0e-edf6-4739-93a7-adbe6b82fe94",
         "name": "HTTP Request1"
@@ -1041,8 +1041,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1536,
-          3328
+          300,
+          1000
         ],
         "id": "68c8a1bc-7693-4adf-9886-02a06782a97e",
         "name": "Code in JavaScript1"
@@ -1106,8 +1106,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          -1328,
-          3328
+          540,
+          1000
         ],
         "id": "52fc24de-953b-4af4-9641-a68bd88e66e7",
         "name": "Switch2"
@@ -1126,8 +1126,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -880,
-          3248
+          780,
+          960
         ],
         "id": "49adbb12-aad9-42d2-b84e-fd4d60b4ec05",
         "name": "[HTTP Whatsapp] Send Message4",
@@ -1177,8 +1177,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -2016,
-          3312
+          -180,
+          1000
         ],
         "id": "d1424d99-dc4a-4fe1-9d02-fe442350bad4",
         "name": "sender check7"
@@ -1255,8 +1255,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -1120,
-          3280
+          780,
+          1040
         ],
         "id": "80e4332a-8bf3-4d6d-aa6c-5ecd5519a982",
         "name": "If"
@@ -1268,8 +1268,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1472,
-          2448
+          300,
+          1380
         ],
         "id": "8bad84a2-1d31-4e68-b10e-28cc390432b5",
         "name": "Code in JavaScript2"
@@ -1298,8 +1298,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1088,
-          2496
+          540,
+          1380
         ],
         "id": "5885f1dc-41ea-46e5-afb3-af8168a4327a",
         "name": "[HTTP Whatsapp] Send Message5",
@@ -1320,8 +1320,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2304,
-          1616
+          780,
+          1180
         ],
         "id": "46288e20-ac40-4f33-a56f-4b531181653c",
         "name": "Code in JavaScript3"
@@ -1340,8 +1340,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -880,
-          1744
+          1020,
+          1180
         ],
         "id": "ef9f6701-b954-4a4e-b5a8-eff7006b1adc",
         "name": "[HTTP Whatsapp] Send Message6",
@@ -1369,8 +1369,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1792,
-          1616
+          60,
+          1140
         ],
         "id": "ab857686-b23e-417b-a737-871eba13793b",
         "name": "HTTP Request2"
@@ -1382,8 +1382,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1568,
-          1664
+          300,
+          1140
         ],
         "id": "7ee5f529-55cb-4c56-b3a4-6ec67899bb75",
         "name": "Code in JavaScript4"
@@ -1447,8 +1447,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          -1360,
-          1664
+          540,
+          1140
         ],
         "id": "383a6d98-8dbb-4f95-ab3c-57da77d85a44",
         "name": "Switch3"
@@ -1467,8 +1467,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -912,
-          1584
+          780,
+          1100
         ],
         "id": "daf62a4f-872b-403a-87c2-b29d6c242036",
         "name": "[HTTP Whatsapp] Send Message7",
@@ -1518,8 +1518,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -2048,
-          1632
+          -180,
+          1140
         ],
         "id": "edd34d98-090a-4f5e-b032-486786a111bf",
         "name": "sender check8"
@@ -1560,8 +1560,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -1488,
-          2688
+          -180,
+          1280
         ],
         "id": "713df84f-6ddd-4e46-90af-6dae5fb33170",
         "name": "sender check9"
@@ -1580,8 +1580,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -464,
-          2912
+          540,
+          1320
         ],
         "id": "ab3b14d8-498a-463b-afcb-595303a4b43a",
         "name": "[HTTP Whatsapp] Send Message8",
@@ -1609,8 +1609,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1168,
-          2768
+          60,
+          1280
         ],
         "id": "e80a745b-fd5e-4f67-8801-363f730e6aa2",
         "name": "HTTP Request3"
@@ -1674,8 +1674,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          -704,
-          2800
+          300,
+          1280
         ],
         "id": "18a6b1de-e575-44e3-93d5-bf2d29430bf7",
         "name": "Switch4"
@@ -1694,8 +1694,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -464,
-          2720
+          540,
+          1240
         ],
         "id": "9afd17f3-2da1-4e19-8358-fe25b80bc967",
         "name": "[HTTP Whatsapp] Send Message9",
@@ -1723,8 +1723,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -4288,
-          2256
+          -180,
+          1500
         ],
         "id": "5bc127ac-6786-4efb-a204-d7d79bd7c2f6",
         "name": "HTTP Request5"
@@ -1736,8 +1736,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -4032,
-          2288
+          60,
+          1500
         ],
         "id": "0aa28816-89ef-47c8-83b7-e6cfdb048a77",
         "name": "Code in JavaScript7"
@@ -1756,8 +1756,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -4256,
-          2064
+          300,
+          1460
         ],
         "id": "e32a9f8c-9890-40c8-8d8d-7a4d8dd52b50",
         "name": "[HTTP Whatsapp] Send Message14",
@@ -1785,8 +1785,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -3664,
-          2576
+          300,
+          1540
         ],
         "id": "428a8495-b160-4971-80c7-64e561b053b0",
         "name": "[HTTP Whatsapp] Send Message15",
@@ -1814,8 +1814,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -4176,
-          1280
+          -180,
+          1640
         ],
         "id": "3464a8c6-a5cb-4869-986a-5d8da981b4fb",
         "name": "HTTP Request6"
@@ -1827,8 +1827,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -3920,
-          1312
+          60,
+          1640
         ],
         "id": "28c2ecc9-0657-444b-8570-3a7a5b653296",
         "name": "Code in JavaScript8"
@@ -1847,8 +1847,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -4160,
-          1040
+          300,
+          1600
         ],
         "id": "6202fe5e-3147-4457-ab73-f260e5c5816c",
         "name": "[HTTP Whatsapp] Send Message16",
@@ -1876,8 +1876,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -3552,
-          1600
+          300,
+          1680
         ],
         "id": "c9085435-1e83-4a17-b5c7-97e3ac8bc1e9",
         "name": "[HTTP Whatsapp] Send Message17",
@@ -1913,8 +1913,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          688,
-          704
+          640,
+          140
         ],
         "id": "61b8aa7e-df98-4e85-be2b-59cc8b8a0fd0",
         "name": "Call 'wa-conversation'"
@@ -1947,8 +1947,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1504,
-          -48
+          880,
+          -180
         ],
         "id": "abadfd0c-411d-4a9b-a4d4-cb75c7823b1c",
         "name": "jadwal manda?"
@@ -1975,8 +1975,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          1920,
-          48
+          1140,
+          -180
         ],
         "id": "3a009e7b-8093-49c6-890b-6b8056507a3c",
         "name": "Call 'manda-to-gcal-assistant'"
@@ -2009,8 +2009,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1120,
-          32
+          640,
+          -120
         ],
         "id": "0ecd0e2a-7bc9-4dd3-b973-83ea01c448c6",
         "name": "pengirim okta?"
@@ -2043,8 +2043,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1312,
-          96
+          880,
+          0
         ],
         "id": "3e59b39c-8f0f-4510-a080-d92f60de5373",
         "name": "pengirim manda?"
@@ -2077,8 +2077,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1504,
-          144
+          1140,
+          60
         ],
         "id": "75824771-0ab5-4ce3-addd-8ffaa89133a4",
         "name": "jadwal okta?"
@@ -2107,8 +2107,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1040,
-          1280
+          880,
+          600
         ],
         "id": "05f23ff7-84a1-4af9-8ef9-731d52cb81df",
         "name": "[HTTP Whatsapp] Send Message10",
@@ -2129,8 +2129,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          752,
-          1216
+          640,
+          600
         ],
         "id": "f26263e9-602e-4aa1-8373-dd7e3d4f5661",
         "name": "[Script] Message Builder1"
@@ -2157,11 +2157,71 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.2,
         "position": [
-          440,
-          500
+          640,
+          340
         ],
         "id": "6088aa91-0a5c-4143-8fb6-1e9765485879",
         "name": "Call 'vps-cli-runner'"
+      },
+      {
+        "parameters": {
+          "content": "### 🌐 1. Central Webhook & Master Switch\n- **Webhook**: Menangkap seluruh event pesan WhatsApp dari Evolution API.\n- **Switch**: Memilah pesan berdasarkan slash commands, mentions bot, pesan pribadi, atau media.",
+          "height": 340,
+          "width": 640,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -240,
+          -40
+        ],
+        "name": "Note: Webhook Router"
+      },
+      {
+        "parameters": {
+          "content": "### 🎯 2. Core Sub-Workflow Routers\n- **Kalender Okta & Manda**: Menentukan target kalender dan memanggil assistant terkait.\n- **AI Conversation**: Memanggil `wa-conversation` untuk pemrosesan teks, audio VN, gambar, notes, dan expenses.\n- **Academic Monitors**: Memanggil Brone, Presensi, dan Pengumuman SIAM.\n- **VPS Agent**: Memanggil `vps-cli-runner` untuk perintah terminal.",
+          "height": 560,
+          "width": 860,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          580,
+          -220
+        ],
+        "name": "Note: Core Routers"
+      },
+      {
+        "parameters": {
+          "content": "### 📋 3. Information & Help Manual\n- **/help**: Menampilkan menu panduan lengkap seluruh fitur asisten.\n- **/kewajiban okta**: Personal reminder.",
+          "height": 300,
+          "width": 860,
+          "color": 3
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          580,
+          420
+        ],
+        "name": "Note: Help & Info"
+      },
+      {
+        "parameters": {
+          "content": "### 🎭 4. Fun & Community Keywords Sidecars\nKumpulan trigger kata kunci grup interaktif (fasta, abil, diaturun, kicau, jokowi, dll).",
+          "height": 940,
+          "width": 1540,
+          "color": 1
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -240,
+          800
+        ],
+        "name": "Note: Fun Keywords"
       }
     ],
     "connections": {

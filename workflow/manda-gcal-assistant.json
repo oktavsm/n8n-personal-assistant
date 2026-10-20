@@ -15,8 +15,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          656,
-          -400
+          280,
+          -380
         ],
         "id": "c4ca3133-7f36-4165-91b7-a21176e7dea3",
         "name": "Code in JavaScript"
@@ -33,8 +33,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          912,
-          -400
+          520,
+          -380
         ],
         "id": "77793394-0cf0-4a49-93e8-1e12fa104d48",
         "name": "[HTTP] Gemini Brone"
@@ -117,8 +117,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          1328,
-          -400
+          1000,
+          -380
         ],
         "id": "9b6bc7dd-9402-4c0d-80d8-582a49d6e004",
         "name": "Switch"
@@ -140,8 +140,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1536,
-          -496
+          1240,
+          -440
         ],
         "id": "10bc6c8a-91d3-4f6d-addf-f4e08b797e89",
         "name": "Create an event",
@@ -168,8 +168,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1568,
-          -192
+          280,
+          80
         ],
         "id": "e03fceff-56d6-4add-a3e0-0a5f64d1325f",
         "name": "Get many events",
@@ -197,8 +197,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1568,
-          -32
+          520,
+          80
         ],
         "id": "fa2d2b30-1945-40ea-ad79-b8fb99a54d14",
         "name": "Get many jadwal kuliah",
@@ -217,8 +217,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1776,
-          -192
+          760,
+          80
         ],
         "id": "103263fc-d1c8-400e-a764-be0239719a3a",
         "name": "Code: Recap Jadwal"
@@ -251,8 +251,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1968,
-          -128
+          1000,
+          80
         ],
         "id": "a706b6bb-7bf0-428f-beeb-8d1aa469a045",
         "name": "If2"
@@ -466,8 +466,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          160,
-          -16
+          -160,
+          260
         ],
         "id": "d654d01e-77b8-45ff-8d21-0d3680620343",
         "name": "Switch1"
@@ -488,8 +488,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          512,
-          0
+          280,
+          720
         ],
         "id": "6afdf8b8-efa6-461e-a6ea-ec48884a9e22",
         "name": "Get many jadwal kuliah1",
@@ -508,8 +508,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          736,
-          80
+          520,
+          720
         ],
         "id": "f8b154d4-d0b7-4f9b-b1da-8e35803ee223",
         "name": "Code: Recap Jadwal1"
@@ -542,8 +542,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          944,
-          80
+          760,
+          720
         ],
         "id": "046c6743-bb17-49e6-997a-4411d564b9c1",
         "name": "If"
@@ -555,8 +555,8 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
         "position": [
-          -848,
-          320
+          -760,
+          260
         ],
         "id": "bd512e65-83b7-483e-9e4c-02d94f91b2bd",
         "name": "WA Command"
@@ -568,8 +568,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          720,
-          416
+          280,
+          -160
         ],
         "id": "aa706590-3e96-49b4-bbda-2e5899d81a85",
         "name": "Code in JavaScript3"
@@ -586,8 +586,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          928,
-          432
+          520,
+          -160
         ],
         "id": "fc22932b-52a8-4474-8ec6-25df0beb5f4f",
         "name": "[HTTP] Gemini Brone2"
@@ -676,8 +676,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          1344,
-          432
+          1000,
+          -160
         ],
         "id": "0edef184-2681-47b5-853e-1adf00cf216c",
         "name": "Switch2"
@@ -699,8 +699,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1552,
-          336
+          1240,
+          -160
         ],
         "id": "a69a09b9-582a-4007-809f-bc1c11fc3030",
         "name": "Create an event1",
@@ -727,8 +727,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1552,
-          768
+          280,
+          560
         ],
         "id": "262bbdaa-ef27-4230-a61a-d0c3db81e215",
         "name": "Get many events1",
@@ -747,8 +747,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1760,
-          768
+          520,
+          560
         ],
         "id": "744f3172-845d-4f36-9a27-636b4456dfb3",
         "name": "Code: Recap Jadwal2"
@@ -781,8 +781,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1968,
-          768
+          760,
+          560
         ],
         "id": "b5192f07-330f-4cb1-8a0e-d75d86e885d6",
         "name": "If3"
@@ -794,8 +794,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1120,
-          -400
+          760,
+          -380
         ],
         "id": "acda6958-eb8d-4e47-8995-286e54cdea88",
         "name": "[Code] Status Check Jadwal"
@@ -807,8 +807,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1136,
-          432
+          760,
+          -160
         ],
         "id": "e0459ca9-a0e1-42c0-a25c-38b432627ef2",
         "name": "[Code] Status Check Tugas"
@@ -829,8 +829,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          640,
-          848
+          280,
+          400
         ],
         "id": "c86c81e8-8148-4b60-a0cf-414b84793de0",
         "name": "Get many events2",
@@ -849,8 +849,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          848,
-          848
+          520,
+          400
         ],
         "id": "58130fe8-5a2d-439b-a4cd-4aadc567225e",
         "name": "Code: Recap Jadwal3"
@@ -883,8 +883,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          1056,
-          848
+          760,
+          400
         ],
         "id": "cc9c9b63-234e-4110-be18-ab51efce251c",
         "name": "If4"
@@ -905,8 +905,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          560,
-          1200
+          280,
+          240
         ],
         "id": "5729f389-3013-491b-ae55-5349c0206a5e",
         "name": "Get many events3",
@@ -942,8 +942,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          2880,
-          208
+          2320,
+          360
         ],
         "id": "cb5d9cb3-7e4b-4043-894a-e14550bd4e5d",
         "name": "[HTTP Whatsapp]8",
@@ -970,8 +970,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          560,
-          1360
+          520,
+          240
         ],
         "id": "cfebfe33-d24b-4ac5-824f-20a51521271a",
         "name": "Get many jadwal kuliah2",
@@ -990,8 +990,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          768,
-          1200
+          760,
+          240
         ],
         "id": "8f838302-8a91-49eb-9d5d-55f97cf43ece",
         "name": "Code: Recap Jadwal4"
@@ -1024,8 +1024,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          976,
-          1200
+          1000,
+          240
         ],
         "id": "8e57336b-032d-406c-a3b3-e14301ada7f0",
         "name": "If5"
@@ -1037,8 +1037,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -368,
-          320
+          -460,
+          260
         ],
         "id": "7dfea77d-9909-4257-bd77-e777bb7015af",
         "name": "[Code] Get WA Data"
@@ -1067,8 +1067,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1936,
-          256
+          2320,
+          220
         ],
         "id": "9ed064b9-8f7a-446a-9673-e624d28e67ef",
         "name": "[HTTP Whatsapp]9",
@@ -1103,8 +1103,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          2400,
-          -192
+          1480,
+          -440
         ],
         "id": "80560f80-b23e-4eb0-a7f3-013541489d56",
         "name": "[HTTP Whatsapp]10",
@@ -1123,8 +1123,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          1300,
-          1100
+          280,
+          1020
         ],
         "id": "manda-pg-fetch-pending-01",
         "name": "[PG] Manda Fetch Pending Selection",
@@ -1152,8 +1152,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1500,
-          1100
+          520,
+          1020
         ],
         "id": "manda-gcal-fetch-agenda-01",
         "name": "Manda Fetch GCal Agenda For Match",
@@ -1182,8 +1182,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1700,
-          1100
+          760,
+          1020
         ],
         "id": "manda-gcal-fetch-tugas-01",
         "name": "Manda Fetch GCal Tugas For Match",
@@ -1212,8 +1212,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          1900,
-          1100
+          1000,
+          1020
         ],
         "id": "manda-gcal-fetch-kuliah-01",
         "name": "Manda Fetch GCal Kuliah For Match",
@@ -1233,8 +1233,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          2100,
-          1100
+          1240,
+          1020
         ],
         "id": "manda-code-safe-action-01",
         "name": "Manda Process Safe Calendar Action",
@@ -1248,8 +1248,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          2300,
-          1100
+          1480,
+          1020
         ],
         "id": "manda-pg-exec-pending-01",
         "name": "[PG] Manda Execute Pending Action Query",
@@ -1343,8 +1343,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.2,
         "position": [
-          2500,
-          1100
+          1720,
+          1020
         ],
         "id": "manda-switch-decision-01",
         "name": "Manda Switch Lifecycle Decision"
@@ -1365,8 +1365,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          2720,
-          1000
+          1960,
+          940
         ],
         "id": "manda-gcal-update-safe-01",
         "name": "Manda Update Safe GCal Event",
@@ -1391,8 +1391,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          2720,
-          1200
+          1960,
+          1100
         ],
         "id": "manda-gcal-delete-safe-01",
         "name": "Manda Delete Safe GCal Event",
@@ -1402,6 +1402,81 @@
             "name": "Google Calendar account"
           }
         }
+      },
+      {
+        "parameters": {
+          "content": "### 📥 1. Ingestion & Command Router (Kak Manda (WITA))\n- **WA Command**: Menerima request dari webhook atau `wa-conversation`.\n- **[Code] Get WA Data**: Menentukan pengirim, chat target, dan membersihkan teks.\n- **Switch1**: Membagi ke 8 rute perintah (/jadwal, /cek, /uas, /tugas, /agenda, /besok, /lifecycle).",
+          "height": 340,
+          "width": 840,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -820,
+          140
+        ],
+        "name": "Note: Ingestion"
+      },
+      {
+        "parameters": {
+          "content": "### ✍️ 2. Natural Language Scheduling (Gemini Time Parsing)\n- Menggunakan Gemini untuk mengekstrak judul, tanggal, dan jam secara otomatis.\n- Menangani pembuatan agenda pribadi (`/jadwal`) dan deadline tugas akademik (`/tugas <detail>`).",
+          "height": 520,
+          "width": 1420,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          220,
+          -500
+        ],
+        "name": "Note: Scheduling"
+      },
+      {
+        "parameters": {
+          "content": "### 📅 3. Schedule, Deadline & Exam Queries\n- **/cek**: Menampilkan jadwal kuliah dan agenda hari ini.\n- **/besok**: Menampilkan jadwal kuliah dan agenda esok hari.\n- **/agenda**: Rekap seluruh kegiatan 7 hari ke depan.\n- **/tugas**: Menampilkan seluruh deadline tugas aktif.\n- **/uas**: Menampilkan jadwal Ujian Akhir Semester.",
+          "height": 840,
+          "width": 1040,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          220,
+          40
+        ],
+        "name": "Note: Queries"
+      },
+      {
+        "parameters": {
+          "content": "### 🛡️ 4. Safe Calendar Lifecycle Engine (/done, /hapus, /edit-kuliah)\n- **Konfirmasi Cerdas**: Jika ditemukan > 1 item yang mirip/duplikat, bot meminta user memilih nomor (1, 2, batal).\n- **Perlindungan Jadwal Kuliah**: Kuliah dilindungi dari hapus/done; hanya bisa diubah ruang atau libur via `/edit-kuliah`.\n- **Scope Aman**: Hanya menghapus / menandai [SELESAI] pada kalender Agenda dan Tugas.",
+          "height": 400,
+          "width": 1960,
+          "color": 3
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          220,
+          900
+        ],
+        "name": "Note: Lifecycle"
+      },
+      {
+        "parameters": {
+          "content": "### 📤 5. WhatsApp Response Dispatcher\nMengirim pesan konfirmasi resmi ke WhatsApp via Evolution API.",
+          "height": 380,
+          "width": 380,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          2260,
+          140
+        ],
+        "name": "Note: Dispatcher"
       }
     ],
     "connections": {

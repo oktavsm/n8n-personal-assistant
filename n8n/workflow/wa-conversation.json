@@ -15,8 +15,8 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
         "position": [
-          -900,
-          0
+          -1200,
+          40
         ],
         "id": "0ce15b9f-6aa4-4a58-bb2c-00402986471c",
         "name": "wa-msg"
@@ -28,8 +28,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -680,
-          0
+          -920,
+          40
         ],
         "id": "b37f3393-000e-4186-8353-9c7615a172c0",
         "name": "Normalize WA Context"
@@ -42,8 +42,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          -460,
-          0
+          -500,
+          40
         ],
         "id": "9e808165-443b-4d1b-9c20-b4c1cf03ac06",
         "name": "[PG] Save Incoming Chat",
@@ -64,7 +64,7 @@
         "typeVersion": 2.5,
         "position": [
           -240,
-          0
+          40
         ],
         "id": "c9adec9a-f273-46d2-815c-f9165adc5a30",
         "name": "[PG] Fetch History",
@@ -82,8 +82,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -20,
-          0
+          20,
+          40
         ],
         "id": "2792379e-206d-4426-b682-064d58d5ecce",
         "name": "Format Memory Context"
@@ -248,8 +248,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.2,
         "position": [
-          2140,
-          260
+          3540,
+          40
         ],
         "id": "446aa5b9-e6d8-4709-8924-71115331dfb9",
         "name": "Switch"
@@ -337,7 +337,7 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.2,
         "position": [
-          440,
+          3780,
           -100
         ],
         "id": "360e8def-55c2-4b70-ac78-e77294537932",
@@ -370,8 +370,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          440,
-          150
+          3780,
+          680
         ],
         "id": "40d6270d-b7bc-4c6f-9d3f-4cf6dec02dbd",
         "name": "If"
@@ -383,8 +383,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          660,
-          150
+          4000,
+          680
         ],
         "id": "85ba316e-3986-4719-b519-d32d3106cc57",
         "name": "Code in JavaScript"
@@ -416,8 +416,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          880,
-          150
+          4240,
+          680
         ],
         "id": "940219a2-02b1-4259-806d-ddccf395e18f",
         "name": "[HTTP Whatsapp] Send Message",
@@ -435,8 +435,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          680,
-          -220
+          4000,
+          -200
         ],
         "id": "78fd85de-9837-4c16-8e31-e09acef6b7e5",
         "name": "Javascript Randomize API Key 1"
@@ -448,8 +448,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          680,
-          -20
+          4000,
+          60
         ],
         "id": "98180338-7882-431b-bad1-1dfd09520ea3",
         "name": "Javascript Randomize API Key "
@@ -471,8 +471,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          900,
-          -220
+          4240,
+          -200
         ],
         "id": "a016f4be-3d75-4de2-906a-cbd64924df3c",
         "name": "[HTTP] Gemini Build Message1"
@@ -494,8 +494,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          900,
-          -20
+          4240,
+          60
         ],
         "id": "3f19e1f7-292a-465b-971f-adb939c38a9a",
         "name": "[HTTP] Gemini Build Message"
@@ -527,8 +527,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1300,
-          -320
+          4740,
+          -200
         ],
         "id": "21a4e611-0926-4af7-bce8-7b64c025bbfe",
         "name": "[HTTP Whatsapp] Send Message2",
@@ -566,8 +566,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1300,
-          80
+          4740,
+          60
         ],
         "id": "7aa6a87c-480d-4a3e-afd6-cbd1a9992434",
         "name": "[HTTP Whatsapp] Send Message1",
@@ -605,8 +605,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          1360,
-          -320
+          4980,
+          -200
         ],
         "id": "e3df5f3b-9aea-4781-bfe8-877a26dde49f",
         "name": "If Titip Pesan"
@@ -638,8 +638,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1580,
-          -320
+          5220,
+          -200
         ],
         "id": "7bbbb799-2acd-4a96-a378-e02c2366fd36",
         "name": "[HTTP Whatsapp] Forward Note to Target",
@@ -658,8 +658,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          1400,
-          -60
+          4980,
+          60
         ],
         "id": "262a97c4-ead2-439a-9b55-7ab2adc98ef4",
         "name": "[PG] Save Bot Reply",
@@ -697,8 +697,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          440,
-          350
+          3780,
+          440
         ],
         "id": "bfb80987-7b9f-40bc-b9e7-2ae486ca2c69",
         "name": "If1"
@@ -730,8 +730,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          680,
-          480
+          4000,
+          580
         ],
         "id": "f420f939-46c8-4d69-8e08-c96c7c996fbb",
         "name": "[HTTP Whatsapp] Send Message3",
@@ -749,8 +749,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          680,
-          320
+          4000,
+          440
         ],
         "id": "f833ef4b-b45a-41ab-b804-877dd1caf556",
         "name": "Prepare Media Payload"
@@ -774,8 +774,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          900,
-          320
+          4240,
+          440
         ],
         "id": "b432acc7-572b-4c5f-92f8-fd08f20bc2c7",
         "name": "[HTTP] Evolution Get Base64",
@@ -805,8 +805,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          1140,
-          320
+          4480,
+          440
         ],
         "id": "be2db0ce-3f82-476a-b0c3-3e4fa97fedba",
         "name": "[HTTP] Evolution Send Sticker",
@@ -844,8 +844,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          1320,
-          0
+          2380,
+          40
         ],
         "id": "251ece34-e4db-4951-b3a5-4c30f8ffbdcd",
         "name": "If Has Audio"
@@ -857,8 +857,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1520,
-          -120
+          2580,
+          -60
         ],
         "id": "dbc3da92-8b4a-4fab-909b-af5b4c29d089",
         "name": "Prepare Audio Payload"
@@ -879,8 +879,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          1720,
-          -120
+          2820,
+          -60
         ],
         "id": "f5aa1daf-6cfe-4957-978e-9a56035bf399",
         "name": "[HTTP] Evolution Get Base64 Audio",
@@ -898,8 +898,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1920,
-          -120
+          3060,
+          -60
         ],
         "id": "007f5d6b-9f0e-4666-a376-d0a2043d2460",
         "name": "Attach Audio Base64"
@@ -1065,8 +1065,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.2,
         "position": [
-          60,
-          0
+          360,
+          40
         ],
         "id": "8740dfe4-7c5b-440b-beb2-e4a2a742fb64",
         "name": "Switch Vision Query"
@@ -1089,8 +1089,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          260,
-          -260
+          640,
+          -480
         ],
         "id": "1321a08e-d2f9-48cb-8262-e3348f3efe6c",
         "name": "Get GCal Okta Agenda",
@@ -1121,8 +1121,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          460,
-          -260
+          1120,
+          -480
         ],
         "id": "68a37f13-5085-4588-b020-af21880cc4f4",
         "name": "Get GCal Okta Kuliah",
@@ -1153,8 +1153,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          660,
-          -260
+          1360,
+          -480
         ],
         "id": "36e8cd34-a407-4fcb-bd89-fb8ea55b5062",
         "name": "Get GCal Manda Agenda",
@@ -1185,8 +1185,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          860,
-          -260
+          1840,
+          -480
         ],
         "id": "1c23533a-0bd5-4923-a40f-65843633dad9",
         "name": "Get GCal Manda Kuliah",
@@ -1206,8 +1206,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1080,
-          -260
+          2080,
+          -480
         ],
         "id": "5ef6231d-ad11-4529-8c80-245e7ba8001c",
         "name": "Format Calendar Vision",
@@ -1227,8 +1227,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          360,
-          -80
+          640,
+          -220
         ],
         "id": "f55548ee-5093-427e-a813-ebd13fd30060",
         "name": "[HTTP] Get SIAM Pengumuman",
@@ -1241,8 +1241,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          660,
-          -80
+          940,
+          -220
         ],
         "id": "1edc2b7e-6823-4d02-89af-d390a02dab5f",
         "name": "Format Pengumuman Vision"
@@ -1261,8 +1261,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          360,
-          80
+          640,
+          -60
         ],
         "id": "8f28b4d0-a79d-4bdf-a0c0-09c72c27112a",
         "name": "[HTTP] Get SIAM Presensi",
@@ -1275,8 +1275,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          660,
-          80
+          940,
+          -60
         ],
         "id": "bd94bd5b-36e8-4203-9aa6-8b934fea52bb",
         "name": "Format Presensi Vision"
@@ -1288,8 +1288,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          360,
-          240
+          640,
+          420
         ],
         "id": "f99c2363-d470-4589-8208-1c940bd271f0",
         "name": "Format Default Vision"
@@ -1301,8 +1301,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1080,
-          -20
+          4480,
+          60
         ],
         "id": "code-proc-actions-okta",
         "name": "Process AI Output & Actions"
@@ -1314,8 +1314,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1080,
-          -220
+          4480,
+          -200
         ],
         "id": "code-proc-actions-manda",
         "name": "Process AI Output & Actions1"
@@ -1347,8 +1347,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          1340,
-          -100
+          4740,
+          360
         ],
         "id": "if-has-cal-actions",
         "name": "If Has Calendar Actions"
@@ -1360,8 +1360,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1540,
-          -100
+          4980,
+          360
         ],
         "id": "code-prep-cal-payloads",
         "name": "Prepare Calendar Payloads"
@@ -1425,8 +1425,8 @@
         "type": "n8n-nodes-base.switch",
         "typeVersion": 3.4,
         "position": [
-          1740,
-          -100
+          5220,
+          360
         ],
         "id": "switch-cal-target",
         "name": "Switch Target Calendar"
@@ -1456,8 +1456,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          1980,
-          -180
+          5460,
+          300
         ],
         "id": "call-okta-gcal-subwf",
         "name": "Call 'wa-to-gcal-assistant'"
@@ -1487,8 +1487,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          1980,
-          -20
+          5460,
+          420
         ],
         "id": "call-manda-gcal-subwf",
         "name": "Call 'manda-to-gcal-assistant'"
@@ -1501,8 +1501,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          80,
-          280
+          640,
+          100
         ],
         "id": "pgFetchActiveNotes01",
         "name": "[PG] Fetch Active Notes",
@@ -1521,8 +1521,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          280,
-          280
+          940,
+          100
         ],
         "id": "formatNotesVision01",
         "name": "Format Notes Vision"
@@ -1554,8 +1554,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          780,
-          180
+          2580,
+          160
         ],
         "id": "ifHasImage0001",
         "name": "If Has Image"
@@ -1567,8 +1567,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          980,
-          140
+          2820,
+          160
         ],
         "id": "prepareImagePayload01",
         "name": "Prepare Image Payload"
@@ -1589,8 +1589,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          1180,
-          140
+          3060,
+          160
         ],
         "id": "httpEvolutionGetBase64Img01",
         "name": "[HTTP] Evolution Get Base64 Image",
@@ -1608,8 +1608,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1380,
-          140
+          3300,
+          160
         ],
         "id": "attachImageBase6401",
         "name": "Attach Image Base64"
@@ -1622,8 +1622,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          2580,
-          280
+          4980,
+          540
         ],
         "id": "pgExecuteNoteAction01",
         "name": "[PG] Execute Note Action",
@@ -1661,8 +1661,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          2380,
-          280
+          4740,
+          540
         ],
         "id": "ifHasNoteActions01",
         "name": "If Has Note Actions"
@@ -1694,8 +1694,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          2380,
-          460
+          4740,
+          700
         ],
         "id": "ifHasPresensiActions01",
         "name": "If Has Presensi Actions"
@@ -1723,8 +1723,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.2,
         "position": [
-          2580,
-          460
+          4980,
+          700
         ],
         "id": "callPresensiFromAction01",
         "name": "Call 'siam-presensi-from-action'"
@@ -1737,8 +1737,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          80,
-          380
+          640,
+          260
         ],
         "id": "pgFetchExpenses0001",
         "name": "[PG] Fetch Recent Expenses",
@@ -1757,8 +1757,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          280,
-          380
+          940,
+          260
         ],
         "id": "formatExpenseVision01",
         "name": "Format Expense Vision"
@@ -1771,8 +1771,8 @@
         "type": "n8n-nodes-base.postgres",
         "typeVersion": 2.5,
         "position": [
-          2580,
-          640
+          4980,
+          860
         ],
         "id": "pgExecuteExpenseAction01",
         "name": "[PG] Execute Expense Action",
@@ -1810,8 +1810,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          2380,
-          640
+          4740,
+          860
         ],
         "id": "ifHasExpenseActions01",
         "name": "If Has Expense Actions"
@@ -1834,8 +1834,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          350,
-          -180
+          880,
+          -480
         ],
         "id": "get-gcal-okta-tugas-vision",
         "name": "Get GCal Okta Tugas",
@@ -1866,8 +1866,8 @@
         "type": "n8n-nodes-base.googleCalendar",
         "typeVersion": 1.3,
         "position": [
-          790,
-          -180
+          1600,
+          -480
         ],
         "id": "get-gcal-manda-tugas-vision",
         "name": "Get GCal Manda Tugas",
@@ -1879,6 +1879,126 @@
         },
         "alwaysOutputData": true,
         "executeOnce": true
+      },
+      {
+        "parameters": {
+          "content": "### 📥 1. Ingestion & Normalisasi Context\n- **wa-msg**: Trigger webhook dari Evolution API.\n- **Normalize WA Context**: Membedakan chat pribadi (PC) vs grup, mengekstrak sender, caption, audio, gambar, dan filter query.",
+          "height": 340,
+          "width": 640,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1260,
+          -80
+        ],
+        "name": "Note: Ingestion"
+      },
+      {
+        "parameters": {
+          "content": "### 🧠 2. PostgreSQL Memory Pipeline (40 Turns / 14 Hari)\n- **[PG] Save Incoming Chat**: Menyimpan chat user ke tabel `wa_chat_memory`.\n- **[PG] Fetch History**: Mengambil 40 riwayat chat terakhir terisolasi per `room_jid`.\n- **Format Memory Context**: Menyusun transkrip percakapan kronologis dengan timestamp cerdas.",
+          "height": 340,
+          "width": 840,
+          "color": 3
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -560,
+          -80
+        ],
+        "name": "Note: Memory"
+      },
+      {
+        "parameters": {
+          "content": "### 👁️ 3. Dynamic Real-Time Vision & Live Context Injection\n- **Switch Vision Query**: Menghubungkan secara dinamis data terkini ke prompt Gemini:\n  • **Kalender**: 6 kalender real-time (Agenda, Tugas, Kuliah Okta & Manda).\n  • **Pengumuman**: Rilis pengumuman akademik terbaru dari SIAM UB.\n  • **Presensi**: Status presensi kuliah hari ini dari SIAM UB.\n  • **Notes**: Catatan aktif milik user di PostgreSQL `user_notes`.\n  • **Expenses**: Riwayat pengeluaran 30 hari di PostgreSQL `user_expenses`.\n  • **Default**: Obrolan santai umum & pertanyaan foto/diagram.",
+          "height": 1100,
+          "width": 1960,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          320,
+          -580
+        ],
+        "name": "Note: Vision Context"
+      },
+      {
+        "parameters": {
+          "content": "### 🎙️📸 4. Multimodal Audio VN & Image OCR Ingestion\n- Mengunduh Voice Note audio atau Foto/Diagram dari Evolution API menjadi Base64.\n- Mengirimkan media ke Gemini 2.5 Flash untuk analisis native multimodal.",
+          "height": 400,
+          "width": 1100,
+          "color": 7
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          2320,
+          -120
+        ],
+        "name": "Note: Multimodal Ingestion"
+      },
+      {
+        "parameters": {
+          "content": "### 🤖 5. Dual-Persona Gemini AI Engine\n- **Switch & Switch1**: Memilah persona Okta (WIB) vs Kak Manda (WITA) dan memilih API key acak (5 keys load-balancing).\n- **Gemini Engine**: `gemini-2.5-flash` untuk media / `gemini-3.5-flash-lite` untuk teks cepat.\n- **Process AI Output & Actions**: Memisahkan teks jawaban bersih untuk user dan mengekstrak tag aksi `<<<ACTION:...>>>`.",
+          "height": 580,
+          "width": 1120,
+          "color": 6
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          3480,
+          -280
+        ],
+        "name": "Note: Gemini AI Engine"
+      },
+      {
+        "parameters": {
+          "content": "### 📤 6. Response Delivery & Relay Titip Pesan\n- **Send Message**: Mengirim pesan balasan resmi ke WhatsApp via Evolution API.\n- **Save Bot Reply**: Menyimpan jawaban AI ke riwayat memori PostgreSQL.\n- **Titip Pesan**: Otomatis meneruskan pesan titipan ke pasangan (Okta ⇄ Manda).",
+          "height": 580,
+          "width": 960,
+          "color": 2
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          4660,
+          -280
+        ],
+        "name": "Note: Response Delivery"
+      },
+      {
+        "parameters": {
+          "content": "### ⚡ 7. Automated Action Execution Dispatcher\nMengeksekusi aksi nyata di latar belakang berdasarkan tag aksi yang dikeluarkan Gemini:\n- **Kalender**: Dispatch ke sub-workflow `wa-to-gcal-assistant` atau `manda-gcal-assistant`.\n- **Catatan**: Menyimpan catatan to-do baru atau menandai tuntas di `user_notes`.\n- **Presensi**: Memanggil presensi otomatis SIAM UB.\n- **Expense**: Menyimpan transaksi pengeluaran ke `user_expenses`.",
+          "height": 720,
+          "width": 1140,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          4660,
+          320
+        ],
+        "name": "Note: Action Dispatcher"
+      },
+      {
+        "parameters": {
+          "content": "### 🎨 8. Quick Utilities (Sticker Generator & Empty Mentions)\n- **Sticker**: Mengubah foto/video/GIF yang masuk menjadi stiker WhatsApp instan.\n- **Empty Mentions**: Membalas sapaan ramah saat pengguna hanya men-tag bot tanpa pesan.",
+          "height": 420,
+          "width": 1120,
+          "color": 1
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          3480,
+          380
+        ],
+        "name": "Note: Utilities"
       }
     ],
     "connections": {
