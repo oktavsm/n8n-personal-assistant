@@ -235,5 +235,17 @@ python3 scripts/deploy_workflows.py
 
 ---
 
+## 📚 Detailed Documentation Hub
+
+Detailed architecture designs, technical postmortems, catalogs, and strategic roadmaps are documented under the [`docs/`](docs/) directory:
+
+* 🚀 **[Strategic Roadmap & Feature Expansion Ideas](docs/roadmap.md):** Next-generation roadmap covering RAG memory (`pgvector`), morning voice briefings, receipt expense tracking, and auto-presensi.
+* 🧠 **[WhatsApp Chatbot Evolution Plan](docs/evolution-plan.md):** Dual-model architecture (Gemini 3.5 Flash Lite + 2.5 Flash), audio understanding, and multi-timezone routing.
+* 📦 **[Complete Workflow Catalog](docs/workflow-catalog.md):** Deep breakdown of all 15 active workflows, IDs, triggers, and execution flows.
+* 🛠️ **[Workflow Improvement & Bugfix Report](docs/improvement-report.md):** Technical postmortem of GCal anti-spam deduplication, system-wide WIB/WITA synchronization, and Codex runner diagnostics.
+* 🔍 **[Incident Postmortem & Memory Audit](issues/issue.md):** Chrome/Puppeteer `/tmp` disk footprint analysis and containment safeguards.
+
+---
+
 ## 📄 License
 MIT License. Built with ❤️ for personal productivity and academic automation.
