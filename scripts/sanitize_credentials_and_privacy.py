@@ -4,8 +4,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-OKTA_NUM = "6285750583867"
-MANDA_NUM = "62895605917452"
+OKTA_NUM = "628XXXXXXXXXX"
+MANDA_NUM = "628YYYYYYYYYY"
 
 # 1. Sanitize wa-to-gcal-assistant.json
 for folder in ["workflow", "n8n/workflow"]:

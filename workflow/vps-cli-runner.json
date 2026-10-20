@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-19T15:20:50.700Z",
+    "updatedAt": "2026-10-20T06:21:09.268Z",
     "createdAt": "2026-10-19T15:00:31.380Z",
     "id": "vpsCLIRunner0001",
     "name": "vps-cli-runner",
@@ -23,7 +23,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const item = $input.first().json;\nconst data = item.body?.data || item.data || item;\nconst msg = data.message || {};\nconst remoteJid = data.key?.remoteJid || '';\nconst participant = data.key?.participant || data.key?.participantAlt || remoteJid;\nconst messageId = data.key?.id || '';\n\nconst text = (msg.conversation || msg.extendedTextMessage?.text || '').trim();\nconst prompt = text.replace(/^(\\/vps|\\/agent)\\s*/i, '').trim();\n\nreturn [{\n  json: {\n    remoteJid,\n    participant,\n    messageId,\n    rawText: text,\n    prompt: prompt || 'Cek status VPS, disk, dan container docker secara ringkas'\n  }\n}];"
+          "jsCode": "const item = .first().json;\nconst data = item.body?.data || item.data || item;\nconst msg = data.message || {};\nconst remoteJid = data.key?.remoteJid || '';\nconst participant = data.key?.participant || data.key?.participantAlt || remoteJid;\nconst messageId = data.key?.id || '';\n\nconst rawText = (msg.conversation || msg.extendedTextMessage?.text || '').trim();\n// Strip bot mentions (@123456... or @bot)\nconst cleanedText = rawText.replace(/@\\d+\\s*/g, '').trim();\nconst prompt = cleanedText.replace(/^(\\/vps|\\/agent)\\s*/i, '').trim();\n\nreturn [{\n  json: {\n    remoteJid,\n    participant,\n    messageId,\n    rawText,\n    prompt: prompt || 'Cek status VPS, disk, dan container docker secara ringkas'\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -200,9 +200,9 @@
     "staticData": null,
     "meta": null,
     "pinData": null,
-    "versionId": "c05f1df6-b305-405c-b299-0b1d306b6fc9",
-    "activeVersionId": "c05f1df6-b305-405c-b299-0b1d306b6fc9",
-    "versionCounter": 15,
+    "versionId": "99cc9d51-2ded-4839-8fa4-94595e7fe2c6",
+    "activeVersionId": "99cc9d51-2ded-4839-8fa4-94595e7fe2c6",
+    "versionCounter": 17,
     "triggerCount": 0,
     "tags": [],
     "shared": [

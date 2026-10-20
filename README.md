@@ -126,6 +126,31 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 ### 7. 🛡️ GCal Anti-Spam & Deduplication
 * Prevents Google Calendar API overlap spam using strict minute checks (`diffMinutes === targetMinute`) and `$getWorkflowStaticData('global')` state deduplication across 15m, 30m, 60m, 12h, and 36h windows.
 
+### 8. 👥 Whitelisted Group Chat Access for VPS Agent
+* Run `/agent <prompt>` or `/vps <command>` directly inside whitelisted WhatsApp groups (e.g. `$env.WA_GROUP_DEV`).
+* Automatically strips bot mention tags (`@171619058196619 /agent ...`), verifies that the sender is Okta, executes on host VPS securely, and responds directly in the originating group.
+
+### 9. ⚡ One-Click & Conversational Presensi UB
+* Instant Attendance: When UB SIAM attendance notifications arrive, reply with a single word (`hadir`, `absen`, `hadir daring`) without any slash prefix to complete attendance in 1 second.
+* Conversational: Chat with `@n8n tolong absenkan kelas sekarang dong` to trigger automatic SIAM attendance.
+
+### 10. 📝 Personal & Cross-Check User Notes (`user_notes`)
+* Store persistent notes, debts, to-dos, and quick ideas in PostgreSQL `user_notes`.
+* Both Okta and Kak Manda have isolated active notes, with bidirectional cross-checking (`/notes manda`, `/notes okta`, `@n8n catatanku apa aja`).
+* Mark done with `/catat done <ID>` or `@n8n tandai catatan 1 selesai`.
+
+### 11. 📸 Multimodal Image OCR & Vision Q&A
+* Powered by `gemini-2.5-flash` with native image understanding.
+* Send an image or quote reply an existing photo on WhatsApp:
+  * Lecture Slides: Ask *"bro ini maksud diagramnya gimana?"*
+  * Homework / Coding: Ask *"bantu langkah-langkah selesaikan soal ini"*
+  * Receipt OCR: Transcribe totals and itemized purchases from shopping receipts.
+
+### 12. 🗓️ Google Calendar Lifecycle Management (`[SELESAI]` / Delete)
+* Mark tasks as done: `/done PPT Pengabdian` or `@n8n tugas PPT pengabdian udah selesai nih` updates Google Calendar event title with `[SELESAI]` and sets event color to green.
+* Cancel / delete events: `/hapus-jadwal Meeting Tim` or `@n8n meeting tim tadi di-cancel, tolong hapus` removes the event from Google Calendar.
+* Interactive follow-up: Bot asks *"Mau ditandai [SELESAI] di kalender atau langsung dihapus aja bro?"* when intent is ambiguous.
+
 ---
 
 ## 📦 Complete Workflows Catalog (15 Workflows)
@@ -162,20 +187,45 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 | `/uas` | Okta / Manda | Check exam schedule |
 | `/jadwal <detail>` | Okta / Manda | Create a calendar event (e.g. `/jadwal Meeting Tim besok jam 14.00`) |
 | `/tugas <detail>` | Okta / Manda | Create a task deadline (e.g. `/tugas Laporan PAPB Jumat jam 23.59`) |
+| `/done <judul>` | Okta / Manda | Mark task as completed (`[SELESAI]`) in Google Calendar |
+| `/selesai <judul>` | Okta / Manda | Alias for `/done` |
+| `/hapus-jadwal <judul>` | Okta / Manda | Delete event from Google Calendar |
 
-### Conversational & Natural Language Actions
+### Notes & To-Do System (`/catat` & `/notes`)
+| Command / Input | Target | Description |
+|---|---|---|
+| `/catat <isi>` | Self | Save a note in PostgreSQL `user_notes` |
+| `/notes` or `/catatan` | Self | List active notes for current user |
+| `/catatan manda` | Okta | View active notes of Kak Manda |
+| `/catatan okta` | Manda | View active notes of Okta |
+| `/catat done <id>` | Self | Mark note as completed |
+| `"@n8n catat kalau belum bayar kas 50k"` | Conversational | Conversational note saving |
+| `"@n8n catatanku apa aja?"` | Conversational | Conversational note listing |
+| `"@n8n tandai catatan 1 selesai"` | Conversational | Conversational note completion |
+
+### Presensi UB Commands
+| Command / Input | Description |
+|---|---|
+| `hadir` / `absen` | One-word instant attendance when notification arrives |
+| `/presensi hadir` | Manual attendance for active lecture |
+| `/presensi hadir daring` | Online attendance submission |
+| `"@n8n tolong absenkan kelas sekarang"` | Conversational attendance trigger |
+
+### Multimodal & Conversational Actions
 | Natural Input | Target | Behavior |
 |---|---|---|
 | `"@n8n buatin tugas PPT deadlinenya lusa jam 23.59"` | Okta / Manda | Auto-extracts tasks, triggers `wa-to-gcal-assistant`, books in Google Calendar |
-| `"@n8n catat agenda meeting koordinasi besok jam 10 pagi"` | Okta / Manda | Auto-extracts meeting time, books in Google Calendar agenda |
+| `"@n8n tugas PPT pengabdian udah selesai nih"` | Okta / Manda | Finds event in GCal, marks as `[SELESAI]` or prompts to delete |
+| `"@n8n meeting tim tadi di-cancel tolong hapus"` | Okta / Manda | Deletes meeting event from Google Calendar |
 | `"titip pesan ke manda: semangat ya praktikumnya"` | Relay | Relays formatted card to Kak Manda's WhatsApp |
+| `[Photo / Image]` + *"ini maksudnya apa bro?"* | Vision OCR | Transcribes text, solves problems, or explains diagram via Gemini 2.5 Flash |
 | `[Voice Note]` | Conversational | Transcribes audio via Gemini 2.5 Flash, answers naturally or executes actions |
 
 ### VPS & Developer Commands
 | Command | Access | Description |
 |---|---|---|
-| `/agent <prompt>` | Okta Only | Autonomous server agent execution |
-| `/vps <command>` | Okta Only | Direct bash command execution (e.g. `/vps docker ps`, `/vps df -h`) |
+| `/agent <prompt>` | Okta Only (Private / Group) | Autonomous server agent execution |
+| `/vps <command>` | Okta Only (Private / Group) | Direct bash command execution (e.g. `/vps docker ps`, `/vps df -h`) |
 | `/stiker` or `/sticker` | General | Converts media image into WhatsApp sticker |
 
 ---

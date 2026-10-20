@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-19T13:31:13.039Z",
+    "updatedAt": "2026-10-20T06:22:09.985Z",
     "createdAt": "2026-08-29T10:20:13.568Z",
     "id": "TcoP1qZ8e4dvKU9F",
     "name": "manda-gcal-assistant",
@@ -433,6 +433,31 @@
                 },
                 "renameOutput": true,
                 "outputKey": "/besok : cek jadwal besok"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "d561e881-2725-4f4c-b448-99a957d089dc",
+                      "leftValue": "={{ $json.pesanWALower.startsWith('/done') || $json.pesanWALower.startsWith('/selesai') || $json.pesanWALower.startsWith('/hapus') }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/done atau /hapus: kelola status agenda"
               }
             ]
           },
@@ -1089,6 +1114,240 @@
             "name": "Header Auth account"
           }
         }
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst text = input.pesanWALower || '';\nconst rawText = input.pesanWA || '';\n\nlet isDelete = text.startsWith('/hapus');\nlet query = '';\nif (isDelete) {\n  query = rawText.replace(/^\\/hapus(-jadwal)?\\s*/i, '').trim();\n} else {\n  query = rawText.replace(/^(\\/done|\\/selesai)\\s*/i, '').trim();\n}\n\nquery = query.replace(/^(manda|okta)\\s*/i, '').trim();\n\nreturn [{\n  json: {\n    ...input,\n    isDelete,\n    isDone: !isDelete,\n    queryTitle: query\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1300,
+          1100
+        ],
+        "id": "42703a59-4b6f-4baf-b2ad-d4c8207354b6",
+        "name": "Manda Parse Done Action"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 30}).toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 90}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          1520,
+          1100
+        ],
+        "id": "80f063fd-2852-4ebd-af48-c1ad13326cf6",
+        "name": "Manda Search GCal Events",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nlet meta = {};\ntry {\n  meta = $('Manda Parse Done Action').first().json;\n} catch (e) {}\n\nconst query = (meta.queryTitle || '').toLowerCase().trim();\nconst isDelete = Boolean(meta.isDelete);\nconst isDone = Boolean(meta.isDone);\n\nlet matched = null;\nfor (const item of items) {\n  const d = item.json;\n  if (!d || !d.id || !d.summary) continue;\n  const summaryLower = d.summary.toLowerCase();\n  if (query && (summaryLower.includes(query) || query.includes(summaryLower))) {\n    matched = d;\n    break;\n  }\n}\n\nif (!matched) {\n  return [{\n    json: {\n      found: false,\n      message: `⚠️ Agenda atau tugas *\"${meta.queryTitle}\"* tidak ditemukan di kalender.`\n    }\n  }];\n}\n\nconst origSummary = matched.summary;\nconst newSummary = isDone\n  ? (origSummary.startsWith('[SELESAI]') ? origSummary : `[SELESAI] ${origSummary}`)\n  : origSummary;\n\nreturn [{\n  json: {\n    found: true,\n    eventId: matched.id,\n    summary: origSummary,\n    newSummary: newSummary,\n    isDelete,\n    isDone\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1740,
+          1100
+        ],
+        "id": "4f64cef6-9d46-461c-9b07-7165efc08e45",
+        "name": "Manda Match Event"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cbd1286a-1c6f-4f2d-8f7b-943442309dfc",
+                "leftValue": "={{ $json.found }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1960,
+          1100
+        ],
+        "id": "29d7a0b2-57bf-405a-b2f9-ebebbef42cbf",
+        "name": "Manda If Event Found"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "d57903f8-60a4-4cf4-aee2-3ef6b5b1fa3f",
+                      "leftValue": "={{ $json.isDone }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "done"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "869f6b59-25d8-4e8e-84bd-b6fcd6b4f92b",
+                      "leftValue": "={{ $json.isDelete }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "delete"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          2180,
+          1050
+        ],
+        "id": "0bc4e88e-926c-4083-b241-0ae02b5debe5",
+        "name": "Manda Switch Done vs Delete"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "eventId": "={{ $json.eventId }}",
+          "updateFields": {
+            "summary": "={{ $json.newSummary }}"
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          2400,
+          980
+        ],
+        "id": "f8c4c0df-ab75-464f-b9bd-315f886ccd5d",
+        "name": "Manda Mark Event Selesai",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "eventId": "={{ $json.eventId }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          2400,
+          1140
+        ],
+        "id": "e6f924d1-e1b9-4531-96a7-2a6fb3fe7859",
+        "name": "Manda Delete GCal Event",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "let summary = '';\ntry { summary = $('Manda Match Event').first().json.summary; } catch(e){}\nreturn [{\n  json: {\n    message: `✅ Tugas *${summary || 'Agenda'}* telah ditandai *[SELESAI]* di Google Calendar! 🎉`\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2620,
+          980
+        ],
+        "id": "c453d0d9-f97c-4f90-8a5a-049d087e8249",
+        "name": "Manda Format Done Msg"
+      },
+      {
+        "parameters": {
+          "jsCode": "let summary = '';\ntry { summary = $('Manda Match Event').first().json.summary; } catch(e){}\nreturn [{\n  json: {\n    message: `🗑️ Agenda/Tugas *${summary || 'Agenda'}* telah berhasil dihapus dari Google Calendar.`\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2620,
+          1140
+        ],
+        "id": "3ef6444d-846a-4e24-9968-c1c61c758343",
+        "name": "Manda Format Delete Msg"
       }
     ],
     "connections": {
@@ -1241,6 +1500,13 @@
           [
             {
               "node": "Get many events3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Manda Parse Done Action",
               "type": "main",
               "index": 0
             }
@@ -1491,6 +1757,119 @@
             }
           ]
         ]
+      },
+      "Manda Parse Done Action": {
+        "main": [
+          [
+            {
+              "node": "Manda Search GCal Events",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Search GCal Events": {
+        "main": [
+          [
+            {
+              "node": "Manda Match Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Match Event": {
+        "main": [
+          [
+            {
+              "node": "Manda If Event Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda If Event Found": {
+        "main": [
+          [
+            {
+              "node": "Manda Switch Done vs Delete",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Switch Done vs Delete": {
+        "main": [
+          [
+            {
+              "node": "Manda Mark Event Selesai",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Manda Delete GCal Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Mark Event Selesai": {
+        "main": [
+          [
+            {
+              "node": "Manda Format Done Msg",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Delete GCal Event": {
+        "main": [
+          [
+            {
+              "node": "Manda Format Delete Msg",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Format Done Msg": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manda Format Delete Msg": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "settings": {
@@ -1506,9 +1885,9 @@
       "templateCredsSetupCompleted": true
     },
     "pinData": {},
-    "versionId": "efc3d06c-11b0-4140-8555-57fe985cac00",
-    "activeVersionId": "efc3d06c-11b0-4140-8555-57fe985cac00",
-    "versionCounter": 138,
+    "versionId": "cebfdc13-1efb-496d-b7ce-43d6f8be9c70",
+    "activeVersionId": "cebfdc13-1efb-496d-b7ce-43d6f8be9c70",
+    "versionCounter": 140,
     "triggerCount": 0,
     "tags": [],
     "shared": [

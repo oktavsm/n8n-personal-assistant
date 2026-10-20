@@ -39,23 +39,29 @@ flowchart TD
 ### A. WhatsApp Router (`master-router-webhook` - `yViHMhfkTHv6uNFC`)
 Pusat kontrol dan filter pesan masuk WhatsApp dari Evolution API:
 - **Filtering Cerdas:** Mengabaikan pesan dari bot sendiri (`fromMe: true`) dan pesan tanpa konten relevan.
-- **22 Aturan Routing Dinamis:** Mendeteksi command, prefix, mention, nomor pengirim, dan media.
+- **23 Aturan Routing Dinamis:** Mendeteksi command, prefix, mention bot di grup, nomor pengirim, whitelist grup (`ALLOWED_AGENT_GROUPS`), presensi one-word, notes, dan media.
 - **Multi-Room Awareness:** Mengenali apakah pesan berasal dari Private Chat Okta, Private Chat Kak Manda, atau Group Dev/Shared.
 
 ### B. AI Conversation & Memory (`wa-conversation` - `WmvJdI22Wr5O1k9y`)
-Chatbot percakapan berbasis Google Gemini dengan memori jangka panjang:
-- **Database Chat Memory:** Tersimpan di PostgreSQL (`n8n_db.public.wa_chat_memory`). Mengingat **15 percakapan terakhir** dalam **7 hari** terakhir per room chat.
+Chatbot percakapan multimodal berbasis Google Gemini dengan memori kronologis dan action trigger:
+- **Database Chat Memory:** Tersimpan di PostgreSQL (`n8n_db.public.wa_chat_memory`). Mengingat **40 percakapan terakhir** dalam **14 hari** terakhir per room chat (kronologis `oldest -> newest`).
+- **Multimodal Vision & Voice Notes:**
+  - **Voice Notes (VN):** Audio ditranskripsi dan dipahami native oleh `gemini-2.5-flash`.
+  - **Image Understanding & OCR:** Membaca teks slide materi, lembar soal tugas, struk belanja, dan diagram arsitektur via Gemini Vision.
+- **Sistem Catatan Pribadi & Dua Arah:** Terhubung ke PostgreSQL `user_notes` untuk `/catat`, `/notes`, dan cross-check antara Okta dan Kak Manda.
+- **Action Trigger Engine:** Mengubah niat percakapan menjadi aksi nyata di Google Calendar (`TUGAS`, `JADWAL`, `DONE`, `DELETE`), Catatan (`NOTE_ADD`, `NOTE_DONE`), dan Presensi UB (`PRESENSI`).
 - **Persona Dinamis ("Perwakilan Okta"):**
   - **Khusus Kak Manda:** Bot memposisikan diri sebagai perwakilan Okta yang ramah, sopan, panggil *"Kak Manda"*, hangat, to the point, dan tidak alay.
   - **Okta & Group:** Bot menjadi co-pilot teknis yang tanggap dan ringkas.
-- **Fitur "Titip Pesan" Otomatis:** Jika Kak Manda menitipkan pesan (misal: *"titip pesan ke okta ya..."*, *"bilang okta..."*), bot otomatis meneruskan pesan tersebut ke nomor WhatsApp pribadi Okta.
+- **Fitur "Titip Pesan" Otomatis:** Jika Kak Manda menitipkan pesan, bot otomatis meneruskannya ke WhatsApp pribadi Okta (dan sebaliknya).
 - **Sticker Generator (`/stiker` / `/sticker`):**
-  - Mengonversi foto, video pendek, atau GIF (baik yang dikirim bersama caption maupun yang di-reply) langsung menjadi stiker WhatsApp animasi atau statis via Evolution API.
+  - Mengonversi foto, video pendek, atau GIF langsung menjadi stiker WhatsApp animasi atau statis via Evolution API.
 
 ### C. VPS CLI Agent Runner (`vps-cli-runner` - `vpsCLIRunner0001`)
 Menjalankan agen AI langsung di host VPS via WhatsApp:
 - **Perintah:** `/vps <instruksi>` atau `/agent <instruksi>`.
-- **Akses Eksklusif (Zero-Trust):** Hanya dapat dipicu oleh nomor WhatsApp pribadi Okta (`$env.MY_WA_NUMBER`).
+- **Akses Grup Ter-Whitelist:** Dapat dipicu dari Private Chat maupun Group Chat yang terdaftar di `ALLOWED_AGENT_GROUPS` / `WA_GROUP_DEV`.
+- **Akses Eksklusif (Zero-Trust):** Hanya dapat dipicu oleh pengirim terverifikasi Okta (`$env.MY_WA_NUMBER`). Tag mention bot otomatis dibersihkan.
 - **Immediate Acknowledgment:** Mengirim konfirmasi seketika bahwa tugas sedang diproses di VPS.
 - **Eksekusi Aman:** Terhubung via SSH ed25519 internal dengan command blacklist (`rm -rf /`, `mkfs`, `shutdown`, dll.) dan timeout 120 detik.
 - **Hasil Terstruktur:** Mengembalikan rangkuman hasil eksekusi terminal/agen langsung ke WhatsApp.
@@ -66,12 +72,13 @@ Menjalankan agen AI langsung di host VPS via WhatsApp:
 
 ### A. Okta Google Calendar Assistant (`wa-to-gcal-assistant` - `U43zT3sJktIA9LaL`)
 - **Query Bahasa Alami:** Cek jadwal hari ini, besok, minggu ini, ujian (UAS), tugas, dan agenda kuliah.
+- **Lifecycle Management:** Mendukung `/done <judul>`, `/selesai <judul>` (menandai `[SELESAI]` dan ubah warna), serta `/hapus-jadwal <judul>` (menghapus event dari kalender).
 - **Fallback Jadwal Kosong:** Memberikan pesan ramah dan informatif jika tidak ada agenda pada tanggal yang diminta.
 - **Validasi Command:** Mendeteksi jika parameter tanggal/perintah kurang lengkap dan memberikan petunjuk format yang benar.
 
 ### B. Manda Google Calendar Assistant (`manda-gcal-assistant` - `TcoP1qZ8e4dvKU9F`)
 - Khusus terintegrasi dengan kalender agenda, kuliah, dan tugas Kak Manda.
-- Dilengkapi fallback jadwal kosong dan validasi prompt yang sama handalnya.
+- Dilengkapi lifecycle `/done`, `/selesai`, `/hapus-jadwal`, fallback jadwal kosong, dan validasi prompt yang sama handalnya.
 
 ### C. Pengingat Otomatis Terjadwal (`gcal-to-wa-assistant` - `eCtWrmeyciUgg8f2`)
 - Cron harian yang otomatis membaca agenda dan jadwal kuliah pagi hari.

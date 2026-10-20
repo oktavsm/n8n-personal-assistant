@@ -39,5 +39,6 @@ test_*.py
 main.cpp
 brone-auth/test_*.js
 workflow/archive/
+scripts/update_*.py
 
 .agent/

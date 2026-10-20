@@ -208,8 +208,8 @@ if (!actions || actions.length === 0) {
 }
 
 const items = [];
-const defaultOktaNumber = $env.MY_WA_NUMBER || "6285750583867";
-const defaultMandaNumber = $env.MANDA_WA_NUMBER || "62895605917452";
+const defaultOktaNumber = $env.MY_WA_NUMBER || "628XXXXXXXXXX";
+const defaultMandaNumber = $env.MANDA_WA_NUMBER || "628YYYYYYYYYY";
 
 for (const act of actions) {
   const isMandaTarget = act.target === 'manda';

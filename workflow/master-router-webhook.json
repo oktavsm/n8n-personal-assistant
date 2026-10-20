@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-19T16:35:44.247Z",
+    "updatedAt": "2026-10-20T06:20:54.955Z",
     "createdAt": "2026-04-06T02:19:40.562Z",
     "id": "yViHMhfkTHv6uNFC",
     "name": "master-router-webhook",
@@ -231,11 +231,12 @@
                   "conditions": [
                     {
                       "id": "77b486dc-e2d6-48b8-a97b-8957a5448767",
-                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
-                      "rightValue": "=/presensi",
+                      "leftValue": "={{ (() => { const raw = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || \"\").trim(); const cleaned = raw.replace(/@\\d+\\s*/g, \"\").trim().toLowerCase(); const isExactPresensi = [\"hadir\", \"absen\", \"absen hadir\", \"hadir daring\", \"hadir online\", \"hadir luring\"].includes(cleaned); return Boolean(cleaned.startsWith(\"/presensi\") || isExactPresensi); })() }}",
+                      "rightValue": "",
                       "operator": {
-                        "type": "string",
-                        "operation": "contains"
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
                       }
                     }
                   ],
@@ -447,11 +448,12 @@
                   "conditions": [
                     {
                       "id": "4bed6907-c663-4c73-968c-54cf3f259638",
-                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
-                      "rightValue": "=/ask",
+                      "leftValue": "={{ (() => { const raw = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || \"\").trim(); const cleaned = raw.replace(/@\\d+\\s*/g, \"\").trim().toLowerCase(); const jid = $json.body?.data?.key?.remoteJid || \"\"; const ctx = $json.body?.data?.message?.extendedTextMessage?.contextInfo || {}; const mentionedJid = ctx.mentionedJid || []; const botNumbers = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", $env.MY_WA_NUMBER]; const isAsk = cleaned.startsWith(\"/ask\"); const isMention = botNumbers.some(b => raw.includes(\"@\" + b)) || mentionedJid.some(j => botNumbers.some(b => j.includes(b))) || raw.toLowerCase().includes(\"@n8n\") || raw.toLowerCase().includes(\"@bot\"); const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\"); const isDoneCmd = cleaned.startsWith(\"/done\") || cleaned.startsWith(\"/selesai\") || cleaned.startsWith(\"/hapus-jadwal\"); return Boolean(isAsk || isMention || isNoteCmd || isDoneCmd); })() }}",
+                      "rightValue": "",
                       "operator": {
-                        "type": "string",
-                        "operation": "contains"
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
                       }
                     }
                   ],
@@ -544,7 +546,7 @@
                   "conditions": [
                     {
                       "id": "cb9037f4-e3bc-4bab-a9f7-f484cd1484e0",
-                      "leftValue": "={{ (() => { const text = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').trim(); const lower = text.toLowerCase(); const jid = $json.body?.data?.key?.remoteJid || ''; const part = $json.body?.data?.key?.participant || $json.body?.data?.key?.participantAlt || ''; const isOkta = jid.includes($env.MY_WA_NUMBER) || part.includes($env.MY_WA_NUMBER); return Boolean(isOkta && (lower.startsWith('/vps') || lower.startsWith('/agent'))); })() }}",
+                      "leftValue": "={{ (() => { const raw = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || \"\").trim(); const cleaned = raw.replace(/@\\d+\\s*/g, \"\").trim(); const lower = cleaned.toLowerCase(); const jid = $json.body?.data?.key?.remoteJid || \"\"; const part = $json.body?.data?.key?.participant || $json.body?.data?.key?.participantAlt || \"\"; const isOkta = jid.includes($env.MY_WA_NUMBER) || part.includes($env.MY_WA_NUMBER); const isGroup = jid.endsWith(\"@g.us\"); const allowedGroups = ($env.ALLOWED_AGENT_GROUPS || `${$env.WA_GROUP_DEV || \"\"},${$env.WA_GROUP_SHARED || \"\"},120363336434287340@g.us,120363426033987537@g.us`).split(\",\").map(s => s.trim()).filter(Boolean); const isAllowedChat = !isGroup || allowedGroups.some(g => jid.includes(g) || g.includes(jid)); return Boolean(isOkta && isAllowedChat && (lower.startsWith(\"/vps\") || lower.startsWith(\"/agent\"))); })() }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",
@@ -2747,9 +2749,9 @@
     "staticData": null,
     "meta": null,
     "pinData": {},
-    "versionId": "5a929267-9f56-4bcb-929f-93c038fe7c49",
-    "activeVersionId": "5a929267-9f56-4bcb-929f-93c038fe7c49",
-    "versionCounter": 1075,
+    "versionId": "a0afe05f-9904-475e-860d-fd905bd5eb5a",
+    "activeVersionId": "a0afe05f-9904-475e-860d-fd905bd5eb5a",
+    "versionCounter": 1077,
     "triggerCount": 1,
     "tags": [],
     "shared": [

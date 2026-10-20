@@ -47,7 +47,7 @@ for n in router["nodes"]:
     msg.audioMessage?.contextInfo ||
     {};
 
-  const botLids = ['195095164887244', '171619058196619', '158613192614132', '6283130151476', '6285750583867'];
+  const botLids = ['195095164887244', '171619058196619', '158613192614132', '6283130151476', '628XXXXXXXXXX'];
 
   // 1. Tag / Mention check
   const jids = ctx.mentionedJid || [];
@@ -202,7 +202,7 @@ const selectedMedia = currentMedia.exists ? currentMedia : quotedMedia.exists ? 
 const textLower = currentText.toLowerCase();
 
 const mentionedJid = ctx.mentionedJid || [];
-const botLids = ["171619058196619", "195095164887244", "158613192614132", "6283130151476", "6285750583867"];
+const botLids = ["171619058196619", "195095164887244", "158613192614132", "6283130151476", "628XXXXXXXXXX"];
 const isMentionBot =
   botLids.some(b => currentText.includes("@" + b)) ||
   mentionedJid.some(j => botLids.some(b => j.includes(b)));

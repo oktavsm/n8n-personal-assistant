@@ -7,8 +7,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 workflows_to_deploy = [
-    "workflow/gcal-to-wa-assistant.json",
-    "workflow/wa-conversation.json"
+    "workflow/master-router-webhook.json",
+    "workflow/vps-cli-runner.json",
+    "workflow/siam-presensi-notifier.json",
+    "workflow/wa-conversation.json",
+    "workflow/wa-to-gcal-assistant.json",
+    "workflow/manda-gcal-assistant.json"
 ]
 
 host = "pg-bcc"
@@ -52,4 +56,4 @@ for wf in workflows_to_deploy:
         res = subprocess.run(["ssh", host, act_cmd], capture_output=True, text=True)
         print(f"  Published/Activated: {wf_id}")
 
-print("🎉 Workflows deployed and published successfully!")
+print("🎉 All workflows deployed and published successfully!")

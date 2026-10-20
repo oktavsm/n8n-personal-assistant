@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-19T13:31:40.875Z",
+    "updatedAt": "2026-10-20T06:21:23.548Z",
     "createdAt": "2026-04-06T06:15:45.185Z",
     "id": "H5lVT2ani2aaNkyV",
     "name": "siam-presensi-notifier",
@@ -233,7 +233,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// ==============================\n// CONFIG\n// ==============================\n\n// ==============================\n// HELPER\n// ==============================\nfunction getWAData() {\n  try {\n    const data = $(\"WA Command\").item.json.body.data;\n\n    const text =\n      data?.message?.conversation ||\n      data?.message?.extendedTextMessage?.text ||\n      \"\";\n\n    const remoteJid = data?.key?.remoteJid || \"\";\n\n    return {\n      isScheduler: false,\n      pesanWA: text.toLowerCase().trim(),\n      targetNumber: remoteJid,\n    };\n  } catch (e) {\n    return {\n      isScheduler: true,\n      pesanWA: \"otomatis\",\n      targetNumber: \"\",\n    };\n  }\n}\n\nfunction formatPresensiList(kelasBelumAbsen) {\n  let text = \"🚨 *DAFTAR PRESENSI AKTIF:*\\n\\n\";\n\n  kelasBelumAbsen.forEach(m => {\n    text +=\n      `📚 *${m.MATA_KULIAH}*\\n` +\n      `⏳ Tutup: ${m.JAM_SELESAI}\\n\\n`;\n  });\n\n  text +=\n    \"Ketik:\\n\" +\n    \"/presensi hadir\\n\" +\n    \"/presensi hadir daring\\n\" +\n    \"/presensi sakit\\n\" +\n    \"/presensi izin\";\n\n  return text;\n}\n\n// ==============================\n// SOURCE\n// ==============================\nconst { isScheduler, pesanWA, targetNumber } = getWAData();\n\n// ==============================\n// DATA PRESENSI\n// ==============================\nconst presensiAktif = $input.first().json.data || [];\nconst kelasBelumAbsen = presensiAktif.filter(p => p.K_ABSENSI === \"\");\n\n// ==============================\n// SCHEDULER MODE\n// Scheduler cuma info, tidak execute\n// ==============================\nif (isScheduler) {\n  if (kelasBelumAbsen.length === 0) {\n    return [];\n  }\n\n  return {\n    json: {\n      action: \"INFORM_PRESENSI\",\n      status: \"ADA_PRESENSI\",\n      isScheduler: true,\n      text: formatPresensiList(kelasBelumAbsen),\n    }\n  };\n}\n\n// ==============================\n// MANUAL MODE: TIDAK ADA PRESENSI\n// ==============================\nif (presensiAktif.length === 0) {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"TIDAK_ADA_PRESENSI\",\n      isScheduler: false,\n      targetNumber,\n      text: \"Lagi gaada presensi kelas yang dibuka.\",\n    }\n  };\n}\n\n// ==============================\n// MANUAL MODE: SEMUA SUDAH ABSEN\n// ==============================\nif (kelasBelumAbsen.length === 0) {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"SUDAH_ABSEN_SEMUA\",\n      isScheduler: false,\n      targetNumber,\n      text: \"Kamu udah absen buat semua kelas yang aktif saat ini.\",\n    }\n  };\n}\n\n// ==============================\n// PARSE COMMAND\n// ==============================\nconst command = pesanWA.replace(\"/presensi\", \"\").trim();\n\nlet kode_absensi = \"\";\nlet is_daring = \"0\";\n\nif (command === \"\") {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"ADA_PRESENSI\",\n      isScheduler: false,\n      targetNumber,\n      text: formatPresensiList(kelasBelumAbsen),\n    }\n  };\n}\n\nif (command.includes(\"hadir daring\") || command.includes(\"hadir online\")) {\n  kode_absensi = \"H\";\n  is_daring = \"1\";\n}\nelse if (command.includes(\"hadir\") || command.includes(\"hadir luring\") || command.includes(\"hadir offline\")) {\n  kode_absensi = \"H\";\n  is_daring = \"0\";\n}\nelse if (command.includes(\"sakit\")) {\n  kode_absensi = \"S\";\n  is_daring = \"0\";\n}\nelse if (command.includes(\"izin\")) {\n  kode_absensi = \"I\";\n  is_daring = \"0\";\n}\n\n// ==============================\n// COMMAND INVALID\n// ==============================\nif (kode_absensi === \"\") {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"COMMAND_INVALID\",\n      isScheduler: false,\n      targetNumber,\n      text:\n        \"Command presensi belum dikenali.\\n\\n\" +\n        formatPresensiList(kelasBelumAbsen),\n    }\n  };\n}\n\n// ==============================\n// EXECUTE PRESENSI\n// Manual command only\n// ==============================\nreturn kelasBelumAbsen.map(matkul => ({\n  json: {\n    action: \"EXECUTE_PRESENSI\",\n    status: \"EXECUTE_PRESENSI\",\n    isScheduler: false,\n    targetNumber,\n    kode_materi: matkul.K_MATERI_AJAR,\n    kode_absensi,\n    is_daring,\n    nama_matkul: matkul.MATA_KULIAH,\n    text:\n      `Sedang execute presensi *${matkul.MATA_KULIAH}*...`,\n  }\n}));"
+          "jsCode": "// ==============================\n// CONFIG\n// ==============================\n\n// ==============================\n// HELPER\n// ==============================\nfunction getWAData() {\n  try {\n    const data = $(\"WA Command\").item.json.body.data;\n\n    const text =\n      data?.message?.conversation ||\n      data?.message?.extendedTextMessage?.text ||\n      \"\";\n\n    const remoteJid = data?.key?.remoteJid || \"\";\n\n    return {\n      isScheduler: false,\n      pesanWA: text.toLowerCase().trim(),\n      targetNumber: remoteJid,\n    };\n  } catch (e) {\n    return {\n      isScheduler: true,\n      pesanWA: \"otomatis\",\n      targetNumber: \"\",\n    };\n  }\n}\n\nfunction formatPresensiList(kelasBelumAbsen) {\n  let text = \"🚨 *DAFTAR PRESENSI AKTIF:*\\n\\n\";\n\n  kelasBelumAbsen.forEach(m => {\n    text +=\n      `📚 *${m.MATA_KULIAH}*\\n` +\n      `⏳ Tutup: ${m.JAM_SELESAI}\\n\\n`;\n  });\n\n  text +=\n    \"Ketik:\\n\" +\n    \"/presensi hadir\\n\" +\n    \"/presensi hadir daring\\n\" +\n    \"/presensi sakit\\n\" +\n    \"/presensi izin\";\n\n  return text;\n}\n\n// ==============================\n// SOURCE\n// ==============================\nconst { isScheduler, pesanWA, targetNumber } = getWAData();\n\n// ==============================\n// DATA PRESENSI\n// ==============================\nconst presensiAktif = $input.first().json.data || [];\nconst kelasBelumAbsen = presensiAktif.filter(p => p.K_ABSENSI === \"\");\n\n// ==============================\n// SCHEDULER MODE\n// Scheduler cuma info, tidak execute\n// ==============================\nif (isScheduler) {\n  if (kelasBelumAbsen.length === 0) {\n    return [];\n  }\n\n  return {\n    json: {\n      action: \"INFORM_PRESENSI\",\n      status: \"ADA_PRESENSI\",\n      isScheduler: true,\n      text: formatPresensiList(kelasBelumAbsen),\n    }\n  };\n}\n\n// ==============================\n// MANUAL MODE: TIDAK ADA PRESENSI\n// ==============================\nif (presensiAktif.length === 0) {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"TIDAK_ADA_PRESENSI\",\n      isScheduler: false,\n      targetNumber,\n      text: \"Lagi gaada presensi kelas yang dibuka.\",\n    }\n  };\n}\n\n// ==============================\n// MANUAL MODE: SEMUA SUDAH ABSEN\n// ==============================\nif (kelasBelumAbsen.length === 0) {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"SUDAH_ABSEN_SEMUA\",\n      isScheduler: false,\n      targetNumber,\n      text: \"Kamu udah absen buat semua kelas yang aktif saat ini.\",\n    }\n  };\n}\n\n// ==============================\n// PARSE COMMAND\n// ==============================\nconst command = pesanWA.replace(\"/presensi\", \"\").trim();\n\nlet kode_absensi = \"\";\nlet is_daring = \"0\";\n\nif (command === \"\") {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"ADA_PRESENSI\",\n      isScheduler: false,\n      targetNumber,\n      text: formatPresensiList(kelasBelumAbsen),\n    }\n  };\n}\n\nif (command.includes(\"hadir daring\") || command.includes(\"hadir online\")) {\n  kode_absensi = \"H\";\n  is_daring = \"1\";\n}\nelse if (command.includes(\"hadir\") || command.includes(\"hadir luring\") || command.includes(\"hadir offline\") || command === \"absen\") {\n  kode_absensi = \"H\";\n  is_daring = \"0\";\n}\nelse if (command.includes(\"sakit\")) {\n  kode_absensi = \"S\";\n  is_daring = \"0\";\n}\nelse if (command.includes(\"izin\")) {\n  kode_absensi = \"I\";\n  is_daring = \"0\";\n}\n\n// ==============================\n// COMMAND INVALID\n// ==============================\nif (kode_absensi === \"\") {\n  return {\n    json: {\n      action: \"REPLY_ONLY\",\n      status: \"COMMAND_INVALID\",\n      isScheduler: false,\n      targetNumber,\n      text:\n        \"Command presensi belum dikenali.\\n\\n\" +\n        formatPresensiList(kelasBelumAbsen),\n    }\n  };\n}\n\n// ==============================\n// EXECUTE PRESENSI\n// Manual command only\n// ==============================\nreturn kelasBelumAbsen.map(matkul => ({\n  json: {\n    action: \"EXECUTE_PRESENSI\",\n    status: \"EXECUTE_PRESENSI\",\n    isScheduler: false,\n    targetNumber,\n    kode_materi: matkul.K_MATERI_AJAR,\n    kode_absensi,\n    is_daring,\n    nama_matkul: matkul.MATA_KULIAH,\n    text:\n      `Sedang execute presensi *${matkul.MATA_KULIAH}*...`,\n  }\n}));"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -333,50 +333,24 @@
         "parameters": {
           "conditions": {
             "options": {
-              "caseSensitive": true,
+              "caseSensitive": false,
               "leftValue": "",
-              "typeValidation": "strict",
+              "typeValidation": "loose",
               "version": 3
             },
             "conditions": [
               {
-                "id": "001cd4ec-655f-4afe-8982-bf2ce0d97223",
-                "leftValue": "={{ $json.body.data.message.conversation }}",
-                "rightValue": "=hadir",
+                "id": "cond-cmd-text",
+                "leftValue": "={{ (() => { const t = (.body?.data?.message?.conversation || .body?.data?.message?.extendedTextMessage?.text || \"\").toLowerCase(); return Boolean(t.includes(\"hadir\") || t.includes(\"daring\") || t.includes(\"izin\") || t.includes(\"sakit\") || t.includes(\"absen\") || t.includes(\"/presensi\")); })() }}",
+                "rightValue": "",
                 "operator": {
-                  "type": "string",
-                  "operation": "contains"
-                }
-              },
-              {
-                "id": "687942c7-0e7f-412d-bb65-bfc022416734",
-                "leftValue": "={{ $json.body.data.message.conversation }}",
-                "rightValue": "=daring",
-                "operator": {
-                  "type": "string",
-                  "operation": "contains"
-                }
-              },
-              {
-                "id": "e3a02f97-d996-4957-8a96-803b2231b22c",
-                "leftValue": "={{ $json.body.data.message.conversation }}",
-                "rightValue": "=izin",
-                "operator": {
-                  "type": "string",
-                  "operation": "contains"
-                }
-              },
-              {
-                "id": "32e61a0a-b23e-4ef3-bfe2-ac61010a1972",
-                "leftValue": "={{ $json.body.data.message.conversation }}",
-                "rightValue": "=sakit",
-                "operator": {
-                  "type": "string",
-                  "operation": "contains"
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
                 }
               }
             ],
-            "combinator": "or"
+            "combinator": "and"
           },
           "options": {}
         },
@@ -689,9 +663,9 @@
     },
     "meta": null,
     "pinData": {},
-    "versionId": "6583b770-ed93-4d02-855d-fa1444fc7f52",
-    "activeVersionId": "6583b770-ed93-4d02-855d-fa1444fc7f52",
-    "versionCounter": 499,
+    "versionId": "ae3e46dc-3385-4b3d-9e40-86f738a031fb",
+    "activeVersionId": "ae3e46dc-3385-4b3d-9e40-86f738a031fb",
+    "versionCounter": 501,
     "triggerCount": 1,
     "tags": [],
     "shared": [

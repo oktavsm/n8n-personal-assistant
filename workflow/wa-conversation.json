@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-20T04:11:07.154Z",
+    "updatedAt": "2026-10-20T06:21:38.142Z",
     "createdAt": "2026-05-05T15:46:35.418Z",
     "id": "WmvJdI22Wr5O1k9y",
     "name": "wa-conversation",
@@ -23,7 +23,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const root = $input.first().json;\nconst body = root.body || {};\nconst data = body.data || {};\nconst msg = data.message || {};\nconst ctx =\n  data.contextInfo ||\n  msg.extendedTextMessage?.contextInfo ||\n  msg.imageMessage?.contextInfo ||\n  msg.videoMessage?.contextInfo ||\n  msg.documentMessage?.contextInfo ||\n  msg.audioMessage?.contextInfo ||\n  {};\n\nconst quoted = ctx.quotedMessage || {};\n\nfunction getTextFromMessage(m = {}) {\n  return (\n    m.conversation ||\n    m.extendedTextMessage?.text ||\n    m.imageMessage?.caption ||\n    m.videoMessage?.caption ||\n    m.documentMessage?.caption ||\n    \"\"\n  );\n}\n\nfunction detectMedia(m = {}) {\n  if (m.imageMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"image\",\n      kind: \"imageMessage\",\n      mimetype: m.imageMessage.mimetype || \"image/jpeg\",\n      caption: m.imageMessage.caption || \"\",\n      message: m.imageMessage,\n    };\n  }\n\n  if (m.videoMessage) {\n    const isGif = !!m.videoMessage.gifPlayback;\n    return {\n      exists: true,\n      source: null,\n      type: isGif ? \"gif\" : \"video\",\n      kind: \"videoMessage\",\n      mimetype: m.videoMessage.mimetype || \"video/mp4\",\n      caption: m.videoMessage.caption || \"\",\n      message: m.videoMessage,\n    };\n  }\n\n  if (m.audioMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"audio\",\n      kind: \"audioMessage\",\n      mimetype: m.audioMessage.mimetype || \"audio/ogg\",\n      caption: \"\",\n      message: m.audioMessage,\n    };\n  }\n\n  if (m.documentMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"document\",\n      kind: \"documentMessage\",\n      mimetype: m.documentMessage.mimetype || \"application/octet-stream\",\n      caption: m.documentMessage.caption || \"\",\n      fileName: m.documentMessage.fileName || \"\",\n      message: m.documentMessage,\n    };\n  }\n\n  if (m.stickerMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"sticker\",\n      kind: \"stickerMessage\",\n      mimetype: m.stickerMessage.mimetype || \"image/webp\",\n      caption: \"\",\n      message: m.stickerMessage,\n    };\n  }\n\n  return {\n    exists: false,\n    source: null,\n    type: null,\n    kind: null,\n    mimetype: null,\n    caption: \"\",\n    message: null,\n  };\n}\n\nconst currentText = getTextFromMessage(msg).trim();\nconst quotedText = getTextFromMessage(quoted).trim();\n\nconst currentMedia = detectMedia(msg);\ncurrentMedia.source = \"current\";\n\nconst quotedMedia = detectMedia(quoted);\nquotedMedia.source = \"quoted\";\n\nconst selectedMedia = currentMedia.exists ? currentMedia : quotedMedia.exists ? quotedMedia : null;\n\nconst textLower = currentText.toLowerCase();\n\nconst mentionedJid = ctx.mentionedJid || [];\nconst botLids = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", \"${$env.MY_WA_NUMBER}\"];\nconst isMentionBot =\n  botLids.some(b => currentText.includes(\"@\" + b)) ||\n  mentionedJid.some(j => botLids.some(b => j.includes(b)));\n\nconst quotedParticipant = ctx.participant || ctx.quotedMessageSender || \"\";\nconst isReplyingToBot = botLids.some(b => quotedParticipant.includes(b));\n\nconst isAskCommand = textLower.startsWith(\"/ask\");\nconst isStickerCommand = textLower.startsWith(\"/stiker\") || textLower.startsWith(\"/sticker\");\n\nconst cleanText = currentText\n  .replace(/@171619058196619/g, \"\")\n  .replace(/@195095164887244/g, \"\")\n  .replace(/@158613192614132/g, \"\")\n  .replace(/@6283130151476/g, \"\")\n  .replace(/^\\/ask/i, \"\")\n  .replace(/^\\/stiker/i, \"\")\n  .replace(/^\\/sticker/i, \"\")\n  .trim();\n\nconst remoteJid = data.key?.remoteJid || \"\";\nconst participant = data.key?.participant || data.key?.participantAlt || remoteJid;\nconst isGroup = remoteJid.endsWith(\"@g.us\");\nconst isDevGroup = remoteJid === ($env.WA_GROUP_DEV || \"120363336434287340@g.us\");\n\nconst isManda = remoteJid.includes($env.MANDA_WA_NUMBER) || participant.includes($env.MANDA_WA_NUMBER);\nconst isOkta = remoteJid.includes($env.MY_WA_NUMBER) || participant.includes($env.MY_WA_NUMBER);\n\n// Deteksi Titip Pesan Dua Arah\nconst isTitipPesanToOkta = !isOkta && /titip|bilang|kasih tau|suruh|ingetin okta|sampaikan ke okta|pesan buat okta/i.test(currentText);\nconst isTitipPesanToManda = isOkta && /titip|bilang|kasih tau|suruh|ingetin manda|sampaikan ke manda|pesan buat manda/i.test(currentText);\nconst isTitipPesan = isTitipPesanToOkta || isTitipPesanToManda;\nconst titipTargetNumber = isTitipPesanToOkta ? $env.MY_WA_NUMBER : isTitipPesanToManda ? $env.MANDA_WA_NUMBER : null;\nconst titipTitle = isTitipPesanToOkta ? \"💌 *Titip Pesan dari Kak Manda untuk Okta:*\" : \"💌 *Titip Pesan dari Okta untuk Kak Manda:*\";\n\nconst hasAudio = selectedMedia?.type === \"audio\";\n\n// Vision Query Detection\nconst isScheduleQuery = Boolean(hasAudio || /jadwal|agenda|kuliah|tugas|uas|kelas|acara|free|kosong|sibuk|kegiatan|besok|hari ini|lusa|ngapain|padet/i.test(currentText));\nconst isAnnouncementQuery = Boolean(/pengumuman|siam|berita kampus|info dosen|info kuliah|asinkron|dinas luar/i.test(currentText));\nconst isPresensiQuery = Boolean(/presensi|absen|absensi|kehadiran/i.test(currentText));\n\nreturn [\n  {\n    json: {\n      ...root,\n      wa: {\n        remoteJid,\n        fromMe: data.key?.fromMe || false,\n        messageId: data.key?.id || \"\",\n        participant,\n        participantAlt: data.key?.participantAlt || \"\",\n        pushName: data.pushName || \"\",\n        dateTime: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Jakarta\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WIB\",\n        dateTimeWib: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Jakarta\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WIB\",\n        dateTimeWita: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Makassar\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WITA\",\n\n        isManda,\n        isOkta,\n        isGroup,\n        isDevGroup,\n\n        currentText,\n        quotedText,\n        cleanText,\n\n        isMentionBot,\n        isReplyingToBot,\n        isAskCommand,\n        isStickerCommand,\n        isTitipPesan,\n        isTitipPesanToOkta,\n        isTitipPesanToManda,\n        titipTargetNumber,\n        titipTitle,\n\n        hasAudio,\n        isScheduleQuery,\n        isAnnouncementQuery,\n        isPresensiQuery,\n\n        hasCurrentMedia: currentMedia.exists,\n        hasQuotedMedia: quotedMedia.exists,\n        hasAnyMedia: !!selectedMedia,\n\n        currentMedia,\n        quotedMedia,\n        selectedMedia,\n\n        selectedMediaSummary: selectedMedia\n          ? `${selectedMedia.source} ${selectedMedia.type} (${selectedMedia.mimetype})`\n          : \"-\",\n\n        quotedPayload: {\n          key: {\n            remoteJid: data.key?.remoteJid,\n            fromMe: data.key?.fromMe,\n            id: data.key?.id,\n            participant: data.key?.participant || data.participant,\n          },\n          message: data.message,\n        },\n      },\n    },\n  },\n];"
+          "jsCode": "const root = $input.first().json;\nconst body = root.body || {};\nconst data = body.data || {};\nconst msg = data.message || {};\nconst ctx =\n  data.contextInfo ||\n  msg.extendedTextMessage?.contextInfo ||\n  msg.imageMessage?.contextInfo ||\n  msg.videoMessage?.contextInfo ||\n  msg.documentMessage?.contextInfo ||\n  msg.audioMessage?.contextInfo ||\n  {};\n\nconst quoted = ctx.quotedMessage || {};\n\nfunction getTextFromMessage(m = {}) {\n  return (\n    m.conversation ||\n    m.extendedTextMessage?.text ||\n    m.imageMessage?.caption ||\n    m.videoMessage?.caption ||\n    m.documentMessage?.caption ||\n    \"\"\n  );\n}\n\nfunction detectMedia(m = {}) {\n  if (m.imageMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"image\",\n      kind: \"imageMessage\",\n      mimetype: m.imageMessage.mimetype || \"image/jpeg\",\n      caption: m.imageMessage.caption || \"\",\n      message: m.imageMessage,\n    };\n  }\n\n  if (m.videoMessage) {\n    const isGif = !!m.videoMessage.gifPlayback;\n    return {\n      exists: true,\n      source: null,\n      type: isGif ? \"gif\" : \"video\",\n      kind: \"videoMessage\",\n      mimetype: m.videoMessage.mimetype || \"video/mp4\",\n      caption: m.videoMessage.caption || \"\",\n      message: m.videoMessage,\n    };\n  }\n\n  if (m.audioMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"audio\",\n      kind: \"audioMessage\",\n      mimetype: m.audioMessage.mimetype || \"audio/ogg\",\n      caption: \"\",\n      message: m.audioMessage,\n    };\n  }\n\n  if (m.documentMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"document\",\n      kind: \"documentMessage\",\n      mimetype: m.documentMessage.mimetype || \"application/octet-stream\",\n      caption: m.documentMessage.caption || \"\",\n      fileName: m.documentMessage.fileName || \"\",\n      message: m.documentMessage,\n    };\n  }\n\n  if (m.stickerMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"sticker\",\n      kind: \"stickerMessage\",\n      mimetype: m.stickerMessage.mimetype || \"image/webp\",\n      caption: \"\",\n      message: m.stickerMessage,\n    };\n  }\n\n  return {\n    exists: false,\n    source: null,\n    type: null,\n    kind: null,\n    mimetype: null,\n    caption: \"\",\n    message: null,\n  };\n}\n\nconst currentText = getTextFromMessage(msg).trim();\nconst quotedText = getTextFromMessage(quoted).trim();\n\nconst currentMedia = detectMedia(msg);\ncurrentMedia.source = \"current\";\n\nconst quotedMedia = detectMedia(quoted);\nquotedMedia.source = \"quoted\";\n\nconst selectedMedia = currentMedia.exists ? currentMedia : quotedMedia.exists ? quotedMedia : null;\n\nconst textLower = currentText.toLowerCase();\n\nconst mentionedJid = ctx.mentionedJid || [];\nconst botLids = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", \"${$env.MY_WA_NUMBER}\"];\nconst isMentionBot =\n  botLids.some(b => currentText.includes(\"@\" + b)) ||\n  mentionedJid.some(j => botLids.some(b => j.includes(b)));\n\nconst quotedParticipant = ctx.participant || ctx.quotedMessageSender || \"\";\nconst isReplyingToBot = botLids.some(b => quotedParticipant.includes(b));\n\nconst isAskCommand = textLower.startsWith(\"/ask\");\nconst isStickerCommand = textLower.startsWith(\"/stiker\") || textLower.startsWith(\"/sticker\");\nconst isNoteCmd = textLower.startsWith(\"/catat\") || textLower.startsWith(\"/notes\") || textLower.startsWith(\"/catatan\");\nconst isDoneCmd = textLower.startsWith(\"/done\") || textLower.startsWith(\"/selesai\") || textLower.startsWith(\"/hapus-jadwal\") || textLower.startsWith(\"/hapus\");\nconst isNotesQuery = Boolean(/catat|notes|catatan|memo|utang|piutang/i.test(currentText) || isNoteCmd);\nconst isDoneOrDeleteQuery = Boolean(/selesai|done|beres|kelar|hapus jadwal|hapus agenda|batal/i.test(currentText) || isDoneCmd);\nconst hasImage = Boolean(selectedMedia?.type === \"image\");\n\nconst cleanText = currentText\n  .replace(/@171619058196619/g, \"\")\n  .replace(/@195095164887244/g, \"\")\n  .replace(/@158613192614132/g, \"\")\n  .replace(/@6283130151476/g, \"\")\n  .replace(/^\\/ask/i, \"\")\n  .replace(/^\\/stiker/i, \"\")\n  .replace(/^\\/sticker/i, \"\")\n  .trim();\n\nconst remoteJid = data.key?.remoteJid || \"\";\nconst participant = data.key?.participant || data.key?.participantAlt || remoteJid;\nconst isGroup = remoteJid.endsWith(\"@g.us\");\nconst isDevGroup = remoteJid === ($env.WA_GROUP_DEV || \"120363336434287340@g.us\");\n\nconst isManda = remoteJid.includes($env.MANDA_WA_NUMBER) || participant.includes($env.MANDA_WA_NUMBER);\nconst isOkta = remoteJid.includes($env.MY_WA_NUMBER) || participant.includes($env.MY_WA_NUMBER);\n\n// Deteksi Titip Pesan Dua Arah\nconst isTitipPesanToOkta = !isOkta && /titip|bilang|kasih tau|suruh|ingetin okta|sampaikan ke okta|pesan buat okta/i.test(currentText);\nconst isTitipPesanToManda = isOkta && /titip|bilang|kasih tau|suruh|ingetin manda|sampaikan ke manda|pesan buat manda/i.test(currentText);\nconst isTitipPesan = isTitipPesanToOkta || isTitipPesanToManda;\nconst titipTargetNumber = isTitipPesanToOkta ? $env.MY_WA_NUMBER : isTitipPesanToManda ? $env.MANDA_WA_NUMBER : null;\nconst titipTitle = isTitipPesanToOkta ? \"💌 *Titip Pesan dari Kak Manda untuk Okta:*\" : \"💌 *Titip Pesan dari Okta untuk Kak Manda:*\";\n\nconst hasAudio = selectedMedia?.type === \"audio\";\n\n// Vision Query Detection\nconst isScheduleQuery = Boolean(hasAudio || isDoneOrDeleteQuery || /jadwal|agenda|kuliah|tugas|uas|kelas|acara|free|kosong|sibuk|kegiatan|besok|hari ini|lusa|ngapain|padet/i.test(currentText));\nconst isAnnouncementQuery = Boolean(/pengumuman|siam|berita kampus|info dosen|info kuliah|asinkron|dinas luar/i.test(currentText));\nconst isPresensiQuery = Boolean(/presensi|absen|absensi|kehadiran/i.test(currentText));\n\nreturn [\n  {\n    json: {\n      ...root,\n      wa: {\n        remoteJid,\n        fromMe: data.key?.fromMe || false,\n        messageId: data.key?.id || \"\",\n        participant,\n        participantAlt: data.key?.participantAlt || \"\",\n        pushName: data.pushName || \"\",\n        dateTime: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Jakarta\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WIB\",\n        dateTimeWib: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Jakarta\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WIB\",\n        dateTimeWita: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Makassar\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WITA\",\n\n        isManda,\n        isOkta,\n        isGroup,\n        isDevGroup,\n\n        currentText,\n        quotedText,\n        cleanText,\n\n        isMentionBot,\n        isReplyingToBot,\n        isAskCommand,\n        isStickerCommand,\n        isTitipPesan,\n        isTitipPesanToOkta,\n        isTitipPesanToManda,\n        titipTargetNumber,\n        titipTitle,\n\n        hasAudio,\n        hasImage,\n        isNotesQuery,\n        isDoneOrDeleteQuery,\n        isNoteCmd,\n        isDoneCmd,\n        isScheduleQuery,\n        isAnnouncementQuery,\n        isPresensiQuery,\n\n        hasCurrentMedia: currentMedia.exists,\n        hasQuotedMedia: quotedMedia.exists,\n        hasAnyMedia: !!selectedMedia,\n\n        currentMedia,\n        quotedMedia,\n        selectedMedia,\n\n        selectedMediaSummary: selectedMedia\n          ? `${selectedMedia.source} ${selectedMedia.type} (${selectedMedia.mimetype})`\n          : \"-\",\n\n        quotedPayload: {\n          key: {\n            remoteJid: data.key?.remoteJid,\n            fromMe: data.key?.fromMe,\n            id: data.key?.id,\n            participant: data.key?.participant || data.participant,\n          },\n          message: data.message,\n        },\n      },\n    },\n  },\n];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -457,10 +457,10 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.base64Audio ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ ($json.base64Audio || $json.base64Image) ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Pribadi dan Perwakilan Resmi Okta untuk Kak Manda.\n\nKONTEKS HUBUNGAN:\n- Kak Manda (Amanda Syalwa Nadira) adalah pacar tersayang Okta.\n- Mahasiswi Farmasi Universitas Lambung Mangkurat (ULM), asal Banjarmasin.\n- Panggilan resmi & wajib untuknya: \"Kak Manda\".\n- Okta (Oktavianus Samuel Minarto) adalah developer yang membangun kamu.\n\nATURAN PERAN (PENTING):\n1. Kamu BUKAN Okta dan TIDAK BOLEH berpura-pura menjadi Okta.\n2. Posisikan dirimu sebagai perwakilan, ajudan, atau asisten pribadi Okta yang siap membantu Kak Manda.\n3. Gaya komunikasi: Hangat, sopan, ramah, santai, manis, tapi TIDAK ALAY atau berlebihan (cringe).\n4. Gunakan bahasa Indonesia kasual yang natural (aku, kamu, yaa, hehe, siap Kak Manda).\n5. Jika Kak Manda mengirim pesan suara (voice note), dengarkan audio yang terlampir dengan teliti lalu tanggapi pesannya dengan ramah.\n6. TITIP PESAN KE OKTA:\n   - Jika Kak Manda menitipkan pesan untuk Okta (misal: \"titip pesan\", \"bilang ke okta\", \"ingetin okta\"):\n     - Beritahu dengan manis bahwa pesan Kak Manda sudah kamu catat dan sudah otomatis kamu teruskan ke WhatsApp pribadi Okta sekarang juga!\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, pengumuman, atau presensi secara to-the-point, ramah, dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / kosong, sampaikan dengan ramah bahwa jadwal kosong.` : ''}\n\nINFORMASI SAAT INI:\n- Waktu Sekarang (Kak Manda di Banjarmasin): ${$json.wa.dateTimeWita || $json.wa.dateTime}\\n- Waktu Okta di Malang/Jawa: ${$json.wa.dateTimeWib || $json.wa.dateTime}\n- Pesan Masuk dari Kak Manda: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : '[Media]')}\"\n- Pesan yang Di-quote: \"${$json.wa.quotedText || '-'}\"\n\n\n==================================================\nFITUR AKSI OTOMATIS: PEMBUATAN TUGAS & AGENDA (ACTION TRIGGER)\n==================================================\nJika Kak Manda meminta kamu untuk MEMBUAT, MENCATAT, MENAMBAH, atau MENJADWALKAN tugas, deadline, agenda, jadwal, rapat, atau kegiatan:\n- Termasuk jika merujuk ke obrolan sebelumnya! (Contoh: \"buatin tugas yang tadi disebut deadlinenya lusa jam 23.59\", \"jadiin task ya\").\n- Analisis riwayat percakapan sebelumnya untuk menemukan judul kegiatan/tugas secara spesifik!\n\nATURAN OUTPUT ACTION:\n1. Berikan respon ramah dan manis bahwa tugas/agenda tersebut langsung diproses ke kalender.\n2. DI BARIS PALING AKHIR responmu, WAJIB sertakan SATU ATAU LEBIH baris perintah aksi dengan format persis:\n<<<ACTION:TUGAS|TARGET|DETAIL>>>\natau\n<<<ACTION:JADWAL|TARGET|DETAIL>>>\n\nPenjelasan Parameter:\n- TUGAS: untuk deadline tugas kuliah farmasi, PR, laporan praktikum, dsb.\n- JADWAL: untuk agenda kegiatan, meeting, acara, janji temu, dsb.\n- TARGET:\n  * \"manda\" -> default kalender Kak Manda.\n  * \"okta\" -> jika Kak Manda minta membuatkan jadwal/tugas untuk Okta.\n- DETAIL: Tuliskan nama/judul kegiatan secara lengkap beserta waktu dan tanggal spesifik yang sudah kamu hitung (misal: \"Laporan Farmasi deadline Kamis 22 Oktober 2026 jam 23.59 WITA\"). Jika tidak menyebut jam, gunakan jam default \"jam 23.59\" untuk tugas dan \"jam 09.00\" untuk jadwal.\n\nCATATAN:\n- JANGAN sertakan tag ACTION jika hanya mengecek jadwal/tugas. Tag ACTION HANYA untuk PEMBUATAN baru.\n\n\nJawablah pesan Kak Manda dengan ramah, hangat, dan to-the-point sebagai asisten perwakilan Okta:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( $json.base64Audio ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          ...( $json.base64Image ? [{\n            \"inline_data\": {\n              \"mime_type\": $json.imageMimetype || \"image/jpeg\",\n              \"data\": $json.base64Image\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Cerdas untuk WhatsApp.\n\nLOGIKA PERAN:\n1. JIKA PENGIRIM ADALAH OKTA (${$env.MY_WA_NUMBER}):\n   - Kamu adalah co-pilot developer & asisten pribadi Okta.\n   - Bersikap sigap, efisien, to-the-point, santai (panggil \"bro\" atau \"Okta\").\n   - Jika Okta mengirimkan pesan suara (voice note), dengarkan audio yang terlampir dengan seksama lalu responi.\n   - TITIP PESAN KE KAK MANDA:\n     - Jika Okta menitipkan pesan untuk Kak Manda (misal: \"titip pesan ke manda\", \"bilang ke manda\"):\n       - Konfirmasi bahwa pesan untuk Kak Manda sudah dicatat dan langsung otomatis diteruskan ke WhatsApp Kak Manda!\n\n2. JIKA DI GRUP ATAU PENGIRIM LAIN:\n   - Bersikap ramah, santai, solutif, ringkas, dan menyesuaikan obrolan.\n\n3. KEMAMPUAN MULTIMODAL & IMAGE OCR / VISION:\n   - Jika pengguna melampirkan atau me-reply/quote gambar/foto:\n     - Amati dan pahami gambar secara visual (bisa materi kuliah, slide presentasi, grafik, lembar soal tugas, struk belanja, dsb).\n     - Lakukan OCR untuk membaca teks dalam gambar secara tepat jika ditanyakan.\n     - Jelaskan maksud gambar, bantu kerjakan soal tugas, atau ekstrak data belanjaan dengan ringkas dan jelas.\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, catatan/notes, pengumuman, atau presensi secara to-the-point dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / catatan kosong, sampaikan dengan jelas bahwa tidak ada acara / catatan.` : ''}\n\nINFORMASI SAAT INI:\n- Pengirim: ${$json.wa.pushName || \"User\"} (${$json.wa.participant || $json.wa.remoteJid})\n- Waktu Sekarang: ${$json.wa.dateTimeWib || $json.wa.dateTime} (WIB / UTC+7)\n- Pesan: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : $json.wa.hasImage ? '[Foto / Gambar terlampir di atas]' : '[Media]')}\"\n- Quoted: \"${$json.wa.quotedText || '-'}\"\n\n==================================================\nFITUR AKSI OTOMATIS (ACTION TRIGGERS)\n==================================================\nJika pengguna meminta kamu melakukan suatu aksi nyata, kamu WAJIB menyertakan tag aksi di BARIS PALING AKHIR responmu:\n\n1. PEMBUATAN TUGAS & AGENDA KALENDER:\n   <<<ACTION:TUGAS|TARGET|DETAIL>>>  -> untuk tugas kuliah, PR, deadline project.\n   <<<ACTION:JADWAL|TARGET|DETAIL>>> -> untuk rapat, meeting, acara, kegiatan.\n   TARGET: \"okta\" atau \"manda\"\n   DETAIL: Judul lengkap + waktu & tanggal spesifik (contoh: \"PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59\")\n\n2. LIFECYCLE TUGAS/AGENDA KALENDER (SELESAI / HAPUS):\n   <<<ACTION:DONE|TARGET|JUDUL>>>   -> tandai tugas/jadwal sebagai [SELESAI] di kalender.\n   <<<ACTION:DELETE|TARGET|JUDUL>>> -> hapus tugas/jadwal dari kalender.\n   TARGET: \"okta\" atau \"manda\"\n   Contoh: jika Okta bilang \"tugas PPT pengabdian udah selesai\", konfirmasi dan beri tag:\n   <<<ACTION:DONE|okta|PPT Pengabdian>>>\n\n3. PENCATATAN & TO-DO (NOTES SYSTEM):\n   <<<ACTION:NOTE_ADD|TARGET|DETAIL>>> -> catat hal penting/utang/to-do tanpa jam terikat.\n   <<<ACTION:NOTE_DONE|ID>>>           -> tandai catatan selesai berdasarkan ID catatan.\n   Contoh: jika Okta bilang \"catat kalau aku belum bayar kas 50rb\":\n   <<<ACTION:NOTE_ADD|okta|belum bayar kas 50rb>>>\n   Jika Okta bilang \"catatan 1 udah selesai\":\n   <<<ACTION:NOTE_DONE|1>>>\n\n4. PRESENSI KULIAH UB:\n   <<<ACTION:PRESENSI|hadir>>> -> jika Okta meminta absen (\"@n8n tolong absenkan kelas sekarang\").\n\nJawablah dengan ringkas, cerdas, dan to-the-point:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( ($json.base64Audio || $json.base64Image) ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
           "options": {
             "timeout": 30000
           }
@@ -480,10 +480,10 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.base64Audio ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ ($json.base64Audio || $json.base64Image) ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Cerdas untuk WhatsApp.\n\nLOGIKA PERAN:\n1. JIKA PENGIRIM ADALAH OKTA (${$env.MY_WA_NUMBER}):\n   - Kamu adalah co-pilot developer & asisten pribadi Okta.\n   - Bersikap sigap, efisien, to-the-point, santai (panggil \"bro\" atau \"Okta\").\n   - Jika Okta mengirimkan pesan suara (voice note), dengarkan audio yang terlampir dengan seksama lalu responi.\n   - TITIP PESAN KE KAK MANDA:\n     - Jika Okta menitipkan pesan untuk Kak Manda (misal: \"titip pesan ke manda\", \"bilang ke manda\"):\n       - Konfirmasi bahwa pesan untuk Kak Manda sudah dicatat dan langsung otomatis diteruskan ke WhatsApp Kak Manda!\n\n2. JIKA DI GRUP ATAU PENGIRIM LAIN:\n   - Bersikap ramah, santai, solutif, ringkas, dan menyesuaikan obrolan.\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, pengumuman, atau presensi secara to-the-point dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / kosong, sampaikan dengan jelas bahwa jadwal kosong / tidak ada acara.` : ''}\n\nINFORMASI SAAT INI:\n- Pengirim: ${$json.wa.pushName || \"User\"} (${$json.wa.participant || $json.wa.remoteJid})\n- Waktu Sekarang: ${$json.wa.dateTimeWib || $json.wa.dateTime} (WIB / UTC+7)\n- Pesan: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : '[Media]')}\"\n- Quoted: \"${$json.wa.quotedText || '-'}\"\n\n\n==================================================\nFITUR AKSI OTOMATIS: PEMBUATAN TUGAS & AGENDA (ACTION TRIGGER)\n==================================================\nPerhatikan baik-baik: Jika pengguna (Okta atau Kak Manda) meminta kamu untuk MEMBUAT, MENCATAT, MENAMBAH, atau MENJADWALKAN tugas, deadline, agenda, jadwal, rapat, atau kegiatan:\n- Termasuk jika permintaan merujuk ke obrolan sebelumnya! (Contoh: \"buatin tugas yang aku sebut tadi deadlinenya lusa jam 23.59\", \"jadiin task lusa jam 23.59 dua duanya\", \"catat agenda yang tadi dibahas besok jam 10 pagi\").\n- Analisis riwayat percakapan sebelumnya untuk menemukan judul kegiatan/tugas yang dimaksud secara spesifik!\n\nATURAN OUTPUT ACTION:\n1. Berikan respon ramah dan konfirmasi singkat bahwa tugas/agenda tersebut langsung diproses ke kalender.\n2. DI BARIS PALING AKHIR responmu, WAJIB sertakan SATU ATAU LEBIH baris perintah aksi dengan format persis:\n<<<ACTION:TUGAS|TARGET|DETAIL>>>\natau\n<<<ACTION:JADWAL|TARGET|DETAIL>>>\n\nPenjelasan Parameter:\n- TUGAS: untuk deadline tugas kuliah, PR, project, laporan, submit paper, dsb.\n- JADWAL: untuk agenda kegiatan, meeting, rapat, acara, janji temu, dsb.\n- TARGET:\n  * \"okta\" -> jika kalender tujuan adalah kalender Okta (default jika pengirim adalah Okta, atau jika diminta buat Okta).\n  * \"manda\" -> jika kalender tujuan adalah kalender Kak Manda (jika pengirim adalah Kak Manda, atau jika diminta buat Manda).\n- DETAIL: Tuliskan nama/judul kegiatan secara lengkap beserta waktu dan tanggal spesifik yang sudah kamu hitung berdasarkan waktu sekarang (misal: \"PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59\" atau \"Meeting Project Kerjago besok jam 14.00\"). Jika pengguna tidak menyebut kata jam, selalu cantumkan kata \"jam HH.MM\" (default tugas adalah jam 23.59, default jadwal agenda adalah jam 09.00).\n\nCONTOH MULTI-ACTION (PENTING):\nJika pengguna bilang: \"jadiin task aja deadlinenya lusa 23.59 dua duanya\" dan di riwayat obrolan ada \"PPT Pengabdian\" dan \"PPT Scope\":\nMaka responmu harus menyertakan DUA baris aksi di paling akhir:\n<<<ACTION:TUGAS|okta|PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59>>>\n<<<ACTION:TUGAS|okta|PPT Scope deadline Kamis 22 Oktober 2026 jam 23.59>>>\n\nCATATAN:\n- JANGAN sertakan tag ACTION jika pengguna HANYA MENANYAKAN atau MENGECEK jadwal/tugas (misal: \"ada tugas apa?\", \"cek jadwal besok\"). Tag ACTION HANYA untuk permintaan PEMBUATAN/PENCATATAN baru.\n\n\nJawablah dengan ringkas dan solutif:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( $json.base64Audio ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          ...( $json.base64Image ? [{\n            \"inline_data\": {\n              \"mime_type\": $json.imageMimetype || \"image/jpeg\",\n              \"data\": $json.base64Image\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Cerdas untuk WhatsApp.\n\nLOGIKA PERAN:\n1. JIKA PENGIRIM ADALAH OKTA (${$env.MY_WA_NUMBER}):\n   - Kamu adalah co-pilot developer & asisten pribadi Okta.\n   - Bersikap sigap, efisien, to-the-point, santai (panggil \"bro\" atau \"Okta\").\n   - Jika Okta mengirimkan pesan suara (voice note), dengarkan audio yang terlampir dengan seksama lalu responi.\n   - TITIP PESAN KE KAK MANDA:\n     - Jika Okta menitipkan pesan untuk Kak Manda (misal: \"titip pesan ke manda\", \"bilang ke manda\"):\n       - Konfirmasi bahwa pesan untuk Kak Manda sudah dicatat dan langsung otomatis diteruskan ke WhatsApp Kak Manda!\n\n2. JIKA DI GRUP ATAU PENGIRIM LAIN:\n   - Bersikap ramah, santai, solutif, ringkas, dan menyesuaikan obrolan.\n\n3. KEMAMPUAN MULTIMODAL & IMAGE OCR / VISION:\n   - Jika pengguna melampirkan atau me-reply/quote gambar/foto:\n     - Amati dan pahami gambar secara visual (bisa materi kuliah, slide presentasi, grafik, lembar soal tugas, struk belanja, dsb).\n     - Lakukan OCR untuk membaca teks dalam gambar secara tepat jika ditanyakan.\n     - Jelaskan maksud gambar, bantu kerjakan soal tugas, atau ekstrak data belanjaan dengan ringkas dan jelas.\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, catatan/notes, pengumuman, atau presensi secara to-the-point dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / catatan kosong, sampaikan dengan jelas bahwa tidak ada acara / catatan.` : ''}\n\nINFORMASI SAAT INI:\n- Pengirim: ${$json.wa.pushName || \"User\"} (${$json.wa.participant || $json.wa.remoteJid})\n- Waktu Sekarang: ${$json.wa.dateTimeWib || $json.wa.dateTime} (WIB / UTC+7)\n- Pesan: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : $json.wa.hasImage ? '[Foto / Gambar terlampir di atas]' : '[Media]')}\"\n- Quoted: \"${$json.wa.quotedText || '-'}\"\n\n==================================================\nFITUR AKSI OTOMATIS (ACTION TRIGGERS)\n==================================================\nJika pengguna meminta kamu melakukan suatu aksi nyata, kamu WAJIB menyertakan tag aksi di BARIS PALING AKHIR responmu:\n\n1. PEMBUATAN TUGAS & AGENDA KALENDER:\n   <<<ACTION:TUGAS|TARGET|DETAIL>>>  -> untuk tugas kuliah, PR, deadline project.\n   <<<ACTION:JADWAL|TARGET|DETAIL>>> -> untuk rapat, meeting, acara, kegiatan.\n   TARGET: \"okta\" atau \"manda\"\n   DETAIL: Judul lengkap + waktu & tanggal spesifik (contoh: \"PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59\")\n\n2. LIFECYCLE TUGAS/AGENDA KALENDER (SELESAI / HAPUS):\n   <<<ACTION:DONE|TARGET|JUDUL>>>   -> tandai tugas/jadwal sebagai [SELESAI] di kalender.\n   <<<ACTION:DELETE|TARGET|JUDUL>>> -> hapus tugas/jadwal dari kalender.\n   TARGET: \"okta\" atau \"manda\"\n   Contoh: jika Okta bilang \"tugas PPT pengabdian udah selesai\", konfirmasi dan beri tag:\n   <<<ACTION:DONE|okta|PPT Pengabdian>>>\n\n3. PENCATATAN & TO-DO (NOTES SYSTEM):\n   <<<ACTION:NOTE_ADD|TARGET|DETAIL>>> -> catat hal penting/utang/to-do tanpa jam terikat.\n   <<<ACTION:NOTE_DONE|ID>>>           -> tandai catatan selesai berdasarkan ID catatan.\n   Contoh: jika Okta bilang \"catat kalau aku belum bayar kas 50rb\":\n   <<<ACTION:NOTE_ADD|okta|belum bayar kas 50rb>>>\n   Jika Okta bilang \"catatan 1 udah selesai\":\n   <<<ACTION:NOTE_DONE|1>>>\n\n4. PRESENSI KULIAH UB:\n   <<<ACTION:PRESENSI|hadir>>> -> jika Okta meminta absen (\"@n8n tolong absenkan kelas sekarang\").\n\nJawablah dengan ringkas, cerdas, dan to-the-point:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( ($json.base64Audio || $json.base64Image) ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
           "options": {
             "timeout": 30000
           }
@@ -993,6 +993,31 @@
                   },
                   "conditions": [
                     {
+                      "id": "ccdf9c65-d213-4ebc-ac7c-a9d46c093b4e",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isNotesQuery }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "notes"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
                       "id": "dc1193ba-d8c0-4c9e-ab17-f52a48ab1fa7",
                       "leftValue": "={{ true }}",
                       "rightValue": "",
@@ -1240,7 +1265,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags: <<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const target = match[2].toLowerCase();\n  const detail = match[3].trim();\n  \n  const cmd = actionType === 'tugas' ? '/tugas' : '/jadwal';\n  const commandText = target === 'manda'\n    ? `${cmd} manda ${detail}`\n    : `${cmd} ${detail}`;\n\n  actions.push({\n    actionType,\n    target,\n    detail,\n    commandText\n  });\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
+          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags: <<<ACTION:(TUGAS|JADWAL|DONE|DELETE|NOTE_ADD|NOTE_DONE|PRESENSI)(?:\\|(okta|manda|\\w+))?(?:\\|(.*?))?>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL|DONE|DELETE|NOTE_ADD|NOTE_DONE|PRESENSI)(?:\\|(okta|manda|[\\w-]+))?(?:\\|(.*?))?>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const target = (match[2] || 'okta').toLowerCase();\n  const detail = (match[3] || '').trim();\n  \n  let commandText = '';\n  if (actionType === 'tugas') {\n    commandText = target === 'manda' ? `/tugas manda ${detail}` : `/tugas ${detail}`;\n  } else if (actionType === 'jadwal') {\n    commandText = target === 'manda' ? `/jadwal manda ${detail}` : `/jadwal ${detail}`;\n  } else if (actionType === 'done') {\n    commandText = target === 'manda' ? `/done manda ${detail}` : `/done ${detail}`;\n  } else if (actionType === 'delete') {\n    commandText = target === 'manda' ? `/hapus-jadwal manda ${detail}` : `/hapus-jadwal ${detail}`;\n  } else if (actionType === 'note_add') {\n    commandText = `/catat ${detail}`;\n  } else if (actionType === 'note_done') {\n    commandText = `/catat done ${detail || target}`;\n  } else if (actionType === 'presensi') {\n    commandText = `/presensi ${detail || 'hadir'}`;\n  }\n\n  actions.push({\n    actionType,\n    target,\n    detail: detail || target,\n    commandText\n  });\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:(TUGAS|JADWAL|DONE|DELETE|NOTE_ADD|NOTE_DONE|PRESENSI)(?:\\|(okta|manda|[\\w-]+))?(?:\\|(.*?))?>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nconst hasCalendarActions = actions.some(a => ['tugas', 'jadwal', 'done', 'delete'].includes(a.actionType));\nconst hasNoteActions = actions.some(a => ['note_add', 'note_done'].includes(a.actionType));\nconst hasPresensiActions = actions.some(a => a.actionType === 'presensi');\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    hasCalendarActions,\n    hasNoteActions,\n    hasPresensiActions,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1253,7 +1278,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags: <<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const target = match[2].toLowerCase();\n  const detail = match[3].trim();\n  \n  const cmd = actionType === 'tugas' ? '/tugas' : '/jadwal';\n  const commandText = target === 'manda'\n    ? `${cmd} manda ${detail}`\n    : `${cmd} ${detail}`;\n\n  actions.push({\n    actionType,\n    target,\n    detail,\n    commandText\n  });\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
+          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags: <<<ACTION:(TUGAS|JADWAL|DONE|DELETE|NOTE_ADD|NOTE_DONE|PRESENSI)(?:\\|(okta|manda|\\w+))?(?:\\|(.*?))?>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL|DONE|DELETE|NOTE_ADD|NOTE_DONE|PRESENSI)(?:\\|(okta|manda|[\\w-]+))?(?:\\|(.*?))?>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const target = (match[2] || 'okta').toLowerCase();\n  const detail = (match[3] || '').trim();\n  \n  let commandText = '';\n  if (actionType === 'tugas') {\n    commandText = target === 'manda' ? `/tugas manda ${detail}` : `/tugas ${detail}`;\n  } else if (actionType === 'jadwal') {\n    commandText = target === 'manda' ? `/jadwal manda ${detail}` : `/jadwal ${detail}`;\n  } else if (actionType === 'done') {\n    commandText = target === 'manda' ? `/done manda ${detail}` : `/done ${detail}`;\n  } else if (actionType === 'delete') {\n    commandText = target === 'manda' ? `/hapus-jadwal manda ${detail}` : `/hapus-jadwal ${detail}`;\n  } else if (actionType === 'note_add') {\n    commandText = `/catat ${detail}`;\n  } else if (actionType === 'note_done') {\n    commandText = `/catat done ${detail || target}`;\n  } else if (actionType === 'presensi') {\n    commandText = `/presensi ${detail || 'hadir'}`;\n  }\n\n  actions.push({\n    actionType,\n    target,\n    detail: detail || target,\n    commandText\n  });\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:(TUGAS|JADWAL|DONE|DELETE|NOTE_ADD|NOTE_DONE|PRESENSI)(?:\\|(okta|manda|[\\w-]+))?(?:\\|(.*?))?>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nconst hasCalendarActions = actions.some(a => ['tugas', 'jadwal', 'done', 'delete'].includes(a.actionType));\nconst hasNoteActions = actions.some(a => ['note_add', 'note_done'].includes(a.actionType));\nconst hasPresensiActions = actions.some(a => a.actionType === 'presensi');\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    hasCalendarActions,\n    hasNoteActions,\n    hasPresensiActions,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1299,7 +1324,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\n\nif (!actions || actions.length === 0) {\n  return [];\n}\n\nconst items = [];\nconst defaultOktaNumber = $env.MY_WA_NUMBER || \"${$env.MY_WA_NUMBER}\";\nconst defaultMandaNumber = $env.MANDA_WA_NUMBER || \"${$env.MANDA_WA_NUMBER}\";\n\nfor (const act of actions) {\n  const isMandaTarget = act.target === 'manda';\n  const senderNumber = isMandaTarget ? defaultMandaNumber : defaultOktaNumber;\n  const remoteJid = wa.remoteJid || `${senderNumber}@s.whatsapp.net`;\n\n  items.push({\n    json: {\n      target: act.target,\n      actionType: act.actionType,\n      detail: act.detail,\n      commandText: act.commandText,\n      body: {\n        data: {\n          key: {\n            remoteJid: remoteJid,\n            participant: `${senderNumber}@s.whatsapp.net`,\n            participantAlt: `${senderNumber}@s.whatsapp.net`\n          },\n          message: {\n            conversation: act.commandText\n          }\n        }\n      }\n    }\n  });\n}\n\nreturn items;"
+          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\n\nconst calActions = actions.filter(a => ['tugas', 'jadwal', 'done', 'delete'].includes(a.actionType));\nif (!calActions || calActions.length === 0) {\n  return [];\n}\n\nconst items = [];\nconst defaultOktaNumber = $env.MY_WA_NUMBER || \"\";\nconst defaultMandaNumber = $env.MANDA_WA_NUMBER || \"\";\n\nfor (const act of calActions) {\n  const isMandaTarget = act.target === 'manda';\n  const senderNumber = isMandaTarget ? defaultMandaNumber : defaultOktaNumber;\n  const remoteJid = wa.remoteJid || `${senderNumber}@s.whatsapp.net`;\n\n  items.push({\n    json: {\n      target: act.target,\n      actionType: act.actionType,\n      detail: act.detail,\n      commandText: act.commandText,\n      body: {\n        data: {\n          key: {\n            remoteJid: remoteJid,\n            participant: `${senderNumber}@s.whatsapp.net`,\n            participantAlt: `${senderNumber}@s.whatsapp.net`\n          },\n          message: {\n            conversation: act.commandText\n          }\n        }\n      }\n    }\n  });\n}\n\nreturn items;"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1436,6 +1461,241 @@
         ],
         "id": "call-manda-gcal-subwf",
         "name": "Call 'manda-to-gcal-assistant'"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT id, owner_user, content, category, created_at FROM user_notes WHERE is_done = FALSE ORDER BY id ASC;"
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          80,
+          280
+        ],
+        "id": "pgFetchActiveNotes01",
+        "name": "[PG] Fetch Active Notes",
+        "credentials": {
+          "postgres": {
+            "id": "pgChatMemory0001",
+            "name": "Postgres Chat Memory"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const rows = $input.all().map(i => i.json).filter(r => r && r.id);\nconst oktaNotes = rows.filter(r => r.owner_user === 'okta');\nconst mandaNotes = rows.filter(r => r.owner_user === 'manda');\n\nlet txt = \"📝 DATA CATATAN AKTIF PENGGUNA (REAL-TIME DATABASE):\\n\";\ntxt += \"\\n• Catatan Aktif Okta:\\n\";\nif (oktaNotes.length === 0) {\n  txt += \"  (Tidak ada catatan aktif)\\n\";\n} else {\n  oktaNotes.forEach((n, idx) => {\n    txt += `  ${idx + 1}. [ID: ${n.id}] ${n.content} (kategori: ${n.category || 'general'})\\n`;\n  });\n}\n\ntxt += \"\\n• Catatan Aktif Kak Manda:\\n\";\nif (mandaNotes.length === 0) {\n  txt += \"  (Tidak ada catatan aktif)\\n\";\n} else {\n  mandaNotes.forEach((n, idx) => {\n    txt += `  ${idx + 1}. [ID: ${n.id}] ${n.content} (kategori: ${n.category || 'general'})\\n`;\n  });\n}\n\nlet prev = {};\ntry {\n  prev = $('Format Memory Context').item.json;\n} catch (e) {}\n\nreturn [{\n  json: {\n    ...prev,\n    visionContext: txt\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          280,
+          280
+        ],
+        "id": "formatNotesVision01",
+        "name": "Format Notes Vision"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "2080a921-8f0f-4700-8779-18144583241e",
+                "leftValue": "={{ $('Normalize WA Context').item.json.wa.hasImage }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          780,
+          180
+        ],
+        "id": "ifHasImage0001",
+        "name": "If Has Image"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $('Normalize WA Context').item.json;\nconst data = item.body?.data || {};\nconst wa = item.wa || {};\nconst media = wa.selectedMedia || {};\nconst ctx = data.contextInfo || data.message?.extendedTextMessage?.contextInfo || {};\n\nlet keyObj = {};\nlet msgObj = {};\n\nif (media.source === 'current') {\n  keyObj = data.key;\n  msgObj = data.message;\n} else {\n  keyObj = {\n    remoteJid: data.key?.remoteJid,\n    fromMe: ctx.participant ? (ctx.participant.includes(\"171619058196619\") || ctx.participant.includes(\"195095164887244\")) : false,\n    id: ctx.stanzaId,\n    participant: ctx.participant\n  };\n  msgObj = ctx.quotedMessage || {};\n}\n\nreturn [{\n  json: {\n    number: wa.remoteJid,\n    payload: {\n      message: {\n        key: keyObj,\n        message: msgObj\n      },\n      convertToMp4: false\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          980,
+          140
+        ],
+        "id": "prepareImagePayload01",
+        "name": "Prepare Image Payload"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/chat/getBase64FromMediaMessage/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.payload }}",
+          "options": {
+            "timeout": 25000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1180,
+          140
+        ],
+        "id": "httpEvolutionGetBase64Img01",
+        "name": "[HTTP] Evolution Get Base64 Image",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const imgResult = $input.first().json;\nlet b64 = imgResult.base64 || '';\nif (b64.includes('base64,')) {\n  b64 = b64.split('base64,')[1];\n}\n\nconst wa = $('Normalize WA Context').item.json.wa || {};\nconst mimetype = wa.selectedMedia?.mimetype || 'image/jpeg';\n\nlet prevItem = {};\ntry { prevItem = $('Format Calendar Vision').item.json; } catch(e){}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Pengumuman Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Presensi Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Notes Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Default Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  prevItem = $('Format Memory Context').item.json;\n}\n\nreturn [{\n  json: {\n    ...prevItem,\n    base64Image: b64,\n    imageMimetype: mimetype\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1380,
+          140
+        ],
+        "id": "attachImageBase6401",
+        "name": "Attach Image Base64"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "={{ (() => {\n  const actions = $json.actions || [];\n  const noteActions = actions.filter(a => ['note_add', 'note_done'].includes(a.actionType));\n  if (noteActions.length === 0) return \"SELECT 1;\";\n  \n  const wa = $json.wa || {};\n  const queries = [];\n  \n  for (const act of noteActions) {\n    if (act.actionType === 'note_add') {\n      const owner = act.target === 'manda' ? 'manda' : 'okta';\n      const content = (act.detail || '').replace(/'/g, \"''\");\n      const creatorJid = (wa.participant || wa.remoteJid || '').replace(/'/g, \"''\");\n      const creatorName = (wa.pushName || 'User').replace(/'/g, \"''\");\n      queries.push(`INSERT INTO user_notes (owner_user, creator_jid, creator_name, content, category) VALUES ('${owner}', '${creatorJid}', '${creatorName}', '${content}', 'general');`);\n    } else if (act.actionType === 'note_done') {\n      const id = parseInt(act.detail) || 0;\n      if (id > 0) {\n        queries.push(`UPDATE user_notes SET is_done = TRUE, updated_at = NOW() WHERE id = ${id};`);\n      }\n    }\n  }\n  \n  return queries.length > 0 ? queries.join('\\n') : \"SELECT 1;\";\n})() }}"
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          2580,
+          280
+        ],
+        "id": "pgExecuteNoteAction01",
+        "name": "[PG] Execute Note Action",
+        "credentials": {
+          "postgres": {
+            "id": "pgChatMemory0001",
+            "name": "Postgres Chat Memory"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c4d7fea9-c033-425e-8cb3-aef7d44feffb",
+                "leftValue": "={{ $json.hasNoteActions }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2380,
+          280
+        ],
+        "id": "ifHasNoteActions01",
+        "name": "If Has Note Actions"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c753006d-7d4b-4bec-ad07-d4713882f886",
+                "leftValue": "={{ $json.hasPresensiActions }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2380,
+          460
+        ],
+        "id": "ifHasPresensiActions01",
+        "name": "If Has Presensi Actions"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "H5lVT2ani2aaNkyV",
+            "mode": "list",
+            "cachedResultName": "siam-presensi-notifier"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "body": "={{ { data: { key: { remoteJid: $json.wa.remoteJid, participant: $json.wa.participant || $json.wa.remoteJid }, message: { conversation: \"/presensi hadir\" } } } }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          2580,
+          460
+        ],
+        "id": "callPresensiFromAction01",
+        "name": "Call 'siam-presensi-from-action'"
       }
     ],
     "connections": {
@@ -1736,7 +1996,7 @@
           ],
           [
             {
-              "node": "Switch",
+              "node": "If Has Image",
               "type": "main",
               "index": 0
             }
@@ -1795,6 +2055,13 @@
           [
             {
               "node": "[HTTP] Get SIAM Presensi",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[PG] Fetch Active Notes",
               "type": "main",
               "index": 0
             }
@@ -1930,6 +2197,16 @@
               "node": "If Has Calendar Actions",
               "type": "main",
               "index": 0
+            },
+            {
+              "node": "If Has Note Actions",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Presensi Actions",
+              "type": "main",
+              "index": 0
             }
           ]
         ]
@@ -1944,6 +2221,16 @@
             },
             {
               "node": "If Has Calendar Actions",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Note Actions",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Presensi Actions",
               "type": "main",
               "index": 0
             }
@@ -1999,6 +2286,103 @@
         "main": [
           []
         ]
+      },
+      "[PG] Fetch Active Notes": {
+        "main": [
+          [
+            {
+              "node": "Format Notes Vision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Notes Vision": {
+        "main": [
+          [
+            {
+              "node": "If Has Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Has Image": {
+        "main": [
+          [
+            {
+              "node": "Prepare Image Payload",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Image Payload": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Evolution Get Base64 Image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Evolution Get Base64 Image": {
+        "main": [
+          [
+            {
+              "node": "Attach Image Base64",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Attach Image Base64": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Has Note Actions": {
+        "main": [
+          [
+            {
+              "node": "[PG] Execute Note Action",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "If Has Presensi Actions": {
+        "main": [
+          [
+            {
+              "node": "Call 'siam-presensi-from-action'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
       }
     },
     "settings": {
@@ -2014,9 +2398,9 @@
       "templateCredsSetupCompleted": true
     },
     "pinData": {},
-    "versionId": "55186b7d-1717-44fa-b29d-65740ba33719",
-    "activeVersionId": "55186b7d-1717-44fa-b29d-65740ba33719",
-    "versionCounter": 661,
+    "versionId": "1cf362b2-1cd1-4490-9378-4ea1113817d5",
+    "activeVersionId": "1cf362b2-1cd1-4490-9378-4ea1113817d5",
+    "versionCounter": 663,
     "triggerCount": 0,
     "tags": [],
     "shared": [
