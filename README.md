@@ -147,10 +147,11 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
   * Homework / Coding: Ask *"bantu langkah-langkah selesaikan soal ini"*
   * Receipt OCR: Transcribe totals and itemized purchases from shopping receipts.
 
-### 12. 🗓️ Google Calendar Lifecycle Management (`[SELESAI]` / Delete)
-* Mark tasks as done: `/done PPT Pengabdian` or `@n8n tugas PPT pengabdian udah selesai nih` updates Google Calendar event title with `[SELESAI]` and sets event color to green.
-* Cancel / delete events: `/hapus-jadwal Meeting Tim` or `@n8n meeting tim tadi di-cancel, tolong hapus` removes the event from Google Calendar.
-* Interactive follow-up: Bot asks *"Mau ditandai [SELESAI] di kalender atau langsung dihapus aja bro?"* when intent is ambiguous.
+### 12. 🗓️ Safe Calendar Lifecycle & Protection Engine
+* **Mark tasks as done:** `/done PPT Pengabdian` or `@n8n tugas PPT pengabdian udah selesai nih` updates Google Calendar event title with `[SELESAI]` and sets event color to green.
+* **Delete events:** `/hapus <judul>` or `/hapus-jadwal <judul>` removes the event from Google Calendar.
+* **Interactive Numbered Selection (Anti-Hallucination & Non-Destructive):** If multiple/duplicate tasks match (e.g. duplicate ComVis tasks), the bot presents a numbered selection list (`1️⃣`, `2️⃣`, `batal`). Replying with `1`, `2`, or `batal` safely completes or cancels the action without accidental deletion.
+* **Course Schedule Protection (Jadwal Kuliah):** Kuliah calendar is strictly protected and CANNOT be deleted or marked done. Room updates and holiday flags are handled via `/edit-kuliah [matkul] [ruang / LIBUR]` (e.g. `/edit-kuliah comvis F3.11` or `/edit-kuliah comvis [LIBUR]`).
 
 ### 13. 🎙️ Proactive Morning Audio Briefing (Voice Note TTS 07:00 WIB)
 * Autonomous Cron fires every morning at **07:00 WIB**.
@@ -196,9 +197,10 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 
 ## 💬 WhatsApp Command Reference
 
-### Google Calendar Commands
+### Google Calendar & Academic Schedule Commands
 | Command | Target | Description |
 |---|---|---|
+| `/help` | All | Displays complete interactive user manual and command reference card |
 | `/cek` | Okta / Manda | Check schedule for today |
 | `/besok` | Okta / Manda | Check schedule for tomorrow |
 | `/agenda` | Okta / Manda | View upcoming agenda for the next 7 days |
@@ -206,9 +208,9 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 | `/uas` | Okta / Manda | Check exam schedule |
 | `/jadwal <detail>` | Okta / Manda | Create a calendar event (e.g. `/jadwal Meeting Tim besok jam 14.00`) |
 | `/tugas <detail>` | Okta / Manda | Create a task deadline (e.g. `/tugas Laporan PAPB Jumat jam 23.59`) |
-| `/done <judul>` | Okta / Manda | Mark task as completed (`[SELESAI]`) in Google Calendar |
-| `/selesai <judul>` | Okta / Manda | Alias for `/done` |
-| `/hapus-jadwal <judul>` | Okta / Manda | Delete event from Google Calendar |
+| `/done <judul>` / `/selesai <judul>` | Okta / Manda | Mark task/agenda as completed (`[SELESAI]`) in Google Calendar |
+| `/hapus <judul>` / `/hapus-jadwal <judul>` | Okta / Manda | Delete agenda/task from Google Calendar (prompts interactive numbers if duplicates exist) |
+| `/edit-kuliah <matkul> <ruang / LIBUR>` | Okta / Manda | Update lecture room (e.g. `F3.11`) or mark `[LIBUR]` without deleting recurring course schedule |
 
 ### Notes & To-Do System (`/catat` & `/notes`)
 | Command / Input | Target | Description |

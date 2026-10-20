@@ -23,16 +23,18 @@ Gunakan tabel ini untuk mencoba seluruh fitur satu per satu di WhatsApp:
 | 11 | **Cek Agenda 7 Hari** | `/agenda` | `@n8n agendaku minggu ini ada apa aja?`| Ringkasan kalender 7 hari ke depan | [ ] |
 | 12 | **Cek Deadline Tugas** | `/tugas` | `@n8n tugasku yang belum apa aja?` | Daftar seluruh tugas aktif dan tanggal deadline | [ ] |
 | 13 | **Tandai Tugas Selesai**| `/done PPT Pengabdian` | `@n8n tugas PPT pengabdian udah kelar nih` | Event di GCal diubah jadi `[SELESAI]` & warna hijau | [ ] |
-| 14 | **Hapus Agenda Batal** | `/hapus-jadwal Meeting Tim` | `@n8n rapat tadi dicancel tolong hapus`| Event dihapus dari Google Calendar | [ ] |
-| 15 | **Tanya Foto / Slide** | Kirim slide + *"maksud diagram ini apa?"* | Kirim slide + quote `@n8n jelasin alur ini` | Gemini Vision membaca diagram dan menjelaskan konteksnya | [ ] |
-| 16 | **Voice Note Masuk** | Kirim VN audio apa saja | Kirim VN di Dev Group | Gemini audio mentranskripsi dan menjawab pesan suara | [ ] |
-| 17 | **Morning Audio Brief**| Terjadwal tiap 07.00 WIB | Terjadwal tiap 07.00 WIB | Voice note radio TTS (`id-ID-ArdiNeural`) masuk otomatis | [ ] |
-| 18 | **Akses Server Agent** | `/vps df -h` | `@n8n /agent periksa kondisi storage vps` | Terminal / Codex agent mengeksekusi di host VPS | [ ] |
-| 19 | **Titip Pesan ke Manda**| `"Titip pesan ke Kak Manda: semangat ya"` | `"Titip pesan ke Kak Manda: nanti malam kabarin"` | Bot meneruskan kartu pesan langsung ke nomor Kak Manda | [ ] |
-| 20 | **Presensi Instan UB** | Balas notif kuliah dengan: `hadir` | Balas notif kuliah dengan: `absen` | Panggilan otomatis ke API SIAM UB dalam 1 detik | [ ] |
-| 21 | **Cek LMS Brone UB** | `/brone` | `@n8n cek tugas di brone dong` | Scraping tugas & kuis terbaru dari portal Brone UB | [ ] |
-| 22 | **Cek Pengumuman SIAM**| `/pengumuman` | `@n8n cek pengumuman siam terbaru` | Mengambil pengumuman resmi kampus dari SIAM UB | [ ] |
-| 23 | **Bikin Stiker WA** | Kirim foto + caption `/stiker` | Kirim foto + caption `/stiker` | Mengubah gambar menjadi stiker WhatsApp otomatis | [ ] |
+| 14 | **Hapus Agenda / Tugas** | `/hapus Tugas Comvis` | `@n8n tugas comvis ada yang ganda hapus salah satunya` | Jika ada duplikat, bot kirim menu pilihan angka (1, 2, batal) | [ ] |
+| 15 | **Edit Ruang Kuliah** | `/edit-kuliah comvis F3.11` | `@n8n ruang kuliah comvis pindah ke F3.11` | Ruang kuliah diperbarui tanpa menghapus jadwal semester | [ ] |
+| 16 | **Tandai Kuliah Libur** | `/edit-kuliah comvis [LIBUR]`| `@n8n comvis minggu ini libur` | Jadwal kuliah ditandai `[LIBUR]` secara aman | [ ] |
+| 17 | **Tanya Foto / Slide** | Kirim slide + *"maksud diagram ini apa?"* | Kirim slide + quote `@n8n jelasin alur ini` | Gemini Vision membaca diagram dan menjelaskan konteksnya | [ ] |
+| 18 | **Voice Note Masuk** | Kirim VN audio apa saja | Kirim VN di Dev Group | Gemini audio mentranskripsi dan menjawab pesan suara | [ ] |
+| 19 | **Morning Audio Brief**| Terjadwal tiap 07.00 WIB | Terjadwal tiap 07.00 WIB | Voice note radio TTS (`id-ID-ArdiNeural`) masuk otomatis | [ ] |
+| 20 | **Akses Server Agent** | `/vps df -h` | `@n8n /agent periksa kondisi storage vps` | Terminal / Codex agent mengeksekusi di host VPS | [ ] |
+| 21 | **Titip Pesan ke Manda**| `"Titip pesan ke Kak Manda: semangat ya"` | `"Titip pesan ke Kak Manda: nanti malam kabarin"` | Bot meneruskan kartu pesan langsung ke nomor Kak Manda | [ ] |
+| 22 | **Presensi Instan UB** | Balas notif kuliah dengan: `hadir` | Balas notif kuliah dengan: `absen` | Panggilan otomatis ke API SIAM UB dalam 1 detik | [ ] |
+| 23 | **Cek LMS Brone UB** | `/brone` | `@n8n cek tugas di brone dong` | Scraping tugas & kuis terbaru dari portal Brone UB | [ ] |
+| 24 | **Cek Pengumuman SIAM**| `/pengumuman` | `@n8n cek pengumuman siam terbaru` | Mengambil pengumuman resmi kampus dari SIAM UB | [ ] |
+| 25 | **Bikin Stiker WA** | Kirim foto + caption `/stiker` | Kirim foto + caption `/stiker` | Mengubah gambar menjadi stiker WhatsApp otomatis | [ ] |
 
 ---
 
