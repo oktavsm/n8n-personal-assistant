@@ -13,6 +13,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_MULTIPLE_DATABASES: "n8n_db,evo_db"
+      TZ: Asia/Jakarta
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
@@ -29,6 +30,8 @@ services:
     container_name: notifier_n8n
     restart: always
     environment:
+      - TZ=Asia/Jakarta
+      - GENERIC_TIMEZONE=Asia/Jakarta
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=db
       - DB_POSTGRESDB_USER=${DB_USER}
@@ -45,6 +48,22 @@ services:
       - N8N_PROTOCOL=https
       - WEBHOOK_URL=https://oktaavsm.bccdev.id/n8n/
       - N8N_PATH=/n8n/
+      - MY_WA_NUMBER=${MY_WA_NUMBER}
+      - MANDA_WA_NUMBER=${MANDA_WA_NUMBER}
+      - WA_GROUP_DEV=${WA_GROUP_DEV}
+      - WA_GROUP_NOTIF=${WA_GROUP_NOTIF}
+      - WA_GROUP_SHARED=${WA_GROUP_SHARED}
+      - GCAL_OKTA_AGENDA=${GCAL_OKTA_AGENDA}
+      - GCAL_OKTA_KULIAH=${GCAL_OKTA_KULIAH}
+      - GCAL_OKTA_TUGAS=${GCAL_OKTA_TUGAS}
+      - GCAL_OKTA_UAS_SEM4=${GCAL_OKTA_UAS_SEM4}
+      - GCAL_MANDA_AGENDA=${GCAL_MANDA_AGENDA}
+      - GCAL_MANDA_KULIAH=${GCAL_MANDA_KULIAH}
+      - GCAL_MANDA_TUGAS=${GCAL_MANDA_TUGAS}
+      - GCAL_CLASS_KI=${GCAL_CLASS_KI}
+      - GCAL_CLASS_PAW=${GCAL_CLASS_PAW}
+      - GCAL_CLASS_PAPB=${GCAL_CLASS_PAPB}
+      - N8N_DEFAULT_ERROR_WORKFLOW=${N8N_DEFAULT_ERROR_WORKFLOW:-ERRnotif01UB2026}
     ports:
       - "${N8N_PORT}:5678"
     depends_on:
@@ -59,6 +78,7 @@ services:
     container_name: notifier_wa_gateway
     restart: always
     environment:
+      - TZ=Asia/Jakarta
       - SERVER_TYPE=http
       - SERVER_PORT=8080
       - AUTHENTICATION_TYPE=apikey
@@ -98,6 +118,7 @@ services:
     expose:
       - "3000"
     environment:
+      TZ: Asia/Jakarta
       BRONE_BROWSER_PROFILE_ROOT: /tmp/brone-puppeteer
       TMPDIR: /tmp/brone-runtime
       BRONE_BROWSER_CONCURRENCY: "${BRONE_BROWSER_CONCURRENCY:-1}"

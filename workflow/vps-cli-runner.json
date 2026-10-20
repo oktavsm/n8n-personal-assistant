@@ -1,0 +1,232 @@
+[
+  {
+    "updatedAt": "2026-10-19T15:20:50.700Z",
+    "createdAt": "2026-10-19T15:00:31.380Z",
+    "id": "vpsCLIRunner0001",
+    "name": "vps-cli-runner",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -600,
+          0
+        ],
+        "id": "8280ed4e-ef9e-405c-8972-c33731303f73",
+        "name": "vps-trigger"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst data = item.body?.data || item.data || item;\nconst msg = data.message || {};\nconst remoteJid = data.key?.remoteJid || '';\nconst participant = data.key?.participant || data.key?.participantAlt || remoteJid;\nconst messageId = data.key?.id || '';\n\nconst text = (msg.conversation || msg.extendedTextMessage?.text || '').trim();\nconst prompt = text.replace(/^(\\/vps|\\/agent)\\s*/i, '').trim();\n\nreturn [{\n  json: {\n    remoteJid,\n    participant,\n    messageId,\n    rawText: text,\n    prompt: prompt || 'Cek status VPS, disk, dan container docker secara ringkas'\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -380,
+          0
+        ],
+        "id": "d4f3a7a7-30e1-48bb-a700-65c7e6fe0379",
+        "name": "Normalize & Extract Task"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $json.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ '⏳ *VPS Agent Task Diterima*\\n\\n📋 *Instruksi:* \"' + $json.prompt + '\"\\n\\n_Codex Agent sedang mengeksekusi instruksi di VPS..._' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -160,
+          -100
+        ],
+        "id": "fe197ca9-9c70-437b-b1d9-2f2e1316964a",
+        "name": "Send Ack to WA",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "command",
+          "operation": "execute",
+          "authentication": "privateKey",
+          "command": "={{ \"/home/dev/.local/bin/run-agent.sh \" + JSON.stringify($json.prompt) }}"
+        },
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          -160,
+          100
+        ],
+        "id": "aed22ffb-7e00-4868-90b1-d23b7cf634d6",
+        "name": "Execute Agent on VPS",
+        "continueOnFail": true,
+        "credentials": {
+          "sshPrivateKey": {
+            "id": "sshHostDev0001",
+            "name": "SSH Host Dev"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const sshResult = $input.first().json;\nconst meta = $('Normalize & Extract Task').first().json;\n\nconst stdout = (sshResult.stdout || '').trim();\nconst stderr = (sshResult.stderr || '').trim();\nconst exitCode = sshResult.code;\nconst isError = sshResult.error;\n\nlet reply = '';\nif (isError) {\n  reply = `❌ *VPS Agent Error:*\\n\\n${sshResult.error}`;\n} else if (stdout) {\n  reply = `🤖 *VPS Agent Report:*\\n\\n${stdout}`;\n} else if (stderr) {\n  reply = `⚠️ *VPS Agent Warning:*\\n\\n${stderr}`;\n} else {\n  reply = `ℹ️ *VPS Agent:* Task selesai (exit code: ${exitCode}).`;\n}\n\nif (reply.length > 3500) {\n  reply = reply.substring(0, 3450) + '\\n\\n... _(output terpotong batas karakter WA)_';\n}\n\nreturn [{\n  json: {\n    ...meta,\n    replyText: reply\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          80,
+          100
+        ],
+        "id": "dc2382fd-0dcb-4689-b319-5da953a524be",
+        "name": "Format Agent Result"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $json.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.replyText }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          300,
+          100
+        ],
+        "id": "aac9ebe5-8507-4613-be4a-e4195927355a",
+        "name": "Send Reply to WA",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "vps-trigger": {
+        "main": [
+          [
+            {
+              "node": "Normalize & Extract Task",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize & Extract Task": {
+        "main": [
+          [
+            {
+              "node": "Send Ack to WA",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Execute Agent on VPS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Agent on VPS": {
+        "main": [
+          [
+            {
+              "node": "Format Agent Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Agent Result": {
+        "main": [
+          [
+            {
+              "node": "Send Reply to WA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": null,
+    "versionId": "c05f1df6-b305-405c-b299-0b1d306b6fc9",
+    "activeVersionId": "c05f1df6-b305-405c-b299-0b1d306b6fc9",
+    "versionCounter": 15,
+    "triggerCount": 0,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-10-19T15:00:31.380Z",
+        "createdAt": "2026-10-19T15:00:31.380Z",
+        "role": "workflow:owner",
+        "workflowId": "vpsCLIRunner0001",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

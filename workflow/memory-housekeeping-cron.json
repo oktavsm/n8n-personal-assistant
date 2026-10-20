@@ -1,0 +1,104 @@
+[
+  {
+    "updatedAt": "2026-10-19T15:58:14.354Z",
+    "createdAt": "2026-10-19T15:58:00.409Z",
+    "id": "memHousekeep01",
+    "name": "memory-housekeeping-cron",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 * * 0"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -300,
+          0
+        ],
+        "id": "844ee0fe-37dc-43f2-a9c1-e441bc9be2bd",
+        "name": "Weekly Sunday 3AM Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wa_chat_memory WHERE created_at < NOW() - INTERVAL '30 days';"
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          -80,
+          0
+        ],
+        "id": "ebf7dc84-77bf-4c16-a55a-7540fb60f43d",
+        "name": "[PG] Prune Old Chat Memory",
+        "credentials": {
+          "postgres": {
+            "id": "pgChatMemory0001",
+            "name": "Postgres Chat Memory"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Weekly Sunday 3AM Trigger": {
+        "main": [
+          [
+            {
+              "node": "[PG] Prune Old Chat Memory",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": {
+      "node:Weekly Sunday 3AM Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": null,
+    "pinData": null,
+    "versionId": "ec362d56-535c-41f3-9df1-5008f8c82b8b",
+    "activeVersionId": "ec362d56-535c-41f3-9df1-5008f8c82b8b",
+    "versionCounter": 11,
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-10-19T15:58:00.409Z",
+        "createdAt": "2026-10-19T15:58:00.409Z",
+        "role": "workflow:owner",
+        "workflowId": "memHousekeep01",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

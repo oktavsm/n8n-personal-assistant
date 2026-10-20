@@ -24,8 +24,20 @@ temp/
 *.tmp
 *.http
 
-# Python cache (if any helper scripts are added)
+# Python cache & virtual environment
 __pycache__/
 *.pyc
+.venv/
+venv/
+
+# Scratch & one-off maintenance scripts
+fix_*.js
+replace_*.js
+rewrite_*.js
+update_workflow.js
+test_*.py
+main.cpp
+brone-auth/test_*.js
+workflow/archive/
 
 .agent/

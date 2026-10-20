@@ -1,605 +1,1538 @@
-{
-  "name": "wa-to-gcal-assistant",
-  "nodes": [
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
+[
+  {
+    "updatedAt": "2026-10-19T13:31:50.015Z",
+    "createdAt": "2026-04-04T13:02:29.813Z",
+    "id": "U43zT3sJktIA9LaL",
+    "name": "wa-to-gcal-assistant",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst randomKey = apiKeys.length > 0 \n  ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n  : '';\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          656,
+          -400
+        ],
+        "id": "fb327184-dca2-4c7c-aaa4-fba19c24e24d",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={{ $json.selected_key }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah Asisten Jadwal Pribadi Okta yang cerdas dan berjalan di dalam workflow n8n.\n\nTugasmu adalah memahami pesan WhatsApp user yang berkaitan dengan Google Calendar, jadwal, tugas, deadline, agenda, meeting, project, dan event.\n\nPesan Teks Dari User:\n${$json.pesanWA}\n\n==================================================\nKONTEKS\n==================================================\n\nKalender utama adalah kalender milik Okta.\n\nPemilik kalender:\nOkta\n\nNomor WhatsApp Okta:\n${$env.MY_WA_NUMBER}\n\nAmanda / Manda adalah pacar Okta.\n\nSender WhatsApp:\n${$('[Code] Get WA Data').first().json.sender}\n\nTarget WhatsApp:\n${$('[Code] Get WA Data').first().json.targetNumber}\n\n==================================================\nATURAN AKSES — PALING PENTING\n==================================================\n\nPeriksa sender terlebih dahulu sebelum menentukan fungsi command.\n\n------------------------------------------\nOKTA\n------------------------------------------\n\nJika sender adalah:\n\n${$env.MY_WA_NUMBER}\n\nmaka pengirim adalah Okta.\n\nOkta boleh:\n- mengecek kalender\n- membuat jadwal\n- membuat tugas\n- membuat deadline\n- membuat agenda\n- membuat meeting\n- membuat project\n\n------------------------------------------\nAMANDA / MANDA\n------------------------------------------\n\nJika sender BUKAN:\n\n${$env.MY_WA_NUMBER}\n\nmaka pengirim dianggap sebagai Amanda / Manda.\n\nAmanda HANYA BOLEH melakukan pengecekan.\n\nAmanda TIDAK BOLEH membuat event apa pun melalui workflow kalender Okta.\n\nJika Amanda mengirim command yang biasanya digunakan untuk membuat event, tetap perlakukan sebagai REQUEST PENGECEKAN.\n\nContoh:\n\n/tugas laporan ICN besok jam 18.00\n\nJika dikirim Amanda:\n\n→ JANGAN membuat tugas.\n→ status = \"check\"\n\n/jadwal meeting besok jam 10\n\nJika dikirim Amanda:\n\n→ JANGAN membuat meeting.\n→ status = \"check\"\n\nATURAN INI MEMILIKI PRIORITAS TERTINGGI.\n\n==================================================\nSTATUS YANG DIPERBOLEHKAN\n==================================================\n\nSTATUS HANYA BOLEH:\n\n\"check\"\n\"success\"\n\"error\"\n\nJANGAN PERNAH menggunakan status lain.\n\nDILARANG menggunakan:\n\n\"tugas_check\"\n\"agenda\"\n\"besok\"\n\"kuliah\"\n\"uas\"\n\"create\"\n\"schedule\"\natau status lainnya.\n\nSemua request pengecekan menggunakan:\n\n\"check\"\n\nSemua request pembuatan event yang datanya lengkap menggunakan:\n\n\"success\"\n\nSemua request pembuatan event yang datanya tidak lengkap menggunakan:\n\n\"error\"\n\n==================================================\nWAKTU SEKARANG\n==================================================\n\n${$now.setZone('Asia/Jakarta').toString()}\n\nGunakan timezone:\n\nAsia/Jakarta\nWIB\nUTC+07:00\n\nSemua tanggal dan waktu harus dihitung berdasarkan timezone tersebut.\n\nFormat datetime:\n\nYYYY-MM-DDTHH:mm:ss+07:00\n\n==================================================\nDATA REFERENSI MATA KULIAH\n==================================================\n\nGunakan daftar berikut untuk melakukan standardisasi nama mata kuliah.\n\nUser boleh menggunakan nama lengkap, singkatan, lowercase, atau variasi umum.\n\n- Machine Learning Operations (MLOps)\n  Kode: CIF60048\n  Alias: MLOps, mlops, machine learning operations\n\n- Pengolahan Citra Digital dan Visi Komputer\n  Kode: CIF61339\n  Alias: ComVis, comvis, Computer Vision, computer vision, citra digital, visi komputer\n\n- Pengembangan Aplikasi Perangkat Bergerak\n  Kode: CIF65115\n  Alias: PAPB, papb, Mobile Apps, mobile apps, mobile application, aplikasi perangkat bergerak\n\n- Komputer Grafis\n  Kode: CIF65116\n  Alias: KG, kg, KomGraf, komgraf, komputer grafis, computer graphics\n\n- Jaringan Nirkabel\n  Kode: CIF65217\n  Alias: Jarnir, jarnir, Wireless, wireless, jaringan nirkabel\n\n- Jaringan Saraf Tiruan\n  Kode: CIF65318\n  Alias: JST, jst, ANN, ann, artificial neural network, jaringan saraf tiruan\n\n- Statistika Inferensi\n  Kode: CIF65319\n  Alias: SI, si, Statin, statin, statistika inferensi, inferential statistics\n\n- Metodologi Penelitian dan Penulisan Ilmiah\n  Kode: COM60051\n  Alias: Metopen, metopen, MPPI, mppi, metodologi penelitian, penulisan ilmiah\n\n==================================================\nDATA REFERENSI KEGIATAN / ORGANISASI / PROJECT\n==================================================\n\n- TSA: Tanoto Scholars Association\n  Alias: TSA, Tanoto, Tanoto Scholars, Tanoto Scholars Association\n\n- BCC: Basic Computing Community\n  Alias: BCC, Basic Computing Community\n\n- ICN: Information Centric Networking\n  Alias: ICN, icn, Information Centric Networking\n\n- PMK: Persekutuan Mahasiswa Kristen\n  Alias: PMK, pmk, Persekutuan Mahasiswa Kristen\n\n- Kerjago: Project Part-time\n  Alias: Kerjago, kerjago, KerjaGo, project Kerjago, kerja part-time\n\n- Titipin: Project Pribadi\n  Alias: Titipin, titipin, project Titipin, project pribadi\n\n==================================================\nTARGET KALENDER\n==================================================\n\n\"okta\" = kalender Okta.\n\n\"manda\" = kalender Amanda.\n\n\"amanda\" = kalender Amanda.\n\nJika target ditulis tepat setelah command, anggap sebagai target kalender.\n\nContoh:\n\n/cek okta\n→ check kalender Okta.\n\n/cek manda\n→ check kalender Amanda.\n\n/tugas okta\n→ check tugas Okta.\n\n/tugas manda\n→ check tugas Amanda.\n\n/besok okta\n→ check jadwal Okta besok.\n\n/agenda manda\n→ check agenda Amanda.\n\nJangan memasukkan \"okta\", \"manda\", atau \"amanda\" ke title jika kata tersebut hanya merupakan target kalender.\n\n==================================================\nCOMMAND PENGECEKAN\n==================================================\n\nCommand berikut adalah command pengecekan:\n\n/cek\n/besok\n/tugas\n/agenda\n/kuliah\n/uas\n\nSemua command tersebut menghasilkan:\n\nstatus = \"check\"\n\nTidak peduli kalender mana yang menjadi target.\n\nContoh:\n\n/cek\n→ check\n\n/cek okta\n→ check\n\n/cek manda\n→ check\n\n/besok\n→ check\n\n/besok okta\n→ check\n\n/tugas\n→ check\n\n/tugas okta\n→ check\n\n/tugas manda\n→ check\n\n/agenda\n→ check\n\n/agenda okta\n→ check\n\n/kuliah\n→ check\n\n/uas\n→ check\n\nUntuk semua mode pengecekan:\n\ntitle = null\nstart = null\nend = null\ndescription = null\n\nJika terdapat filter atau permintaan tambahan:\n\nmasukkan ke query.\n\n==================================================\nCOMMAND /TUGAS\n==================================================\n\nCommand /tugas memiliki dua fungsi:\n\n1. Mengecek tugas\n2. Membuat tugas\n\n------------------------------------------\n/tugas TANPA ISI\n------------------------------------------\n\nJika pesan tepat:\n\n/tugas\n\natau:\n\n/tugas okta\n\natau:\n\n/tugas manda\n\ntanpa isi tugas tambahan:\n\n→ status = \"check\"\n\nArtinya user ingin mengecek tugas/deadline.\n\nGunakan:\n\ntitle = null\nstart = null\nend = null\ndescription = null\n\nquery = \"semua tugas mulai hari ini sampai deadline paling jauh\"\n\n------------------------------------------\n/tugas + ISI\n------------------------------------------\n\nJika terdapat isi setelah /tugas:\n\nPertama periksa sender.\n\nJika sender adalah Okta:\n\n→ user bermaksud membuat tugas baru.\n\nJika data lengkap:\n\n→ status = \"success\"\n\nJika data tidak lengkap:\n\n→ status = \"error\"\n\nJANGAN mengubah request ini menjadi \"check\".\n\nContoh:\n\n/tugas laporan PAPB Jumat jam 18.00\n\n→ success\n\n------------------------------------------\n/tugas + ISI DARI AMANDA\n------------------------------------------\n\nJika sender bukan ${$env.MY_WA_NUMBER}:\n\nAmanda hanya boleh melakukan pengecekan.\n\nMaka:\n\n/tugas laporan PAPB Jumat jam 18.00\n\n→ status = \"check\"\n\nJANGAN success.\n\n==================================================\nVALIDASI PEMBUATAN TUGAS\n==================================================\n\nJika Okta ingin membuat tugas menggunakan:\n\n/tugas + isi\n\nminimal wajib tersedia:\n\n1. Judul / isi tugas\n2. Tanggal atau deadline\n\nJika judul tidak ada:\n\n→ error\n\nJika tanggal/deadline tidak ada:\n\n→ error\n\nJika judul dan tanggal/deadline tersedia:\n\n→ success\n\nJangan mengarang tanggal.\n\nJangan mengarang deadline.\n\nJangan mengarang waktu.\n\n==================================================\nCOMMAND /JADWAL\n==================================================\n\n/jadwal digunakan untuk membuat event baru jika dikirim oleh Okta.\n\nContoh:\n\n/jadwal meeting ICN Jumat jam 19.00\n\nJika sender Okta:\n\n→ success jika data lengkap.\n\nJika sender Amanda:\n\n→ check\n\nkarena Amanda tidak boleh membuat event.\n\n==================================================\nVALIDASI /JADWAL\n==================================================\n\nUntuk membuat event menggunakan /jadwal:\n\nminimal wajib tersedia:\n\n1. Judul / nama event\n2. Tanggal\n\nJika tanggal tidak tersedia:\n\n→ error\n\nJika judul tidak tersedia:\n\n→ error\n\nJika data lengkap:\n\n→ success\n\nJangan mengarang data yang tidak diberikan user.\n\n==================================================\nKATEGORI EVENT\n==================================================\n\nKategori hanya:\n\n[Tugas]\n[Meeting]\n[Acara]\n[Project]\n\n------------------------------------------\n[Tugas]\n------------------------------------------\n\nGunakan [Tugas] jika konteksnya:\n\n- tugas\n- deadline\n- pengumpulan\n- submit\n- submission\n- laporan\n- praktikum\n- modul\n\n------------------------------------------\n[Meeting]\n------------------------------------------\n\nGunakan [Meeting] untuk:\n\n- meeting\n- rapat\n- pertemuan\n- koordinasi\n- diskusi\n- konsultasi\n\n------------------------------------------\n[Project]\n------------------------------------------\n\nGunakan [Project] untuk:\n\n- project\n- proyek\n- pengerjaan project\n- pengerjaan proyek\n\n------------------------------------------\n[Acara]\n------------------------------------------\n\nGunakan [Acara] untuk event lainnya.\n\n==================================================\nDURASI\n==================================================\n\n[Tugas]:\n\nJika tidak ada durasi:\n\n→ 2 menit.\n\nContoh:\n\n18:00 → 18:02\n\nKategori lainnya:\n\nJika tidak ada durasi:\n\n→ 60 menit.\n\nContoh:\n\n19:00 → 20:00\n\nJika user memberikan durasi eksplisit:\n\ngunakan durasi tersebut.\n\n==================================================\nJUDUL\n==================================================\n\nJudul wajib menggunakan prefix kategori.\n\nFormat:\n\n\"[Kategori] Nama Lengkap (Singkatan) - Detail Tambahan\"\n\nContoh:\n\n\"[Tugas] Information Centric Networking (ICN) - Form Regenerasi\"\n\n\"[Tugas] Pengembangan Aplikasi Perangkat Bergerak (PAPB) - Video Instalasi Android Studio\"\n\n\"[Meeting] Information Centric Networking (ICN) - Koordinasi\"\n\n\"[Acara] Seminar Proposal\"\n\n\"[Project] Kerjago - Development\"\n\nGunakan nama resmi dari DATA REFERENSI jika dapat diidentifikasi.\n\n==================================================\nDESCRIPTION\n==================================================\n\nMasukkan informasi tambahan seperti:\n\n- lokasi\n- ruang\n- online/offline\n- Google Meet\n- Zoom\n- Brone\n- Classroom\n- link\n- catatan\n- instruksi\n\nJika tidak ada:\n\ndescription = null\n\n==================================================\nSUBJECT\n==================================================\n\nJika mata kuliah berhasil diidentifikasi:\n\nsubject = nama lengkap mata kuliah.\n\nJika tidak ada:\n\nsubject = null\n\n==================================================\nQUERY\n==================================================\n\nGunakan query untuk request pengecekan.\n\nContoh:\n\n/tugas\n\nquery:\n\n\"semua tugas mulai hari ini sampai deadline paling jauh\"\n\nJika user memberikan filter:\n\n/tugas okta tugas PAPB\n\nquery:\n\n\"tugas PAPB\"\n\nJika tidak ada query:\n\nquery = null\n\n==================================================\nATURAN TANGGAL\n==================================================\n\nGunakan:\n\n${$now.setZone('Asia/Jakarta').toString()}\n\nsebagai waktu referensi.\n\n\"hari ini\"\n→ tanggal hari ini.\n\n\"besok\"\n→ satu hari setelah hari ini.\n\n\"lusa\"\n→ dua hari setelah hari ini.\n\nJika tanggal diberikan tanpa tahun:\n\ngunakan tahun yang paling masuk akal berdasarkan waktu sekarang.\n\n==================================================\nATURAN WAKTU\n==================================================\n\n\"jam 7\"\n→ 07:00\n\n\"jam 7 pagi\"\n→ 07:00\n\n\"jam 7 malam\"\n→ 19:00\n\n\"jam 18.00\"\n→ 18:00\n\n\"jam 09.30\"\n→ 09:30\n\nTimezone:\n\nWIB / UTC+07:00\n\n==================================================\nFORMAT DATETIME\n==================================================\n\nGunakan:\n\nYYYY-MM-DDTHH:mm:ss+07:00\n\nContoh:\n\n2026-09-05T20:00:00+07:00\n\n==================================================\nOUTPUT\n==================================================\n\nOutput HARUS berupa JSON valid saja.\n\nJangan menggunakan markdown.\n\nJangan menggunakan code block.\n\nJangan memberikan penjelasan.\n\nStruktur:\n\n{\n  \"status\": \"check | success | error\",\n  \"data\": {\n    \"title\": \"Judul Event atau null\",\n    \"start\": \"YYYY-MM-DDTHH:mm:ss+07:00 atau null\",\n    \"end\": \"YYYY-MM-DDTHH:mm:ss+07:00 atau null\",\n    \"description\": \"Catatan tambahan atau null\",\n    \"query\": \"Filter atau permintaan user atau null\",\n    \"subject\": \"Nama mata kuliah atau null\"\n  },\n  \"error_message\": \"Alasan jika status error atau null\"\n}\n\n==================================================\nCONTOH UTAMA\n==================================================\n\nContoh 1:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas\n\nHasil:\n\n{\n  \"status\": \"check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": \"semua tugas mulai hari ini sampai deadline paling jauh\",\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 2:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas aku ada tugas untuk mengisi form regenerasi ICN, deadline 5 September 2026 jam 20.00\n\nHasil:\n\n{\n  \"status\": \"success\",\n  \"data\": {\n    \"title\": \"[Tugas] Information Centric Networking (ICN) - Form Regenerasi\",\n    \"start\": \"2026-09-05T20:00:00+07:00\",\n    \"end\": \"2026-09-05T20:02:00+07:00\",\n    \"description\": null,\n    \"query\": null,\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 3:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas laporan PAPB\n\nHasil:\n\n{\n  \"status\": \"error\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": null,\n    \"subject\": \"Pengembangan Aplikasi Perangkat Bergerak\"\n  },\n  \"error_message\": \"Tanggal atau deadline tugas belum disebutkan.\"\n}\n\n------------------------------------------\n\nContoh 4:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/cek\n\nHasil:\n\n{\n  \"status\": \"check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": null,\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 5:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/besok\n\nHasil:\n\n{\n  \"status\": \"check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": null,\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 6:\n\nSender:\nBUKAN ${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas laporan PAPB Jumat jam 18.00\n\nHasil:\n\n{\n  \"status\": \"check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": \"laporan PAPB Jumat jam 18.00\",\n    \"subject\": \"Pengembangan Aplikasi Perangkat Bergerak\"\n  },\n  \"error_message\": null\n}\n\nPENTING:\n\nWalaupun data terlihat lengkap, karena sender bukan Okta maka TIDAK BOLEH success.\n\n==================================================\nATURAN FINAL\n==================================================\n\n1. STATUS HANYA:\n   - check\n   - success\n   - error\n\n2. Semua command pengecekan:\n   → check\n\n3. /tugas tanpa isi:\n   → check\n\n4. /tugas + isi dari Okta:\n   → success jika lengkap\n   → error jika tidak lengkap\n\n5. /jadwal + isi dari Okta:\n   → success jika lengkap\n   → error jika tidak lengkap\n\n6. Semua request dari Amanda:\n   → hanya check\n   → tidak pernah success untuk membuat event\n\n7. Jika data pembuatan event tidak lengkap:\n   → error\n   → jangan mengarang data\n\n8. Jangan menggunakan status:\n   - tugas_check\n   - agenda\n   - besok\n   - kuliah\n   - uas\n   - create\n   - schedule\n   - atau status lainnya.\n\n9. Gunakan Asia/Jakarta / WIB / UTC+07:00.\n\n10. Output HARUS JSON valid saja.\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          912,
+          -400
+        ],
+        "id": "9798153e-77eb-431b-8524-f46345913a13",
+        "name": "[HTTP] Gemini Brone"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.status }}",
+                      "rightValue": "=success",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "75463742-e188-4a08-b41c-81f40e1bc9d9"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "50065f18-27e8-44b2-927f-667e73e648fb",
+                      "leftValue": "={{ $json.status }}",
+                      "rightValue": "=error",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "a0133c97-bc0c-45dc-80cc-3cad9b0c9a30",
+                      "leftValue": "={{ $json.status }}",
+                      "rightValue": "=check",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
           },
-          "conditions": [
-            {
-              "id": "99491177-ccd9-49cf-be53-5871a4c22206",
-              "leftValue": "={{ $json.body.data.message.conversation }}",
-              "rightValue": "=/jadwal",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1328,
+          -400
+        ],
+        "id": "63ee8a25-10ba-4705-8e85-06832b841a4e",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "start": "={{ $json.data.start }}",
+          "end": "={{ $json.data.end }}",
+          "additionalFields": {
+            "description": "={{ $json.data.description }}",
+            "summary": "={{ $json.data.title }}"
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          1536,
+          -496
+        ],
+        "id": "cb8655fd-ee8a-4348-ae94-2e58a0d9fa26",
+        "name": "Create an event",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').endOf('day').toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          1536,
+          -64
+        ],
+        "id": "f1b43542-97b0-4a43-b4cd-2ec0e8561079",
+        "name": "Get many events",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').endOf('day').toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          1536,
+          96
+        ],
+        "id": "d4673291-cd0f-4040-8e03-8919f49cdcba",
+        "name": "Get many jadwal kuliah",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "let rawAgenda = [];\nlet rawKuliah = [];\n\ntry {\n  rawAgenda = $('Get many events').all();\n} catch (e) {}\n\ntry {\n  rawKuliah = $('Get many jadwal kuliah').all();\n} catch (e) {}\n\nconst filterValid = (items) => items.filter(e => e.json && (e.json.id || e.json.summary || e.json.start));\nconst events = [...filterValid(rawAgenda), ...filterValid(rawKuliah)];\n\nlet message = \"\";\n\nconst getStart = (event) => {\n  const dateTime = event.json.start?.dateTime;\n  if (!dateTime) return Infinity;\n  return new Date(dateTime).getTime();\n};\n\nconst formatTime = (date) => {\n  return date.toLocaleTimeString(\"id-ID\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: false,\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst formatRange = (start, end) => {\n  const startTime = formatTime(start);\n  if (!end) return `${startTime} WIB`;\n  const endTime = formatTime(end);\n  return `${startTime}–${endTime} WIB`;\n};\n\nconst now = new Date();\nconst getEventStatus = (start, end) => {\n  if (now >= start && now <= end) return \"now\";\n  if (now > end) return \"done\";\n  return \"upcoming\";\n};\n\nconst header = \"🗓️ *JADWAL HARI INI*\";\n\nif (events.length === 0) {\n  return [{ json: { message: `${header}\\n\\nTidak ada jadwal hari ini / Kosong... Santai dulu! 😴` } }];\n}\n\nevents.sort((a, b) => getStart(a) - getStart(b));\n\nmessage = `${header}\\n`;\nlet nextAssigned = false;\nconst lines = [];\n\nevents.forEach((event) => {\n  const data = event.json;\n  const title = data.summary || \"Tanpa judul\";\n\n  if (data.start?.date) {\n    lines.push(`• *${title}*\\n  Seharian`);\n    return;\n  }\n  if (!data.start?.dateTime) return;\n\n  const start = new Date(data.start.dateTime);\n  const end = data.end?.dateTime ? new Date(data.end.dateTime) : new Date(start.getTime() + 60 * 60 * 1000);\n  const eventStatus = getEventStatus(start, end);\n  const time = formatRange(start, end);\n\n  let prefix = \"•\";\n  let statusText = \"\";\n  if (eventStatus === \"now\") { prefix = \"🔥\"; statusText = \" *NOW*\"; }\n  else if (eventStatus === \"done\") { prefix = \"✓\"; }\n  else if (eventStatus === \"upcoming\" && !nextAssigned) { prefix = \"👉\"; statusText = \" *NEXT*\"; nextAssigned = true; }\n\n  let formattedTitle = eventStatus === \"done\" ? `~*${title}*~` : `*${title}*`;\n  lines.push(`${prefix} ${formattedTitle}${statusText}\\n  ${time}`);\n});\n\nif (lines.length === 0) {\n  message += \"\\n\\nTidak ada jadwal hari ini / Kosong... Santai dulu! 😴\";\n} else {\n  message += \"\\n\" + lines.join(\"\\n\\n\");\n}\n\nreturn [{ json: { message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1744,
+          -64
+        ],
+        "id": "5a1983d8-e740-4679-afc4-21100864bef0",
+        "name": "Code: Recap Jadwal"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
             },
-            {
-              "id": "3302ac2b-a32c-46cd-be10-aaa119ba7a42",
-              "leftValue": "={{ $json.body.data.key.remoteJid }}",
-              "rightValue": "={{WHATSAPP_TARGET_NUMBER}}",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
+            "conditions": [
+              {
+                "id": "6f692dd4-b1df-4338-9d0a-615105591b1a",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
               }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1952,
+          -64
+        ],
+        "id": "7ea304fa-981c-46e2-b6df-34623e7ddb1f",
+        "name": "If2"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "c997c5db-d296-436e-942c-b4ff710f8a2d",
+                      "leftValue": "={{ $json.pesanWALower.includes('/jadwal') || ($json.pesanWALower.startsWith('/agenda') && !['/agenda', '/agenda okta', '/agenda manda'].includes($json.pesanWALower)) }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/jadwal xxxx: buat jadwal agenda"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "822a1f5c-3864-4b13-9ab3-d8896075257d",
+                      "leftValue": "={{ ['/cek', '/cek okta'].includes($json.pesanWALower) }}",
+                      "rightValue": "/cek",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/cek: cek jadwal"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "d454b3c4-6a9b-4a2b-8982-f79516a5233e",
+                      "leftValue": "={{ $json.pesanWALower }}",
+                      "rightValue": "/uas",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/cek uas"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "a74a1198-116b-4269-9da2-424bff9baec3",
+                      "leftValue": "={{ ['/tugas', '/tugas okta'].includes($json.pesanWALower) }}",
+                      "rightValue": "/tugas",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/tugas: cek tugas"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "ef35be2c-1706-473d-a6de-852a0bbf94eb",
+                      "leftValue": "={{ $json.pesanWALower }}",
+                      "rightValue": "/tugas",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/tugas xxx: buat tugas"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "e7b48915-9ef9-4a3b-838a-33ff712e5484",
+                      "leftValue": "={{ ['/agenda', '/agenda okta'].includes($json.pesanWALower) }}",
+                      "rightValue": "/agenda",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/agenda: cek agenda seminggu kedepan"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "17b05030-32c3-478b-b7b0-79ea38ad7ddc",
+                      "leftValue": "={{ ['/besok', '/besok okta'].includes($json.pesanWALower) }}",
+                      "rightValue": "/besok",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/besok: jadwal besok"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          176,
+          0
+        ],
+        "id": "c7684c58-92fd-4520-8495-4f183576068a",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_UAS_SEM4 }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "={{ DateTime.fromISO('2026-06-12', { zone: 'Asia/Jakarta' }).endOf('day').toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          512,
+          0
+        ],
+        "id": "e050bd8c-e117-48c6-9787-a438d142a100",
+        "name": "Get many jadwal kuliah1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const rawEvents = $input.all();\nconst events = rawEvents.filter(e => e.json && (e.json.id || e.json.summary || e.json.start));\n\nconst header = \"📝 *JADWAL UAS*\";\n\nif (events.length === 0) {\n  return [{ json: { message: `${header}\\n\\nBelum ada jadwal UAS yang terdaftar. Santai dulu! 😴` } }];\n}\n\nconst getStartDate = (event) => {\n  if (event.json.start?.dateTime) return new Date(event.json.start.dateTime);\n  if (event.json.start?.date) return new Date(`${event.json.start.date}T00:00:00+07:00`);\n  return null;\n};\n\nconst formatTanggal = (date) => {\n  return date.toLocaleDateString(\"id-ID\", {\n    weekday: \"long\",\n    day: \"numeric\",\n    month: \"long\",\n    year: \"numeric\",\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst formatJam = (start, end) => {\n  const jamMulai = start.toLocaleTimeString(\"id-ID\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: false,\n    timeZone: \"Asia/Jakarta\",\n  });\n  if (!end) return `${jamMulai} WIB`;\n  const jamSelesai = end.toLocaleTimeString(\"id-ID\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: false,\n    timeZone: \"Asia/Jakarta\",\n  });\n  return `${jamMulai} - ${jamSelesai} WIB`;\n};\n\nevents.sort((a, b) => getStartDate(a) - getStartDate(b));\n\nconst lines = [];\nevents.forEach((event) => {\n  const data = event.json;\n  const title = data.summary || \"UAS Tanpa Judul\";\n  const start = getStartDate(event);\n  const end = data.end?.dateTime ? new Date(data.end.dateTime) : null;\n  if (!start) return;\n  const tanggal = formatTanggal(start);\n  const jam = formatJam(start, end);\n  lines.push(`• *${title}*\\n  🗓️ ${tanggal}\\n  ⏰ ${jam}`);\n});\n\nlet message = header;\nif (lines.length === 0) {\n  message += \"\\n\\nBelum ada jadwal UAS yang terdaftar. Santai dulu! 😴\";\n} else {\n  message += \"\\n\\n\" + lines.join(\"\\n\\n\");\n}\n\nreturn [{ json: { message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          736,
+          80
+        ],
+        "id": "68379ebc-dc8c-4181-a8bd-b10edd53ee0c",
+        "name": "Code: Recap Jadwal1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "6f692dd4-b1df-4338-9d0a-615105591b1a",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          944,
+          80
+        ],
+        "id": "e712fbf8-a1a7-44db-bde8-f1234ec8824a",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -848,
+          320
+        ],
+        "id": "c069723d-ae82-414b-b749-0dca000719b8",
+        "name": "WA Command"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst randomKey = apiKeys.length > 0 \n  ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n  : '';\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          416
+        ],
+        "id": "f146e2f7-f1a6-4ba0-8ed8-cea6ad9ec82e",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={{ $json.selected_key }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah Asisten Jadwal Pribadi Okta yang cerdas dan berjalan di dalam workflow n8n.\n\nTugasmu adalah memahami pesan WhatsApp user yang berkaitan dengan Google Calendar, jadwal, tugas, deadline, agenda, meeting, project, dan event.\n\nPesan Teks Dari User:\n${$json.pesanWA}\n\n==================================================\nKONTEKS\n==================================================\n\nKalender utama adalah kalender milik Okta.\n\nPemilik kalender:\nOkta\n\nNomor WhatsApp Okta:\n${$env.MY_WA_NUMBER}\n\nAmanda / Manda adalah pacar Okta.\n\nSender WhatsApp:\n${$('[Code] Get WA Data').first().json.sender}\n\nTarget WhatsApp:\n${$('[Code] Get WA Data').first().json.targetNumber}\n\n==================================================\nATURAN AKSES — PALING PENTING\n==================================================\n\nPeriksa sender terlebih dahulu sebelum menentukan fungsi command.\n\n------------------------------------------\nOKTA\n------------------------------------------\n\nJika sender adalah:\n\n${$env.MY_WA_NUMBER}\n\nmaka pengirim adalah Okta.\n\nOkta boleh:\n- mengecek kalender\n- membuat jadwal\n- membuat tugas\n- membuat deadline\n- membuat agenda\n- membuat meeting\n- membuat project\n\n------------------------------------------\nAMANDA / MANDA\n------------------------------------------\n\nJika sender BUKAN:\n\n${$env.MY_WA_NUMBER}\n\nmaka pengirim dianggap sebagai Amanda / Manda.\n\nAmanda HANYA BOLEH melakukan pengecekan.\n\nAmanda TIDAK BOLEH membuat event apa pun melalui workflow kalender Okta.\n\nJika Amanda mengirim command yang biasanya digunakan untuk membuat event, tetap perlakukan sebagai REQUEST PENGECEKAN.\n\nContoh:\n\n/tugas laporan ICN besok jam 18.00\n\nJika dikirim Amanda:\n\n→ JANGAN membuat tugas.\n→ status = \"check\"\n\n/jadwal meeting besok jam 10\n\nJika dikirim Amanda:\n\n→ JANGAN membuat meeting.\n→ status = \"check\"\n\nATURAN INI MEMILIKI PRIORITAS TERTINGGI.\n\n==================================================\nSTATUS YANG DIPERBOLEHKAN\n==================================================\n\nSTATUS HANYA BOLEH:\n\n\"tugas_check\"\n\"success\"\n\"error\"\n\nJANGAN PERNAH menggunakan status lain.\n\nDILARANG menggunakan:\n\n\"agenda\"\n\"besok\"\n\"kuliah\"\n\"uas\"\n\"create\"\n\"schedule\"\natau status lainnya.\n\nSemua request pengecekan menggunakan:\n\n\"tugas_check\"\n\nSemua request pembuatan event yang datanya lengkap menggunakan:\n\n\"success\"\n\nSemua request pembuatan event yang datanya tidak lengkap menggunakan:\n\n\"error\"\n\n==================================================\nWAKTU SEKARANG\n==================================================\n\n${$now.setZone('Asia/Jakarta').toString()}\n\nGunakan timezone:\n\nAsia/Jakarta\nWIB\nUTC+07:00\n\nSemua tanggal dan waktu harus dihitung berdasarkan timezone tersebut.\n\nFormat datetime:\n\nYYYY-MM-DDTHH:mm:ss+07:00\n\n==================================================\nDATA REFERENSI MATA KULIAH\n==================================================\n\nGunakan daftar berikut untuk melakukan standardisasi nama mata kuliah.\n\nUser boleh menggunakan nama lengkap, singkatan, lowercase, atau variasi umum.\n\n- Machine Learning Operations (MLOps)\n  Kode: CIF60048\n  Alias: MLOps, mlops, machine learning operations\n\n- Pengolahan Citra Digital dan Visi Komputer\n  Kode: CIF61339\n  Alias: ComVis, comvis, Computer Vision, computer vision, citra digital, visi komputer\n\n- Pengembangan Aplikasi Perangkat Bergerak\n  Kode: CIF65115\n  Alias: PAPB, papb, Mobile Apps, mobile apps, mobile application, aplikasi perangkat bergerak\n\n- Komputer Grafis\n  Kode: CIF65116\n  Alias: KG, kg, KomGraf, komgraf, komputer grafis, computer graphics\n\n- Jaringan Nirkabel\n  Kode: CIF65217\n  Alias: Jarnir, jarnir, Wireless, wireless, jaringan nirkabel\n\n- Jaringan Saraf Tiruan\n  Kode: CIF65318\n  Alias: JST, jst, ANN, ann, artificial neural network, jaringan saraf tiruan\n\n- Statistika Inferensi\n  Kode: CIF65319\n  Alias: SI, si, Statin, statin, statistika inferensi, inferential statistics\n\n- Metodologi Penelitian dan Penulisan Ilmiah\n  Kode: COM60051\n  Alias: Metopen, metopen, MPPI, mppi, metodologi penelitian, penulisan ilmiah\n\n==================================================\nDATA REFERENSI KEGIATAN / ORGANISASI / PROJECT\n==================================================\n\n- TSA: Tanoto Scholars Association\n  Alias: TSA, Tanoto, Tanoto Scholars, Tanoto Scholars Association\n\n- BCC: Basic Computing Community\n  Alias: BCC, Basic Computing Community\n\n- ICN: Information Centric Networking\n  Alias: ICN, icn, Information Centric Networking\n\n- PMK: Persekutuan Mahasiswa Kristen\n  Alias: PMK, pmk, Persekutuan Mahasiswa Kristen\n\n- Kerjago: Project Part-time\n  Alias: Kerjago, kerjago, KerjaGo, project Kerjago, kerja part-time\n\n- Titipin: Project Pribadi\n  Alias: Titipin, titipin, project Titipin, project pribadi\n\n==================================================\nTARGET KALENDER\n==================================================\n\n\"okta\" = kalender Okta.\n\n\"manda\" = kalender Amanda.\n\n\"amanda\" = kalender Amanda.\n\nJika target ditulis tepat setelah command, anggap sebagai target kalender.\n\nContoh:\n\n/cek okta\n→ check kalender Okta.\n\n/cek manda\n→ check kalender Amanda.\n\n/tugas okta\n→ check tugas Okta.\n\n/tugas manda\n→ check tugas Amanda.\n\n/besok okta\n→ check jadwal Okta besok.\n\n/agenda manda\n→ check agenda Amanda.\n\nJangan memasukkan \"okta\", \"manda\", atau \"amanda\" ke title jika kata tersebut hanya merupakan target kalender.\n\n==================================================\nCOMMAND PENGECEKAN\n==================================================\n\nCommand berikut adalah command pengecekan:\n\n/cek\n/besok\n/tugas\n/agenda\n/kuliah\n/uas\n\nSemua command tersebut menghasilkan:\n\nstatus = \"tugas_check\"\n\nTidak peduli kalender mana yang menjadi target.\n\nContoh:\n\n/cek\n→ check\n\n/cek okta\n→ check\n\n/cek manda\n→ check\n\n/besok\n→ check\n\n/besok okta\n→ check\n\n/tugas\n→ check\n\n/tugas okta\n→ check\n\n/tugas manda\n→ check\n\n/agenda\n→ check\n\n/agenda okta\n→ check\n\n/kuliah\n→ check\n\n/uas\n→ check\n\nUntuk semua mode pengecekan:\n\ntitle = null\nstart = null\nend = null\ndescription = null\n\nJika terdapat filter atau permintaan tambahan:\n\nmasukkan ke query.\n\n==================================================\nCOMMAND /TUGAS\n==================================================\n\nCommand /tugas memiliki dua fungsi:\n\n1. Mengecek tugas\n2. Membuat tugas\n\n------------------------------------------\n/tugas TANPA ISI\n------------------------------------------\n\nJika pesan tepat:\n\n/tugas\n\natau:\n\n/tugas okta\n\natau:\n\n/tugas manda\n\ntanpa isi tugas tambahan:\n\n→ status = \"check\"\n\nArtinya user ingin mengecek tugas/deadline.\n\nGunakan:\n\ntitle = null\nstart = null\nend = null\ndescription = null\n\nquery = \"semua tugas mulai hari ini sampai deadline paling jauh\"\n\n------------------------------------------\n/tugas + ISI\n------------------------------------------\n\nJika terdapat isi setelah /tugas:\n\nPertama periksa sender.\n\nJika sender adalah Okta:\n\n→ user bermaksud membuat tugas baru.\n\nJika data lengkap:\n\n→ status = \"success\"\n\nJika data tidak lengkap:\n\n→ status = \"error\"\n\nJANGAN mengubah request ini menjadi \"check\".\n\nContoh:\n\n/tugas laporan PAPB Jumat jam 18.00\n\n→ success\n\n------------------------------------------\n/tugas + ISI DARI AMANDA\n------------------------------------------\n\nJika sender bukan ${$env.MY_WA_NUMBER}:\n\nAmanda hanya boleh melakukan pengecekan.\n\nMaka:\n\n/tugas laporan PAPB Jumat jam 18.00\n\n→ status = \"check\"\n\nJANGAN success.\n\n==================================================\nVALIDASI PEMBUATAN TUGAS\n==================================================\n\nJika Okta ingin membuat tugas menggunakan:\n\n/tugas + isi\n\nminimal wajib tersedia:\n\n1. Judul / isi tugas\n2. Tanggal atau deadline\n\nJika judul tidak ada:\n\n→ error\n\nJika tanggal/deadline tidak ada:\n\n→ error\n\nJika judul dan tanggal/deadline tersedia:\nBuatkan starttime dan endtimenya, end timenya cukup +1 menit dari starttime, jika berada diujung hari misal 23:59, maka end time ada di 00:00 di hari berikutnya\n→ success\n\nJangan mengarang tanggal.\n\nJangan mengarang deadline.\n\nJangan mengarang waktu.\n\n==================================================\nCOMMAND /JADWAL\n==================================================\n\n/jadwal digunakan untuk membuat event baru jika dikirim oleh Okta.\n\nContoh:\n\n/jadwal meeting ICN Jumat jam 19.00\n\nJika sender Okta:\n\n→ success jika data lengkap.\n\nJika sender Amanda:\n\n→ check\n\nkarena Amanda tidak boleh membuat event.\n\n==================================================\nVALIDASI /JADWAL\n==================================================\n\nUntuk membuat event menggunakan /jadwal:\n\nminimal wajib tersedia:\n\n1. Judul / nama event\n2. Tanggal\n\nJika tanggal tidak tersedia:\n\n→ error\n\nJika judul tidak tersedia:\n\n→ error\n\nJika data lengkap:\n\n→ success\n\nJangan mengarang data yang tidak diberikan user.\n\n==================================================\nKATEGORI EVENT\n==================================================\n\nKategori hanya:\n\n[Tugas]\n[Meeting]\n[Acara]\n[Project]\n\n------------------------------------------\n[Tugas]\n------------------------------------------\n\nGunakan [Tugas] jika konteksnya:\n\n- tugas\n- deadline\n- pengumpulan\n- submit\n- submission\n- laporan\n- praktikum\n- modul\n\n------------------------------------------\n[Meeting]\n------------------------------------------\n\nGunakan [Meeting] untuk:\n\n- meeting\n- rapat\n- pertemuan\n- koordinasi\n- diskusi\n- konsultasi\n\n------------------------------------------\n[Project]\n------------------------------------------\n\nGunakan [Project] untuk:\n\n- project\n- proyek\n- pengerjaan project\n- pengerjaan proyek\n\n------------------------------------------\n[Acara]\n------------------------------------------\n\nGunakan [Acara] untuk event lainnya.\n\n==================================================\nDURASI\n==================================================\n\n[Tugas]:\n\nJika tidak ada durasi:\n\n→ 2 menit.\n\nContoh:\n\n18:00 → 18:02\n\nKategori lainnya:\n\nJika tidak ada durasi:\n\n→ 60 menit.\n\nContoh:\n\n19:00 → 20:00\n\nJika user memberikan durasi eksplisit:\n\ngunakan durasi tersebut.\n\n==================================================\nJUDUL\n==================================================\n\nJudul wajib menggunakan prefix kategori.\n\nFormat:\n\n\"[Kategori] Nama Lengkap (Singkatan) - Detail Tambahan\"\n\nContoh:\n\n\"[Tugas] Information Centric Networking (ICN) - Form Regenerasi\"\n\n\"[Tugas] Pengembangan Aplikasi Perangkat Bergerak (PAPB) - Video Instalasi Android Studio\"\n\n\"[Meeting] Information Centric Networking (ICN) - Koordinasi\"\n\n\"[Acara] Seminar Proposal\"\n\n\"[Project] Kerjago - Development\"\n\nGunakan nama resmi dari DATA REFERENSI jika dapat diidentifikasi.\n\n==================================================\nDESCRIPTION\n==================================================\n\nMasukkan informasi tambahan seperti:\n\n- lokasi\n- ruang\n- online/offline\n- Google Meet\n- Zoom\n- Brone\n- Classroom\n- link\n- catatan\n- instruksi\n\nJika tidak ada:\n\ndescription = null\n\n==================================================\nSUBJECT\n==================================================\n\nJika mata kuliah berhasil diidentifikasi:\n\nsubject = nama lengkap mata kuliah.\n\nJika tidak ada:\n\nsubject = null\n\n==================================================\nQUERY\n==================================================\n\nGunakan query untuk request pengecekan.\n\nContoh:\n\n/tugas\n\nquery:\n\n\"semua tugas mulai hari ini sampai deadline paling jauh\"\n\nJika user memberikan filter:\n\n/tugas okta tugas PAPB\n\nquery:\n\n\"tugas PAPB\"\n\nJika tidak ada query:\n\nquery = null\n\n==================================================\nATURAN TANGGAL\n==================================================\n\nGunakan:\n\n${$now.setZone('Asia/Jakarta').toString()}\n\nsebagai waktu referensi.\n\n\"hari ini\"\n→ tanggal hari ini.\n\n\"besok\"\n→ satu hari setelah hari ini.\n\n\"lusa\"\n→ dua hari setelah hari ini.\n\nJika tanggal diberikan tanpa tahun:\n\ngunakan tahun yang paling masuk akal berdasarkan waktu sekarang.\n\n==================================================\nATURAN WAKTU\n==================================================\n\n\"jam 7\"\n→ 07:00\n\n\"jam 7 pagi\"\n→ 07:00\n\n\"jam 7 malam\"\n→ 19:00\n\n\"jam 18.00\"\n→ 18:00\n\n\"jam 09.30\"\n→ 09:30\n\nTimezone:\n\nWIB / UTC+07:00\n\n==================================================\nFORMAT DATETIME\n==================================================\n\nGunakan:\n\nYYYY-MM-DDTHH:mm:ss+07:00\n\nContoh:\n\n2026-09-05T20:00:00+07:00\n\n==================================================\nOUTPUT\n==================================================\n\nOutput HARUS berupa JSON valid saja.\n\nJangan menggunakan markdown.\n\nJangan menggunakan code block.\n\nJangan memberikan penjelasan.\n\nStruktur:\n\n{\n  \"status\": \"tugas_check | success | error\",\n  \"data\": {\n    \"title\": \"Judul Event atau null\",\n    \"start\": \"YYYY-MM-DDTHH:mm:ss+07:00 atau null\",\n    \"end\": \"YYYY-MM-DDTHH:mm:ss+07:00 atau null\",\n    \"description\": \"Catatan tambahan atau null\",\n    \"query\": \"Filter atau permintaan user atau null\",\n    \"subject\": \"Nama mata kuliah atau null\"\n  },\n  \"error_message\": \"Alasan jika status error atau null\"\n}\n\n==================================================\nCONTOH UTAMA\n==================================================\n\nContoh 1:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas\n\nHasil:\n\n{\n  \"status\": \"tugas_check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": \"semua tugas mulai hari ini sampai deadline paling jauh\",\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 2:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas aku ada tugas untuk mengisi form regenerasi ICN, deadline 5 September 2026 jam 20.00\n\nHasil:\n\n{\n  \"status\": \"success\",\n  \"data\": {\n    \"title\": \"[Tugas] Information Centric Networking (ICN) - Form Regenerasi\",\n    \"start\": \"2026-09-05T20:00:00+07:00\",\n    \"end\": \"2026-09-05T20:02:00+07:00\",\n    \"description\": null,\n    \"query\": null,\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 3:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas laporan PAPB\n\nHasil:\n\n{\n  \"status\": \"error\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": null,\n    \"subject\": \"Pengembangan Aplikasi Perangkat Bergerak\"\n  },\n  \"error_message\": \"Tanggal atau deadline tugas belum disebutkan.\"\n}\n\n------------------------------------------\n\nContoh 4:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/cek\n\nHasil:\n\n{\n  \"status\": \"tugas_check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": null,\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 5:\n\nSender:\n${$env.MY_WA_NUMBER}\n\nPesan:\n\n/besok\n\nHasil:\n\n{\n  \"status\": \"tugas_check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": null,\n    \"subject\": null\n  },\n  \"error_message\": null\n}\n\n------------------------------------------\n\nContoh 6:\n\nSender:\nBUKAN ${$env.MY_WA_NUMBER}\n\nPesan:\n\n/tugas laporan PAPB Jumat jam 18.00\n\nHasil:\n\n{\n  \"status\": \"tugas_check\",\n  \"data\": {\n    \"title\": null,\n    \"start\": null,\n    \"end\": null,\n    \"description\": null,\n    \"query\": \"laporan PAPB Jumat jam 18.00\",\n    \"subject\": \"Pengembangan Aplikasi Perangkat Bergerak\"\n  },\n  \"error_message\": null\n}\n\nPENTING:\n\nWalaupun data terlihat lengkap, karena sender bukan Okta maka TIDAK BOLEH success.\n\n==================================================\nATURAN FINAL\n==================================================\n\n1. STATUS HANYA:\n   - check\n   - success\n   - error\n\n2. Semua command pengecekan:\n   → tugas_check\n\n3. /tugas tanpa isi:\n   → tugaS_check\n\n4. /tugas + isi dari Okta:\n   → success jika lengkap\n   → error jika tidak lengkap\n\n5. /jadwal + isi dari Okta:\n   → success jika lengkap\n   → error jika tidak lengkap\n\n6. Semua request dari Amanda:\n   → hanya check\n   → tidak pernah success untuk membuat event\n\n7. Jika data pembuatan event tidak lengkap:\n   → error\n   → jangan mengarang data\n\n8. Jangan menggunakan status:\n   - agenda\n   - besok\n   - kuliah\n   - uas\n   - create\n   - schedule\n   - atau status lainnya.\n\n9. Gunakan Asia/Jakarta / WIB / UTC+07:00.\n\n10. Output HARUS JSON valid saja.\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          928,
+          432
+        ],
+        "id": "2a7169be-60d6-4bdb-b441-4fa8e9cee53a",
+        "name": "[HTTP] Gemini Brone2"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.status }}",
+                      "rightValue": "=success",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "75463742-e188-4a08-b41c-81f40e1bc9d9"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "success buat"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "50065f18-27e8-44b2-927f-667e73e648fb",
+                      "leftValue": "={{ $json.status }}",
+                      "rightValue": "=error",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "error"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "a0133c97-bc0c-45dc-80cc-3cad9b0c9a30",
+                      "leftValue": "={{ $json.status }}",
+                      "rightValue": "=tugas_check",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "cek "
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1344,
+          432
+        ],
+        "id": "93e995fb-8727-4646-8b52-d61e63687a3d",
+        "name": "Switch2"
+      },
+      {
+        "parameters": {
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "start": "={{ $json.data.start }}",
+          "end": "={{ $json.data.end }}",
+          "additionalFields": {
+            "description": "={{ $json.data.description }}",
+            "summary": "={{ $json.data.title }}"
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          1552,
+          336
+        ],
+        "id": "c53a4232-d5c5-476c-adca-b136699a964f",
+        "name": "Create an event1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "=",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          1552,
+          768
+        ],
+        "id": "2daa297a-1d61-4c98-b094-8e75f9472fc7",
+        "name": "Get many events1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const rawEvents = $input.all();\nconst events = rawEvents.filter(e => e.json && (e.json.id || e.json.summary || e.json.start));\n\nconst getStart = (event) => {\n  const dateTime = event.json.start?.dateTime;\n  if (!dateTime) return Infinity;\n  return new Date(dateTime).getTime();\n};\n\nconst formatTime = (date) => {\n  return date.toLocaleTimeString(\"id-ID\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: false,\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst formatDate = (date) => {\n  return date.toLocaleDateString(\"id-ID\", {\n    weekday: \"long\",\n    day: \"numeric\",\n    month: \"long\",\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst header = \"📚 *DEADLINE TUGAS*\";\n\nif (events.length === 0) {\n  return [{ json: { message: `${header}\\n\\nTidak ada deadline tugas terdaftar saat ini. Aman! 🎉` } }];\n}\n\nevents.sort((a, b) => getStart(a) - getStart(b));\n\nlet message = `${header}\\n`;\nconst lines = [];\n\nevents.forEach((event) => {\n  const data = event.json;\n  const title = data.summary || \"Tugas\";\n\n  if (!data.start?.dateTime) {\n    if (data.start?.date) {\n      lines.push(`• *${title}*\\n  🗓️ ${data.start.date} (Seharian)`);\n    }\n    return;\n  }\n\n  const start = new Date(data.start.dateTime);\n  const dateStr = formatDate(start);\n  const timeStr = formatTime(start);\n  lines.push(`• *${title}*\\n  🗓️ ${dateStr}\\n  ⏰ ${timeStr} WIB`);\n});\n\nif (lines.length === 0) {\n  message += \"\\nTidak ada deadline tugas terdaftar saat ini. Aman! 🎉\";\n} else {\n  message += \"\\n\" + lines.join(\"\\n\\n\");\n}\n\nreturn [{ json: { message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1760,
+          768
+        ],
+        "id": "bb8b23ca-20af-40c1-a428-0e583523bb1c",
+        "name": "Code: Recap Jadwal2"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "6f692dd4-b1df-4338-9d0a-615105591b1a",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1968,
+          768
+        ],
+        "id": "9f4d2325-eb63-45fc-9d42-bb3c52cf9288",
+        "name": "If3"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Ambil raw text dari output struktur array Gemini lu\nlet rawText = $input.first().json.candidates[0].content.parts[0].text;\n\n// 2. Bersihin bungkus markdown ```json dan ```\nlet cleanString = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();\n\n// 3. Parse string yang udah bersih jadi Object JSON beneran\nlet finalData = JSON.parse(cleanString);\n\n// Ambil pesan asli user\nlet pesanAsli = \"\";\ntry {\n  pesanAsli = ($('[Code] Get WA Data').first().json.pesanWALower || \"\").trim();\n} catch (e) {}\n\n// 4. VALIDASI PROGRAMATIK UNTUK PEMBUATAN JADWAL / AGENDA / TUGAS\nif (finalData.status === \"success\") {\n  const data = finalData.data || {};\n  const hasTitle = data.title && data.title.trim().length > 0;\n  const hasStart = data.start && data.start.trim().length > 0;\n\n  // Cek apakah user menulis indikasi waktu / jam\n  const timeIndicators = [\"jam\", \":\", \"pagi\", \"siang\", \"sore\", \"malam\", \"seharian\", \"wib\", \"wit\", \"wita\"];\n  const hasTimeMentioned = timeIndicators.some(t => pesanAsli.includes(t));\n\n  if (!hasTitle) {\n    finalData.status = \"error\";\n    finalData.error_message = \"Nama kegiatan atau judul agenda belum disebutkan.\";\n  } else if (!hasStart) {\n    finalData.status = \"error\";\n    finalData.error_message = \"Tanggal kegiatan belum disebutkan secara spesifik.\";\n  } else if (!hasTimeMentioned) {\n    finalData.status = \"error\";\n    finalData.error_message = \"Jam/waktu kegiatan belum kamu tentukan (misal: jam 14.00 atau seharian).\";\n  }\n}\n\n// 5. Pastikan ada key message untuk error feedback jika terjadi error\nif (finalData.status === \"error\" || finalData.error_message) {\n  const errMsg = finalData.error_message || \"Format perintah belum lengkap.\";\n  finalData.message = `⚠️ *Format Belum Lengkap:*\\n${errMsg}\\n\\n💡 *Contoh yang benar:*\\n• /jadwal Meeting Tim besok jam 14.00\\n• /jadwal Kuliah Tamu Jumat jam 09.00\\n• /cek (cek jadwal hari ini)\\n• /agenda (cek agenda seminggu)`;\n}\n\nreturn finalData;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          -400
+        ],
+        "id": "435917b5-8515-4225-b60c-ed3512a464f9",
+        "name": "[Code] Status Check Jadwal"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Ambil raw text dari output struktur array Gemini lu\nlet rawText = $input.first().json.candidates[0].content.parts[0].text;\n\n// 2. Bersihin bungkus markdown ```json dan ```\nlet cleanString = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();\n\n// 3. Parse string yang udah bersih jadi Object JSON beneran\nlet finalData = JSON.parse(cleanString);\n\n// Ambil pesan asli user\nlet pesanAsli = \"\";\ntry {\n  pesanAsli = ($('[Code] Get WA Data').first().json.pesanWALower || \"\").trim();\n} catch (e) {}\n\n// 4. VALIDASI PROGRAMATIK UNTUK PEMBUATAN JADWAL / AGENDA / TUGAS\nif (finalData.status === \"success\") {\n  const data = finalData.data || {};\n  const hasTitle = data.title && data.title.trim().length > 0;\n  const hasStart = data.start && data.start.trim().length > 0;\n\n  // Cek apakah user menulis indikasi waktu / jam\n  const timeIndicators = [\"jam\", \":\", \"pagi\", \"siang\", \"sore\", \"malam\", \"seharian\", \"wib\", \"wit\", \"wita\"];\n  const hasTimeMentioned = timeIndicators.some(t => pesanAsli.includes(t));\n\n  if (!hasTitle) {\n    finalData.status = \"error\";\n    finalData.error_message = \"Nama kegiatan atau judul agenda belum disebutkan.\";\n  } else if (!hasStart) {\n    finalData.status = \"error\";\n    finalData.error_message = \"Tanggal kegiatan belum disebutkan secara spesifik.\";\n  } else if (!hasTimeMentioned) {\n    finalData.status = \"error\";\n    finalData.error_message = \"Jam/waktu kegiatan belum kamu tentukan (misal: jam 14.00 atau seharian).\";\n  }\n}\n\n// 5. Pastikan ada key message untuk error feedback jika terjadi error\nif (finalData.status === \"error\" || finalData.error_message) {\n  const errMsg = finalData.error_message || \"Format perintah belum lengkap.\";\n  finalData.message = `⚠️ *Format Belum Lengkap:*\\n${errMsg}\\n\\n💡 *Contoh yang benar:*\\n• /jadwal Meeting Tim besok jam 14.00\\n• /jadwal Kuliah Tamu Jumat jam 09.00\\n• /cek (cek jadwal hari ini)\\n• /agenda (cek agenda seminggu)`;\n}\n\nreturn finalData;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1136,
+          432
+        ],
+        "id": "fe84d9ab-9d70-42e8-9167-47ee97b1ad6c",
+        "name": "[Code] Status Check Tugas"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({ days: 7 }).endOf('day').toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          640,
+          848
+        ],
+        "id": "ee0ebf1f-a2bb-49d9-8e86-7024eada87cf",
+        "name": "Get many events2",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const rawEvents = $input.all();\nconst events = rawEvents.filter(e => e.json && (e.json.id || e.json.summary || e.json.start));\n\nconst TIMEZONE = \"Asia/Jakarta\";\nconst header = \"📅 *AGENDA 7 HARI KE DEPAN*\";\n\nif (events.length === 0) {\n  return [{ json: { message: `${header}\\n\\nTidak ada agenda kegiatan untuk 7 hari ke depan. Kosong! 😴` } }];\n}\n\nconst getStart = (event) => {\n  if (event.json.start?.dateTime) return new Date(event.json.start.dateTime).getTime();\n  if (event.json.start?.date) return new Date(`${event.json.start.date}T00:00:00+07:00`).getTime();\n  return Infinity;\n};\n\nconst formatTime = (date) => {\n  return date.toLocaleTimeString(\"id-ID\", { hour: \"2-digit\", minute: \"2-digit\", hour12: false, timeZone: TIMEZONE });\n};\n\nconst formatDate = (date) => {\n  return date.toLocaleDateString(\"id-ID\", { weekday: \"long\", day: \"2-digit\", month: \"long\", timeZone: TIMEZONE });\n};\n\nconst formatRange = (start, end) => {\n  const startTime = formatTime(start);\n  if (!end) return `${startTime} WIB`;\n  const endTime = formatTime(end);\n  return `${startTime}–${endTime} WIB`;\n};\n\nevents.sort((a, b) => getStart(a) - getStart(b));\nconst grouped = {};\n\nevents.forEach((event) => {\n  const data = event.json;\n  let dateKey;\n  let start;\n  let end = null;\n\n  if (data.start?.dateTime) {\n    start = new Date(data.start.dateTime);\n    dateKey = start.toLocaleDateString(\"en-CA\", { timeZone: TIMEZONE });\n    if (data.end?.dateTime) end = new Date(data.end.dateTime);\n  } else if (data.start?.date) {\n    dateKey = data.start.date;\n    start = new Date(`${data.start.date}T00:00:00+07:00`);\n  } else {\n    return;\n  }\n\n  if (!grouped[dateKey]) grouped[dateKey] = [];\n  grouped[dateKey].push({ data, start, end });\n});\n\nlet message = `${header}\\n`;\nconst dates = Object.keys(grouped).sort();\n\nif (dates.length === 0) {\n  message += \"\\nTidak ada agenda kegiatan untuk 7 hari ke depan. Kosong! 😴\";\n} else {\n  dates.forEach((dateKey) => {\n    const dayEvents = grouped[dateKey];\n    const date = dayEvents[0].start;\n\n    message += `\\n📌 *${formatDate(date)}*\\n`;\n\n    dayEvents.forEach((event) => {\n      const { data, start, end } = event;\n      const title = data.summary || \"Tanpa judul\";\n\n      if (data.start?.date) {\n        message += `• *${title}*\\n  Seharian\\n`;\n        return;\n      }\n\n      const time = formatRange(start, end);\n      message += `• *${title}*\\n  ${time}\\n`;\n    });\n  });\n}\n\nreturn [{ json: { message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          848,
+          848
+        ],
+        "id": "45d091b0-8ae7-438e-9c04-c1a857195f4b",
+        "name": "Code: Recap Jadwal3"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "6f692dd4-b1df-4338-9d0a-615105591b1a",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1056,
+          848
+        ],
+        "id": "bc0a7ff0-47fd-4b10-bdd5-7eb15e14df38",
+        "name": "If4"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').plus({ days: 1 }).startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({ days: 1 }).endOf('day').toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          560,
+          1200
+        ],
+        "id": "f88a5fcd-c9bb-4368-8ff4-ac5222c4bb90",
+        "name": "Get many events3",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('[Code] Get WA Data').first().json.targetNumber }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.message }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2880,
+          208
+        ],
+        "id": "2044602b-02fc-4a7b-bbda-ce37dda8b685",
+        "name": "[HTTP Whatsapp]8",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').plus({ days: 1 }).startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({ days: 1 }).endOf('day').toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          560,
+          1360
+        ],
+        "id": "8f1ae3be-c4fc-4f49-aec2-7ef1eb06d93e",
+        "name": "Get many jadwal kuliah2",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "let rawAgenda = [];\nlet rawKuliah = [];\n\ntry {\n  rawAgenda = $('Get many events3').all();\n} catch (e) {}\n\ntry {\n  rawKuliah = $('Get many jadwal kuliah2').all();\n} catch (e) {}\n\nconst filterValid = (items) => items.filter(e => e.json && (e.json.id || e.json.summary || e.json.start));\nconst events = [...filterValid(rawAgenda), ...filterValid(rawKuliah)];\n\nconst getStart = (event) => {\n  const dateTime = event.json.start?.dateTime;\n  if (!dateTime) return Infinity;\n  return new Date(dateTime).getTime();\n};\n\nconst formatTime = (date) => {\n  return date.toLocaleTimeString(\"id-ID\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    hour12: false,\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst formatRange = (start, end) => {\n  const startTime = formatTime(start);\n  if (!end) return `${startTime} WIB`;\n  const endTime = formatTime(end);\n  return `${startTime}–${endTime} WIB`;\n};\n\nconst header = \"📅 *JADWAL BESOK*\";\n\nif (events.length === 0) {\n  return [{ json: { message: `${header}\\n\\nTidak ada jadwal untuk besok. Kosong! 😴` } }];\n}\n\nevents.sort((a, b) => getStart(a) - getStart(b));\n\nconst lines = [];\nevents.forEach((event) => {\n  const data = event.json;\n  const title = data.summary || \"Tanpa judul\";\n\n  if (data.start?.date) {\n    lines.push(`• *${title}*\\n  Seharian`);\n    return;\n  }\n  if (!data.start?.dateTime) return;\n\n  const start = new Date(data.start.dateTime);\n  const end = data.end?.dateTime ? new Date(data.end.dateTime) : null;\n  const time = formatRange(start, end);\n  lines.push(`• *${title}*\\n  ${time}`);\n});\n\nlet message = header;\nif (lines.length === 0) {\n  message += \"\\n\\nTidak ada jadwal untuk besok. Kosong! 😴\";\n} else {\n  message += \"\\n\\n\" + lines.join(\"\\n\\n\");\n}\n\nreturn [{ json: { message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          768,
+          1200
+        ],
+        "id": "1015c9fd-c524-455d-84d7-d5dfbabb6e95",
+        "name": "Code: Recap Jadwal4"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "6f692dd4-b1df-4338-9d0a-615105591b1a",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          976,
+          1200
+        ],
+        "id": "b0bec7b6-a0bb-430e-a115-ca19588e25aa",
+        "name": "If5"
+      },
+      {
+        "parameters": {
+          "jsCode": "function getWAData() {\n  try {\n    const input = $(\"WA Command\").item.json;\n    const data = input?.body?.data;\n\n    // ------------------------------------------\n    // VALIDASI: APAKAH INI REQUEST DARI WA?\n    // ------------------------------------------\n\n    if (data) {\n      const text =\n        data?.message?.conversation ||\n        data?.message?.extendedTextMessage?.text ||\n        \"\";\n\n      const remoteJid =\n        data?.key?.remoteJid ||\n        \"\";\n\n      // ------------------------------------------\n      // IDENTIFIKASI SENDER\n      // ------------------------------------------\n\n      let sender = remoteJid;\n\n      // Jika pesan berasal dari grup WhatsApp,\n      // remoteJid adalah ID grup (@g.us).\n      // Ambil nomor pengirim sebenarnya dari participantAlt.\n      if (remoteJid.endsWith(\"@g.us\")) {\n        sender =\n          data?.key?.participantAlt ||\n          data?.key?.participant ||\n          \"\";\n      }\n\n      return {\n        isScheduler: false,\n\n        pesanWA: text.trim(),\n\n        pesanWALower: text.toLowerCase().trim(),\n\n        // Siapa yang mengirim pesan\n        sender: sender,\n\n        // Chat tujuan untuk membalas\n        // Bisa nomor pribadi atau ID grup\n        targetNumber: remoteJid,\n      };\n    }\n\n    // ------------------------------------------\n    // SCHEDULER\n    // ------------------------------------------\n\n    return {\n      isScheduler: true,\n\n      pesanWA: \"otomatis\",\n\n      pesanWALower: \"otomatis\",\n\n      sender: \"\",\n\n      targetNumber: \"\",\n    };\n\n  } catch (e) {\n\n    // ------------------------------------------\n    // FALLBACK\n    // ------------------------------------------\n    // Jika node WA tidak tersedia / error,\n    // anggap workflow dijalankan oleh scheduler.\n    // ------------------------------------------\n\n    return {\n      isScheduler: true,\n\n      pesanWA: \"otomatis\",\n\n      pesanWALower: \"otomatis\",\n\n      sender: \"\",\n\n      targetNumber: \"\",\n    };\n  }\n}\n\n\n// ==========================================\n// EXECUTE\n// ==========================================\n\nconst wa = getWAData();\n\nreturn [\n  {\n    json: wa\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -368,
+          320
+        ],
+        "id": "7cf1d5a4-85e6-48b8-b842-1611e4e1241d",
+        "name": "[Code] Get WA Data"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('[Code] Get WA Data').first().json.targetNumber }}"
+              },
+              {
+                "name": "text",
+                "value": "=✅ *Jadwal Berhasil Dicatat!*\n\n📌 *Judul:* {{ $json.summary }}\n⏰ *Waktu:* {{ $node[\"[Code] Status Check Tugas\"].json[\"data\"][\"start\"] }}\n📝 *Catatan:* {{ $json.description }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2224,
+          160
+        ],
+        "id": "5c776bbd-7ea0-4828-8473-3d83a554e3ca",
+        "name": "[HTTP Whatsapp]9",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('[Code] Get WA Data').first().json.targetNumber }}"
+              },
+              {
+                "name": "text",
+                "value": "=✅ *Jadwal Berhasil Dicatat!*\n\n📌 *Judul:* {{ $json.summary }}\n⏰ *Waktu:* {{ $node[\"[Code] Status Check Jadwal\"].json[\"data\"][\"start\"] }}\n📝 *Catatan:* {{ $json.description }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2400,
+          -192
+        ],
+        "id": "9e8cd6fe-b593-47c3-9e76-4a5390011807",
+        "name": "[HTTP Whatsapp]10",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Gemini Brone",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Gemini Brone": {
+        "main": [
+          [
+            {
+              "node": "[Code] Status Check Jadwal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Create an event",
+              "type": "main",
+              "index": 0
             }
           ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        208,
-        0
-      ],
-      "id": "83a0e134-330c-4212-8978-351e1c75cdf0",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "jsCode": "const apiKeys = [\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\",\n  \"{{GEMINI_API_KEY_PLACEHOLDER}}\"\n];\n\nconst randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        448,
-        -16
-      ],
-      "id": "fb327184-dca2-4c7c-aaa4-fba19c24e24d",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah Asisten Jadwal Pribadi yang cerdas. Tugasmu adalah mengekstrak informasi jadwal dari pesan teks user yang diawali dengan \"/jadwal\" dan mengubahnya menjadi format JSON yang valid untuk Google Calendar.\n\nPesan Teks Dari User:  ${$json.body.data.message.conversation}\n\n\nDATA REFERENSI (Standardisasi):\n- PAW: Pengembangan Aplikasi Web\n- PAL: Penyediaan dan Automasi Layanan\n- KAL: Kecerdasan Artifisial Lanjut\n- KI: Keamanan Informasi\n- KWU: Kewirausahaan\n- KWN: Kewarganegaraan\n- PCS: Pancasila\n- DAA: Desain dan Analisis Algoritma\n- TSA: Tanoto Scholars Association (Departemen ComStrat, Divisi CM, TSA)\n- BCC: Basic Computing Community\n- ICN: Information Centric Networking\n- PMK: Persekutuan Mahasiswa Kristen\n- Satuklien: Project Part-time\n- Titipin: Project Pribadi\n\nATURAN LOGIKA:\n1. WAKTU SEKARANG: ${$now.setZone('Asia/Jakarta').toString()}\n2. ZONA WAKTU: Selalu gunakan Asia/Jakarta (WIB).\n3. KATEGORI TUGAS/DEADLINE: Jika user menyebut \"deadline\", \"tugas\", atau \"pengumpulan\", set durasi hanya 2 menit (Contoh: 15:00 sampai 15:02).\n4. KATEGORI ACARA/MEETING: Jika tidak ada durasi spesifik, gunakan default 60 menit (Contoh: 19:00 sampai 20:00).\n5. VALIDASI: Pastikan ada Judul, Tanggal, dan Jam. Jika ada yang kurang, set status: \"error\".\n6. JUDUL: WAJIB gunakan prefix kategori di awal judul. Pilihan kategori HANYA: [Tugas], [Meeting], [Acara], [Project]. \nFormat baku: \"[Kategori] Nama Lengkap (Singkatan) - Detail Tambahan\".\nContoh Benar: \"[Tugas] Pengembangan Aplikasi Web (PAW) - Deadline Laporan\" atau \"[Meeting] Radiv CM (TSA)\".\n7. Deskripsi isikan sesuai pesan user, misal jika user mengatakan lokasi, online/offline, atau misalnya melalui platform Brone (LMS UB) atau classroom. Misal Deskripsi: Pengumpulan di classroom. Note: Jika tidak ada deskripsi khusus kamu bebas mengisi deskripsinya atau tidak mengisi deskripsi nya jika tidak penting\n8. Jika user mengirim pesan \"/cek\", set status: \"check\". \n   Abaikan field data title, start, dan end. Ini artinya user ingin cek jadwal hari ini\n\nFORMAT OUTPUT (WAJIB JSON):\n{\n  \"status\": \"success\" | \"error\",\n  \"data\": {\n    \"title\": \"Judul Event\",\n    \"start\": \"YYYY-MM-DDTHH:mm:ss+07:00\",\n    \"end\": \"YYYY-MM-DDTHH:mm:ss+07:00\",\n    \"description\": \"Catatan tambahan jika ada\"\n  },\n  \"error_message\": \"Alasan jika status error (sebutkan apa yang kurang)\"\n}\n\n\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        704,
-        -16
-      ],
-      "id": "9798153e-77eb-431b-8524-f46345913a13",
-      "name": "[HTTP] Gemini Brone"
-    },
-    {
-      "parameters": {
-        "jsCode": "let rawText = $input.first().json.candidates[0].content.parts[0].text;\n\nlet cleanString = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();\n\nlet finalData = JSON.parse(cleanString);\n\nreturn finalData;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        912,
-        -16
-      ],
-      "id": "435917b5-8515-4225-b60c-ed3512a464f9",
-      "name": "Code in JavaScript1"
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
+          [
             {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.status }}",
-                    "rightValue": "=success",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "75463742-e188-4a08-b41c-81f40e1bc9d9"
-                  }
-                ],
-                "combinator": "and"
-              }
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "50065f18-27e8-44b2-927f-667e73e648fb",
-                    "leftValue": "={{ $json.status }}",
-                    "rightValue": "=error",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              }
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "a0133c97-bc0c-45dc-80cc-3cad9b0c9a30",
-                    "leftValue": "={{ $json.status }}",
-                    "rightValue": "=check",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              }
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        1120,
-        -16
-      ],
-      "id": "63ee8a25-10ba-4705-8e85-06832b841a4e",
-      "name": "Switch"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "=httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "{{WHATSAPP_TARGET_NUMBER}}"
-            },
-            {
-              "name": "text",
-              "value": "=⚠️ *Waduh, Gagal Nyatet Nih Bro!*\n\nKayaknya ada data yang kurang:\n❌ {{ $node[\"Code in JavaScript1\"].json[\"error_message\"] }}\n\nCoba kirim ulang dengan detail jam atau tanggal yang jelas ya."
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1328,
-        112
-      ],
-      "id": "86e940fe-a7c9-4c87-ac5f-a8b9f83d274f",
-      "name": "[HTTP Whatsapp]1",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "{{N8N_CREDENTIAL_ID}}",
-          "name": "Header Auth account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "calendar": {
-          "__rl": true,
-          "value": "{{PRIMARY_CALENDAR_ID}}",
-          "mode": "list",
-          "cachedResultName": "{{PRIMARY_CALENDAR_ID}}"
-        },
-        "start": "={{ $json.data.start }}",
-        "end": "={{ $json.data.end }}",
-        "additionalFields": {
-          "description": "={{ $json.data.description }}",
-          "summary": "={{ $json.data.title }}"
-        }
-      },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.3,
-      "position": [
-        1328,
-        -112
-      ],
-      "id": "cb8655fd-ee8a-4348-ae94-2e58a0d9fa26",
-      "name": "Create an event",
-      "credentials": {
-        "googleCalendarOAuth2Api": {
-          "id": "{{N8N_CREDENTIAL_ID}}",
-          "name": "Google Calendar account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "=httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "{{WHATSAPP_TARGET_NUMBER}}"
-            },
-            {
-              "name": "text",
-              "value": "=✅ *Jadwal Berhasil Dicatat!*\n\n📌 *Judul:* {{ $json.summary }}\n⏰ *Waktu:* {{ $node[\"Code in JavaScript1\"].json[\"data\"][\"start\"] }}\n📝 *Catatan:* {{ $json.description }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1600,
-        -112
-      ],
-      "id": "53a69f63-7b37-4a98-bacf-74216d1008c8",
-      "name": "[HTTP Whatsapp]",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "{{N8N_CREDENTIAL_ID}}",
-          "name": "Header Auth account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "f9afbfbf-cda1-4dc7-b305-60920809c57b",
-              "leftValue": "={{ $json.body.data.message.conversation }}",
-              "rightValue": "/cek",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "16c6c71f-f9ab-4b13-9f8f-b7548b48a4e9",
-              "leftValue": "={{ $json.body.data.key.remoteJid }}",
-              "rightValue": "{{WHATSAPP_TARGET_NUMBER}}",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
             }
           ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        208,
-        240
-      ],
-      "id": "06ba931d-6399-4d33-b3e6-240d01aabfea",
-      "name": "If1"
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "calendar": {
-          "__rl": true,
-          "value": "{{PRIMARY_CALENDAR_ID}}",
-          "mode": "list",
-          "cachedResultName": "{{PRIMARY_CALENDAR_ID}}"
-        },
-        "returnAll": true,
-        "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
-        "timeMax": "={{ $now.setZone('Asia/Jakarta').endOf('day').toISO() }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.3,
-      "position": [
-        1328,
-        320
-      ],
-      "id": "f1b43542-97b0-4a43-b4cd-2ec0e8561079",
-      "name": "Get many events",
-      "credentials": {
-        "googleCalendarOAuth2Api": {
-          "id": "{{N8N_CREDENTIAL_ID}}",
-          "name": "Google Calendar account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://evolution-api:8080/message/sendText/{{WA_INSTANCE_NAME}}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "=httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
+          [
             {
-              "name": "number",
-              "value": "{{WHATSAPP_TARGET_NUMBER}}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.message }}"
+              "node": "Get many events",
+              "type": "main",
+              "index": 0
             }
           ]
-        },
-        "options": {}
+        ]
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1808,
-        320
-      ],
-      "id": "30f4a545-f10e-4043-9b1a-926c4662e539",
-      "name": "[HTTP Whatsapp]2",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "{{N8N_CREDENTIAL_ID}}",
-          "name": "Header Auth account"
-        }
+      "Create an event": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many events": {
+        "main": [
+          [
+            {
+              "node": "Get many jadwal kuliah",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many jadwal kuliah": {
+        "main": [
+          [
+            {
+              "node": "Code: Recap Jadwal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Recap Jadwal": {
+        "main": [
+          [
+            {
+              "node": "If2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If2": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get many jadwal kuliah1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get many events2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get many events3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Recap Jadwal1": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many jadwal kuliah1": {
+        "main": [
+          [
+            {
+              "node": "Code: Recap Jadwal1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WA Command": {
+        "main": [
+          [
+            {
+              "node": "[Code] Get WA Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Gemini Brone2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Gemini Brone2": {
+        "main": [
+          [
+            {
+              "node": "[Code] Status Check Tugas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch2": {
+        "main": [
+          [
+            {
+              "node": "Create an event1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get many events1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create an event1": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many events1": {
+        "main": [
+          [
+            {
+              "node": "Code: Recap Jadwal2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Recap Jadwal2": {
+        "main": [
+          [
+            {
+              "node": "If3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If3": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Code] Status Check Jadwal": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Code] Status Check Tugas": {
+        "main": [
+          [
+            {
+              "node": "Switch2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many events2": {
+        "main": [
+          [
+            {
+              "node": "Code: Recap Jadwal3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Recap Jadwal3": {
+        "main": [
+          [
+            {
+              "node": "If4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If4": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many events3": {
+        "main": [
+          [
+            {
+              "node": "Get many jadwal kuliah2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many jadwal kuliah2": {
+        "main": [
+          [
+            {
+              "node": "Code: Recap Jadwal4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Recap Jadwal4": {
+        "main": [
+          [
+            {
+              "node": "If5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If5": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Code] Get WA Data": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "calendar": {
-          "__rl": true,
-          "value": "{{GOOGLE_CALENDAR_ID}}",
-          "mode": "list",
-          "cachedResultName": "Kuliah Okta"
-        },
-        "returnAll": true,
-        "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
-        "timeMax": "={{ $now.setZone('Asia/Jakarta').endOf('day').toISO() }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.3,
-      "position": [
-        1328,
-        480
-      ],
-      "id": "d4673291-cd0f-4040-8e03-8919f49cdcba",
-      "name": "Get many jadwal kuliah",
-      "credentials": {
-        "googleCalendarOAuth2Api": {
-          "id": "{{N8N_CREDENTIAL_ID}}",
-          "name": "Google Calendar account"
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate",
+      "timeSavedMode": "fixed",
+      "timezone": "Asia/Jakarta",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "47711147-c538-4f3a-b1bc-f6e621f3d684",
+    "activeVersionId": "47711147-c538-4f3a-b1bc-f6e621f3d684",
+    "versionCounter": 798,
+    "triggerCount": 0,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-04-04T13:02:29.813Z",
+        "createdAt": "2026-04-04T13:02:29.813Z",
+        "role": "workflow:owner",
+        "workflowId": "U43zT3sJktIA9LaL",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "const events = $input.all();\nlet message = \"\";\n\nconst now = new Date();\n\nif (events.length === 0) {\n  message = \"Kosong melompong bro! Nggak ada jadwal masuk buat hari ini. Bisa santai dulu atau lanjutin project Titipin! ☕\";\n} else {\n\n  const getStart = (event) => {\n    if (event.json.start?.dateTime) {\n      return new Date(event.json.start.dateTime).getTime();\n    }\n    return Infinity;\n  };\n\n  events.sort((a, b) => (getStart(a) - now.getTime()) - (getStart(b) - now.getTime()));\n\n  message = \"🗓️ *RECAP JADWAL HARI INI*\\n\\n\";\n\n  let nextAssigned = false;\n\n  events.forEach((event, index) => {\n    let startTime = \"-\";\n    let label = \"\";\n\n    if (event.json.start?.dateTime) {\n      const start = new Date(event.json.start.dateTime);\n      const end = event.json.end?.dateTime\n        ? new Date(event.json.end.dateTime)\n        : new Date(start.getTime() + 60 * 60 * 1000);\n\n      const diffMs = start - now;\n      const diffMinutes = Math.floor(diffMs / 60000);\n\n      if (now >= start && now <= end) {\n        label = \" 🔥 *NOW*\";\n      } \n      else if (now > end) {\n        label = \" ✅ *DONE*\";\n      } \n      else if (diffMs > 0 && !nextAssigned) {\n        label = \" 🚀 *NEXT*\";\n        nextAssigned = true;\n\n        if (diffMinutes <= 60) {\n          label += ` ⏳ (${diffMinutes} menit lagi)`;\n        }\n      } \n      else if (diffMs > 0 && diffMinutes <= 60) {\n        label = ` ⏳ (${diffMinutes} menit lagi)`;\n      }\n\n      startTime = start.toLocaleTimeString('id-ID', {\n        hour: '2-digit',\n        minute: '2-digit',\n        timeZone: 'Asia/Jakarta'\n      });\n\n    } else if (event.json.start?.date) {\n      startTime = \"Seharian\";\n    }\n    \nlet title = `*${event.json.summary}*`;\n\nif (label.includes(\"DONE\")) {\n  title = `~*${event.json.summary}*~`;\n}\n\nmessage += `${index + 1}. ${title}${label}\\n⏰ ${startTime} WIB\\n\\n`;\n  });\n\n  message += \"Gas terus bro, lu udah on track hari ini 💪🔥\";\n}\n\nreturn { message };"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1536,
-        320
-      ],
-      "id": "5a1983d8-e740-4679-afc4-21100864bef0",
-      "name": "Code: Recap Jadwal"
-    },
-    {
-      "parameters": {
-        "inputSource": "passthrough"
-      },
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -32,
-        0
-      ],
-      "id": "c069723d-ae82-414b-b749-0dca000719b8",
-      "name": "When Executed by Another Workflow"
+    ],
+    "versionMetadata": {
+      "name": "Version 5ffadba7",
+      "description": ""
     }
-  ],
-  "pinData": {},
-  "connections": {
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "[HTTP] Gemini Brone",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "If1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[HTTP] Gemini Brone": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript1": {
-      "main": [
-        [
-          {
-            "node": "Switch",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch": {
-      "main": [
-        [
-          {
-            "node": "Create an event",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "[HTTP Whatsapp]1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get many events",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get many jadwal kuliah",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create an event": {
-      "main": [
-        [
-          {
-            "node": "[HTTP Whatsapp]",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If1": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get many events": {
-      "main": [
-        [
-          {
-            "node": "Code: Recap Jadwal",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get many jadwal kuliah": {
-      "main": [
-        [
-          {
-            "node": "Code: Recap Jadwal",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code: Recap Jadwal": {
-      "main": [
-        [
-          {
-            "node": "[HTTP Whatsapp]2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "When Executed by Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "timeSavedMode": "fixed",
-    "timezone": "Asia/Jakarta",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
-  },
-  "versionId": "23c0025f-5c3c-4563-b5e4-8250173848fe",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "{{N8N_INSTANCE_ID}}"
-  },
-  "id": "U43zT3sJktIA9LaL",
-  "tags": []
-}
+  }
+]

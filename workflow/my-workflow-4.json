@@ -1,0 +1,323 @@
+[
+  {
+    "updatedAt": "2026-10-19T13:31:22.260Z",
+    "createdAt": "2026-09-07T16:24:27.260Z",
+    "id": "M8b8EyT5nJkzsGPQ",
+    "name": "My workflow 4",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "formTitle": "Apakah manda sayang aku?",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "apakah manda sayang aku?",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "sayang"
+                    },
+                    {
+                      "option": "enggak"
+                    },
+                    {
+                      "option": "sayang banget"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.formTrigger",
+        "typeVersion": 2.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "7f31237f-be5c-4f44-a24d-88cc626bbeec",
+        "name": "On form submission",
+        "webhookId": "772155e3-5116-4274-a400-16947c186a4c"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MANDA_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "=manda sayang okta"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          512,
+          -48
+        ],
+        "id": "8a29075d-cc3b-4dd7-b5ad-bd4d4d88fe7b",
+        "name": "[HTTP Whatsapp]1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MANDA_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "=manda ga sayang okta"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          512,
+          112
+        ],
+        "id": "99bad59b-2750-427a-9108-f6e2a6c64731",
+        "name": "[HTTP Whatsapp]",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json['apakah manda sayang aku?'] }}",
+                      "rightValue": "sayang",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "d05d01a7-b0d0-41f6-b4f6-9afa4976f514"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda sayang"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "2742212e-79a3-4b47-b89c-2ec5017d53fe",
+                      "leftValue": "={{ $json['apakah manda sayang aku?'] }}",
+                      "rightValue": "e",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda gak sayang"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "c44d3956-d21a-42b7-b581-cf335cc46c4c",
+                      "leftValue": "={{ $json['apakah manda sayang aku?'] }}",
+                      "rightValue": "sayang banget",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda sayang banget"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          208,
+          0
+        ],
+        "id": "2fa2a20a-654a-445f-a416-58e7029dcb86",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MANDA_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "=sini ku bekap"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          496,
+          272
+        ],
+        "id": "e2e4d321-9070-4203-ae37-9b36747526cd",
+        "name": "[HTTP Whatsapp]2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "On form submission": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp]",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp]2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": null,
+    "pinData": {},
+    "versionId": "919b5e94-d612-4ce7-a687-584beb33abd6",
+    "activeVersionId": "919b5e94-d612-4ce7-a687-584beb33abd6",
+    "versionCounter": 108,
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-09-07T16:24:27.260Z",
+        "createdAt": "2026-09-07T16:24:27.260Z",
+        "role": "workflow:owner",
+        "workflowId": "M8b8EyT5nJkzsGPQ",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Version 64406788",
+      "description": ""
+    }
+  }
+]

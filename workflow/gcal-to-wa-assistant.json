@@ -1,0 +1,1804 @@
+[
+  {
+    "updatedAt": "2026-10-20T04:10:44.190Z",
+    "createdAt": "2026-04-04T12:13:49.223Z",
+    "id": "eCtWrmeyciUgg8f2",
+    "name": "gcal-to-wa-assistant",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 1
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -1472,
+          496
+        ],
+        "id": "d3ab51e9-558a-4d5a-a14f-b745f932b492",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          -256
+        ],
+        "id": "9c08d99c-8285-41d5-86c4-5d5cd49f6d65",
+        "name": "[15 Menit] Calendar get Events",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 60}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 61}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          -80
+        ],
+        "id": "683387b9-8e72-48d9-b438-f1917862822d",
+        "name": "[60 Menit] Calendar get Events",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MY_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          544
+        ],
+        "id": "8dbbc5c9-921d-4a2c-ae2e-63dfc90fc451",
+        "name": "[HTTP Whatsapp]1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={{ $json.selected_key }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah asisten pribadi mahasiswa yang cerdas dan serba tahu. Tugasmu adalah mengolah jadwal dari kalender menjadi notifikasi WA yang efektif.\n\nATURAN LOGIKA KONTEKS:\n1. IDENTIFIKASI: Jika nama acara mengandung kata \"Laporan\", \"Praktikum\", \"Modul\", atau \"Tugas\", maka ini adalah *TUGAS/DEADLINE*. Jika tidak, anggap ini *JADWAL KULIAH/ACARA*.\n2. TONE: Pakai bahasa tongkrongan (lu/gue) yang asik. \n   - Kalau TUGAS: Agak cerewet/ngingetin buat buruan dikerjain.\n   - Kalau KULIAH: Ngingetin biar nggak telat atau jangan bolos.\n3. DILARANG KERAS pakai kata pengantar/penutup (\"Baik\", \"Siap\", dll). Langsung output teks pesannya.\n\nFORMAT OUTPUT WAJIB:\n[Emoji Sesuai Konteks] *JADWAL OKTA - [KLASIFIKASI ACARA]* [Emoji Sesuai Konteks]\n📌 *Nama:* [Nama Acara]\n🕒 *Waktu:* [Waktu Mulai dalam format Jam:Menit WIB]\n📍 *Lokasi:* [Lokasi atau \"Online/Tidak ada\"]\n💬 *Deskripsi:* [Deskripsi tugas/kegiatan/event]\n\n💬 *Catatan Asisten:* [Hitung selisih waktu dari 'Waktu Sekarang' ke 'Waktu Acara'. Berikan pesan yang relevan. Misal: \"H-1 deadline praktikum nih, udah kelar covernya belum?\" atau \"15 menit lagi kelas mulai, buruan otw!\" pastikan sesuai dengan judul atau deskripsi event/tugasnya biar aku tau ini tuh reminder untuk event/tugas apa]\n\nDATA LOGIKA:\n- Sisa Waktu Menuju Acara: ${$json.menit_tersisa} menit lagi\n- Waktu Acara: ${$json.start?.dateTime || $json.start?.date || \"Tidak diketahui\"}\n- Nama Acara: ${$json.summary || \"Tidak ada judul\"}\n- Lokasi: ${$json.location || \"Online\"}, Jika tidak ada coba cek di ${$json.summary} biasanya dituliskan dalam judul misal [Lokasi] - Nama Acara, contoh F3.11 - Metopen, F3.11 adalah ruangan atau lokasi, F artinya Gedung F, 3 artinya lantai 3 dan 11 ada ruangannya tapi cukup tuliskan F3.11 atau [II.1.1] - Farmasi Industri, II adalah Gedung 2 atau MIPA 2, 1 lantai 1 dan ruangan 1, atau bisa juga G1.4 G adalah Gedung G, 1 lantai 1 dan 4 ruang 4 tapi cukup tulis singkatan aja. Kamu juga bisa baca di summary itu apakah ada lokasi atau gak\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          16,
+          544
+        ],
+        "id": "58ee684d-47ac-45ef-8ab6-b8d2a0b802b4",
+        "name": "HTTP Request Gemini",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 30}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 31}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          288
+        ],
+        "id": "4a218dd6-3522-49e2-bceb-ecc9da2651cd",
+        "name": "[30 Menit] Calendar get Kuliah",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          112
+        ],
+        "id": "b6baaad3-a68d-4c43-810e-38858d1fa29a",
+        "name": "[15 Menit] Calendar get Kuliah",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 15;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          192
+        ],
+        "id": "9c19bc29-9f55-4b7b-bd41-26e9b1ad5bda",
+        "name": "[15 Menit] Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 30;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          368
+        ],
+        "id": "6491681d-7011-42d9-ab62-9c62ff22deae",
+        "name": "[30] Menit Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 60;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          544
+        ],
+        "id": "dce06494-adb4-4483-8227-6f464fab2593",
+        "name": "[60 Menit] Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 720;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          736
+        ],
+        "id": "1bb47547-315c-4479-a624-5db0ef27dd45",
+        "name": "[12 Jam] Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 2160;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          880
+        ],
+        "id": "eb26b5a7-c711-429b-9e58-5c9f1b1f3e27",
+        "name": "[36 Jam] Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MY_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.message }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1744,
+          464
+        ],
+        "id": "bf258f76-0fd9-4d44-bbfe-600699ffe178",
+        "name": "[HTTP Whatsapp]3",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "jsCode": "const events = $input.all();\nlet message = \"\";\n\nconst now = new Date();\n\nconst getStartDate = (event) => {\n  if (event.json.start?.dateTime) {\n    return new Date(event.json.start.dateTime);\n  }\n\n  if (event.json.start?.date) {\n    return new Date(`${event.json.start.date}T00:00:00+07:00`);\n  }\n\n  return new Date(8640000000000000);\n};\n\nconst getEndDate = (event, start) => {\n  if (event.json.end?.dateTime) {\n    return new Date(event.json.end.dateTime);\n  }\n\n  if (event.json.end?.date) {\n    return new Date(`${event.json.end.date}T23:59:59+07:00`);\n  }\n\n  return new Date(start.getTime() + 60 * 60 * 1000);\n};\n\nconst cleanText = (text) => {\n  if (!text) return \"\";\n\n  return String(text)\n    .replace(/<[^>]*>/g, \"\")\n    .replace(/&nbsp;/g, \" \")\n    .replace(/&amp;/g, \"&\")\n    .replace(/\\s+/g, \" \")\n    .trim();\n};\n\nconst formatDate = (date) => {\n  return date.toLocaleDateString(\"id-ID\", {\n    weekday: \"long\",\n    day: \"2-digit\",\n    month: \"long\",\n    year: \"numeric\",\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst formatTime = (date) => {\n  return date.toLocaleTimeString(\"id-ID\", {\n    hour: \"2-digit\",\n    minute: \"2-digit\",\n    timeZone: \"Asia/Jakarta\",\n  });\n};\n\nconst parseTitle = (summary) => {\n  const title = cleanText(summary);\n\n  const result = {\n    rawTitle: title,\n    room: \"\",\n    course: title,\n    code: \"\",\n    examType: \"\",\n  };\n\n  // Contoh: [F3.11] Pancasila (PCS) - UAS\n  const match = title.match(/^\\[(.*?)\\]\\s*(.*?)\\s*(?:\\((.*?)\\))?\\s*-\\s*(.*)$/);\n\n  if (match) {\n    result.room = cleanText(match[1]);\n    result.course = cleanText(match[2]);\n    result.code = cleanText(match[3]);\n    result.examType = cleanText(match[4]);\n  }\n\n  return result;\n};\n\nconst parseDescription = (description) => {\n  const desc = cleanText(description);\n\n  const result = {\n    prodi: \"\",\n    kelas: \"\",\n    jumlahMahasiswa: \"\",\n    ruang: \"\",\n    dosen: \"\",\n  };\n\n  // Split berdasarkan koma yang diikuti label berikutnya\n  // Aman untuk nama dosen yang punya koma gelar, misal S.Fil., M.Phil.\n  const labels = [\"Prodi\", \"Kelas\", \"Jumlah Mahasiswa\", \"Ruang\", \"Dosen\"];\n\n  labels.forEach((label, index) => {\n    const nextLabels = labels.slice(index + 1).join(\"|\");\n\n    const regex = nextLabels\n      ? new RegExp(`${label}:\\\\s*(.*?)(?=,\\\\s*(?:${nextLabels}):|$)`, \"i\")\n      : new RegExp(`${label}:\\\\s*(.*)$`, \"i\");\n\n    const match = desc.match(regex);\n\n    if (match) {\n      const value = cleanText(match[1]).replace(/,$/, \"\");\n\n      if (label === \"Prodi\") result.prodi = value;\n      if (label === \"Kelas\") result.kelas = value;\n      if (label === \"Jumlah Mahasiswa\") result.jumlahMahasiswa = value;\n      if (label === \"Ruang\") result.ruang = value;\n      if (label === \"Dosen\") result.dosen = value;\n    }\n  });\n\n  return result;\n};\n\nconst getStatus = (start, end) => {\n  if (now >= start && now <= end) {\n    return \" 🔥 *NOW*\";\n  }\n\n  if (now > end) {\n    return \" ✅ *DONE*\";\n  }\n\n  const diffMinutes = Math.floor((start - now) / 60000);\n  const diffHours = Math.floor(diffMinutes / 60);\n  const diffDays = Math.floor(diffHours / 24);\n\n  if (diffMinutes <= 60) {\n    return ` 🚀 *NEXT* ⏳ (${diffMinutes} menit lagi)`;\n  }\n\n  if (diffHours < 24) {\n    return ` ⏳ (${diffHours} jam lagi)`;\n  }\n\n  return ` ⏳ (${diffDays} hari lagi)`;\n};\n\nif (events.length === 0) {\n  message = \"Kosong coi... belum ada jadwal UAS yang kebaca 😴\";\n} else {\n  events.sort((a, b) => getStartDate(a) - getStartDate(b));\n\n  message = \"🗓️ *RECAP JADWAL UAS*\\n\";\n  message += \"📌 Hari ini sampai 12 Juni\\n\\n\";\n\n  let currentDateLabel = \"\";\n\n  events.forEach((event) => {\n    const start = getStartDate(event);\n    const end = getEndDate(event, start);\n\n    const dateLabel = formatDate(start);\n\n    if (dateLabel !== currentDateLabel) {\n      currentDateLabel = dateLabel;\n      message += `📅 *${dateLabel}*\\n`;\n    }\n\n    const titleData = parseTitle(event.json.summary);\n    const descData = parseDescription(event.json.description);\n\n    const room = titleData.room || descData.ruang || \"-\";\n    const course = titleData.course || event.json.summary || \"Tanpa judul\";\n    const code = titleData.code ? ` (${titleData.code})` : \"\";\n    const examType = titleData.examType ? ` - ${titleData.examType}` : \"\";\n\n    const timeText = event.json.start?.dateTime\n      ? `${formatTime(start)} - ${formatTime(end)} WIB`\n      : \"Seharian\";\n\n    const status = getStatus(start, end);\n\n    message += `• *${course}${code}${examType}*${status}\\n`;\n    message += `  ⏰ ${timeText}\\n`;\n    message += `  🏫 Kelas: ${descData.kelas || \"-\"}\\n`;\n    message += `  📍 Ruang: ${room}\\n`;\n\n    if (descData.jumlahMahasiswa) {\n      message += `  👥 ${descData.jumlahMahasiswa} mahasiswa\\n`;\n    }\n\n    if (descData.dosen) {\n      message += `  👨‍🏫 ${descData.dosen}\\n`;\n    }\n\n    message += \"------------------------------\\n\";\n  });\n}\n\nreturn [{ message }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1264,
+          480
+        ],
+        "id": "fefd0891-4aef-45ab-b148-b90875c25551",
+        "name": "Code: Recap Jadwal1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "6f692dd4-b1df-4338-9d0a-615105591b1a",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1472,
+          480
+        ],
+        "id": "0713ba69-36a3-49a8-9e6d-4cbf6e7fe368",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          1504
+        ],
+        "id": "bef6ce81-d950-4d8c-87be-35f016c990f7",
+        "name": "[12 Jam] Calendar get Agenda",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          1680
+        ],
+        "id": "4b7301ca-20e1-4e60-bb7f-d71bd423941c",
+        "name": "[36 Jam] Calendar get Agenda",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_CLASS_PAPB }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          464
+        ],
+        "id": "1b7f9b08-dae0-40f5-a99f-c069646fb313",
+        "name": "[12 Jam] Calendar get PAPB",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_CLASS_PAPB }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -864,
+          800
+        ],
+        "id": "ac526c77-a7a7-4d6b-b407-2769163dcdfc",
+        "name": "[36 Jam] Calendar get PAPB",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          1872
+        ],
+        "id": "5e743f80-fca9-458e-9e99-493553161e8a",
+        "name": "[12 Jam] Calendar get Tugas",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          2064
+        ],
+        "id": "2a2b9370-c487-418b-8ddd-cff66b0db897",
+        "name": "[36 Jam] Calendar get Tugas",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          2320
+        ],
+        "id": "db3842af-8fca-4f1f-9be5-cc427f16310a",
+        "name": "[15 Menit] Calendar get Tugas",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 60}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 61}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          2496
+        ],
+        "id": "b6c71159-03b5-4e38-8884-531116f01d79",
+        "name": "[60 Menit] Calendar get Tugas",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 30}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 31}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          -896,
+          2704
+        ],
+        "id": "604edc54-3aed-4f64-9b01-2e67967afe59",
+        "name": "[30 Menit] Calendar get Tugas",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 1
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          64,
+          2896
+        ],
+        "id": "00a1e553-23dd-4e6f-94e8-a5022d760637",
+        "name": "Schedule Trigger1"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          640,
+          2144
+        ],
+        "id": "35237248-7427-4860-881e-e67e189011f8",
+        "name": "[15 Menit] Calendar get Events1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 60}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 61}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          640,
+          2320
+        ],
+        "id": "b3f760d1-a595-4cf9-ad72-616b056d6caf",
+        "name": "[60 Menit] Calendar get Events1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={{ $json.selected_key }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah asisten pribadi mahasiswa yang cerdas dan serba tahu. Tugasmu adalah mengolah jadwal dari kalender menjadi notifikasi WA yang efektif.\n\nATURAN LOGIKA KONTEKS:\n1. IDENTIFIKASI: Jika nama acara mengandung kata \"Laporan\", \"Praktikum\", \"Modul\", atau \"Tugas\", maka ini adalah *TUGAS/DEADLINE*. Jika tidak, anggap ini *JADWAL KULIAH/ACARA*.\n2. TONE: Pakai bahasa tongkrongan (lu/gue) yang asik. \n   - Kalau TUGAS: Agak cerewet/ngingetin buat buruan dikerjain.\n   - Kalau KULIAH: Ngingetin biar nggak telat atau jangan bolos.\n3. DILARANG KERAS pakai kata pengantar/penutup (\"Baik\", \"Siap\", dll). Langsung output teks pesannya.\n\nFORMAT OUTPUT WAJIB:\n[Emoji Sesuai Konteks] *JADWAL MANDA - [KLASIFIKASI ACARA]* [Emoji Sesuai Konteks]\n📌 *Nama:* [Nama Acara]\n🕒 *Waktu:* [Waktu Mulai dalam format Jam:Menit WITA]\n📍 *Lokasi:* [Lokasi atau \"Online/Tidak ada\"]\n💬 *Deskripsi:* [Deskripsi tugas/kegiatan/event]\n\n💬 *Catatan Asisten:* [Hitung selisih waktu dari 'Waktu Sekarang' ke 'Waktu Acara'. Berikan pesan yang relevan. Misal: \"H-1 deadline praktikum nih, udah kelar covernya belum?\" atau \"15 menit lagi kelas mulai, buruan otw!\" pastikan sesuai dengan judul atau deskripsi event/tugasnya biar aku tau ini tuh reminder untuk event/tugas apa]\n\nDATA LOGIKA:\n- Sisa Waktu Menuju Acara: ${$json.menit_tersisa} menit lagi\n- Waktu Acara: ${$json.start?.dateTime || $json.start?.date || \"Tidak diketahui\"}\n- Nama Acara: ${$json.summary || \"Tidak ada judul\"}\n- Lokasi: ${$json.location || \"Online\"}, Jika tidak ada coba cek di ${$json.summary} biasanya dituliskan dalam judul misal [Lokasi] - Nama Acara, contoh F3.11 - Metopen, F3.11 adalah ruangan atau lokasi, F artinya Gedung F, 3 artinya lantai 3 dan 11 ada ruangannya tapi cukup tuliskan F3.11 atau [II.1.1] - Farmasi Industri, II adalah Gedung 2 atau MIPA 2, 1 lantai 1 dan ruangan 1, atau bisa juga G1.4 G adalah Gedung G, 1 lantai 1 dan 4 ruang 4 tapi cukup tulis singkatan aja. Kamu juga bisa baca di summary itu apakah ada lokasi atau gak\n`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1552,
+          2944
+        ],
+        "id": "434707b3-dc12-418a-918b-58f9d1c54213",
+        "name": "HTTP Request Gemini1",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 30}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 31}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          640,
+          2688
+        ],
+        "id": "a9fe4775-23b9-4223-8a9a-c28ea6007304",
+        "name": "[30 Menit] Calendar get Kuliah1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          640,
+          2512
+        ],
+        "id": "62ecf1c8-81a6-485a-bed5-97499f5b6a06",
+        "name": "[15 Menit] Calendar get Kuliah1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 15;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          2592
+        ],
+        "id": "1a7ffff1-a426-4dc1-970c-9d747b69f8b2",
+        "name": "[15 Menit] Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 30;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          2768
+        ],
+        "id": "2f8463b1-cadc-4d6c-8221-65497e12c047",
+        "name": "[30] Menit Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 60;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          2944
+        ],
+        "id": "a00e6229-1407-4226-92fb-ed3e9a7f8219",
+        "name": "[60 Menit] Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 720;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          3136
+        ],
+        "id": "c383e63b-4b60-4354-bc52-db827f006276",
+        "name": "[12 Jam] Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst targetMinute = 2160;\nconst now = new Date();\nconst validItems = [];\nconst processedIds = new Set();\n\nlet staticData = {};\ntry {\n  staticData = $getWorkflowStaticData('global');\n  if (!staticData.sentReminders) {\n    staticData.sentReminders = {};\n  }\n} catch (e) {}\n\n// Bersihkan data deduplikasi yang lebih dari 48 jam agar memori tidak bengkak\nconst twoDaysAgo = now.getTime() - 48 * 3600 * 1000;\nif (staticData.sentReminders) {\n  for (const k in staticData.sentReminders) {\n    if (staticData.sentReminders[k] < twoDaysAgo) {\n      delete staticData.sentReminders[k];\n    }\n  }\n}\n\nfor (const item of $input.all()) {\n  const startStr = item.json.start?.dateTime;\n  if (!startStr) continue; // Skip all-day events\n\n  const eventId = item.json.id;\n  if (!eventId || processedIds.has(eventId)) continue;\n\n  const startTime = new Date(startStr);\n  const diffMs = startTime.getTime() - now.getTime();\n  const diffMinutes = Math.round(diffMs / 60000);\n\n  // FILTER KETAT ANTI-SPAM: HANYA lolos jika sisa menit tepat targetMinute\n  if (diffMinutes !== targetMinute) continue;\n\n  const dedupeKey = `${eventId}_${targetMinute}_${startStr}`;\n  if (staticData.sentReminders && staticData.sentReminders[dedupeKey]) {\n    continue; // Sudah pernah dikirim, jangan spam!\n  }\n\n  processedIds.add(eventId);\n  if (staticData.sentReminders) {\n    staticData.sentReminders[dedupeKey] = now.getTime();\n  }\n\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n\n  item.json.selected_key = randomKey;\n  item.json.menit_tersisa = diffMinutes;\n  validItems.push(item);\n}\n\nreturn validItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          3280
+        ],
+        "id": "6d945cc3-e71b-434a-a32d-57b711a4e8e5",
+        "name": "[36 Jam] Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          2912
+        ],
+        "id": "5b88969f-c1ff-42a1-b514-d7d1013ffe5d",
+        "name": "[12 Jam] Calendar get Agenda1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          3088
+        ],
+        "id": "79b34a04-9107-4d26-ba73-42eeee467c51",
+        "name": "[36 Jam] Calendar get Agenda1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 720}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 721}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          3280
+        ],
+        "id": "fa40f774-815f-4422-b09f-7b37c16d970a",
+        "name": "[12 Jam] Calendar get Tugas1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 2160}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 2161}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          3472
+        ],
+        "id": "2ec3b6b1-798a-48bd-9388-d4d437ecd95e",
+        "name": "[36 Jam] Calendar get Tugas1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 15}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 16}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          3728
+        ],
+        "id": "98782bb4-5ae6-4037-aba3-fa522cf4b36b",
+        "name": "[15 Menit] Calendar get Tugas1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 60}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 61}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          3904
+        ],
+        "id": "ded6fae4-073a-4ff2-86d3-ec58a3766792",
+        "name": "[60 Menit] Calendar get Tugas1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_TUGAS }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.plus({minutes: 30}).toISO() }}",
+          "timeMax": "={{ $now.plus({minutes: 31}).toISO() }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          656,
+          4112
+        ],
+        "id": "e69f97a4-f0b3-4d0e-abf5-b79a304fca57",
+        "name": "[30 Menit] Calendar get Tugas1",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.WA_GROUP_SHARED }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1760,
+          3152
+        ],
+        "id": "83d28cd4-f581-4459-85bf-1a59bdf206a4",
+        "name": "[HTTP Whatsapp]2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.WA_GROUP_SHARED }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          736
+        ],
+        "id": "09acfa6d-4d9b-47c5-baa0-536e3935259e",
+        "name": "[HTTP Whatsapp]4",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.WA_GROUP_NOTIF }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          208,
+          960
+        ],
+        "id": "f30a00cf-a947-40da-adf3-9a6e047cb034",
+        "name": "[HTTP Whatsapp]6",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MANDA_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1776,
+          2928
+        ],
+        "id": "eadaa926-a3ad-4078-a395-ae4323ab8dd1",
+        "name": "[HTTP Whatsapp]",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Calendar get Events",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[60 Menit] Calendar get Events",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[15 Menit] Calendar get Kuliah",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[30 Menit] Calendar get Kuliah",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[12 Jam] Calendar get PAPB",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[36 Jam] Calendar get PAPB",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[12 Jam] Calendar get Agenda",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[36 Jam] Calendar get Agenda",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[12 Jam] Calendar get Tugas",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[36 Jam] Calendar get Tugas",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[15 Menit] Calendar get Tugas",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[60 Menit] Calendar get Tugas",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[30 Menit] Calendar get Tugas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Calendar get Events": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[60 Menit] Calendar get Events": {
+        "main": [
+          [
+            {
+              "node": "[60 Menit] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request Gemini": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[HTTP Whatsapp]4",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[HTTP Whatsapp]6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[30 Menit] Calendar get Kuliah": {
+        "main": [
+          [
+            {
+              "node": "[30] Menit Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Calendar get Kuliah": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[30] Menit Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[60 Menit] Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Recap Jadwal1": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Calendar get Agenda": {
+        "main": [
+          [
+            {
+              "node": "[12 Jam] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Calendar get Agenda": {
+        "main": [
+          [
+            {
+              "node": "[36 Jam] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Calendar get PAPB": {
+        "main": [
+          [
+            {
+              "node": "[12 Jam] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Calendar get PAPB": {
+        "main": [
+          [
+            {
+              "node": "[36 Jam] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Calendar get Tugas": {
+        "main": [
+          [
+            {
+              "node": "[12 Jam] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Calendar get Tugas": {
+        "main": [
+          [
+            {
+              "node": "[36 Jam] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Calendar get Tugas": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[60 Menit] Calendar get Tugas": {
+        "main": [
+          [
+            {
+              "node": "[60 Menit] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[30 Menit] Calendar get Tugas": {
+        "main": [
+          [
+            {
+              "node": "[30] Menit Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger1": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Calendar get Events1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[60 Menit] Calendar get Events1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[15 Menit] Calendar get Kuliah1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[30 Menit] Calendar get Kuliah1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[12 Jam] Calendar get Agenda1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[36 Jam] Calendar get Agenda1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[12 Jam] Calendar get Tugas1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[36 Jam] Calendar get Tugas1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[15 Menit] Calendar get Tugas1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[60 Menit] Calendar get Tugas1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[30 Menit] Calendar get Tugas1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Calendar get Events1": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[60 Menit] Calendar get Events1": {
+        "main": [
+          [
+            {
+              "node": "[60 Menit] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request Gemini1": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp]2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "[HTTP Whatsapp]",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[30 Menit] Calendar get Kuliah1": {
+        "main": [
+          [
+            {
+              "node": "[30] Menit Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Calendar get Kuliah1": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[30] Menit Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[60 Menit] Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request Gemini1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Calendar get Agenda1": {
+        "main": [
+          [
+            {
+              "node": "[12 Jam] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Calendar get Agenda1": {
+        "main": [
+          [
+            {
+              "node": "[36 Jam] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[12 Jam] Calendar get Tugas1": {
+        "main": [
+          [
+            {
+              "node": "[12 Jam] Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[36 Jam] Calendar get Tugas1": {
+        "main": [
+          [
+            {
+              "node": "[36 Jam] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[15 Menit] Calendar get Tugas1": {
+        "main": [
+          [
+            {
+              "node": "[15 Menit] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[60 Menit] Calendar get Tugas1": {
+        "main": [
+          [
+            {
+              "node": "[60 Menit] Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[30 Menit] Calendar get Tugas1": {
+        "main": [
+          [
+            {
+              "node": "[30] Menit Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate",
+      "timeSavedMode": "fixed",
+      "timezone": "Asia/Jakarta",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      },
+      "node:Google Calendar Trigger": {
+        "lastTimeChecked": "2026-04-04T17:17:14Z"
+      },
+      "node:Schedule Trigger1": {
+        "recurrenceRules": [
+          0
+        ]
+      },
+      "global": {
+        "sentReminders": {
+          "ikssdjd39psohlqpdg9ed6358o_20261020T033000Z_30_2026-10-20T10:30:00+07:00": 1792465170768,
+          "ikssdjd39psohlqpdg9ed6358o_20261020T033000Z_15_2026-10-20T10:30:00+07:00": 1792466070206
+        }
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "f0fbeeac-e950-43bb-ba16-da763cc1a02d",
+    "activeVersionId": "f0fbeeac-e950-43bb-ba16-da763cc1a02d",
+    "versionCounter": 709,
+    "triggerCount": 2,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-04-04T12:13:49.223Z",
+        "createdAt": "2026-04-04T12:13:49.223Z",
+        "role": "workflow:owner",
+        "workflowId": "eCtWrmeyciUgg8f2",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Version 61c2d089",
+      "description": ""
+    }
+  }
+]

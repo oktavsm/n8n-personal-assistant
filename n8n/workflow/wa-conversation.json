@@ -1,0 +1,2046 @@
+[
+  {
+    "updatedAt": "2026-10-20T04:11:07.154Z",
+    "createdAt": "2026-05-05T15:46:35.418Z",
+    "id": "WmvJdI22Wr5O1k9y",
+    "name": "wa-conversation",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -900,
+          0
+        ],
+        "id": "0ce15b9f-6aa4-4a58-bb2c-00402986471c",
+        "name": "wa-msg"
+      },
+      {
+        "parameters": {
+          "jsCode": "const root = $input.first().json;\nconst body = root.body || {};\nconst data = body.data || {};\nconst msg = data.message || {};\nconst ctx =\n  data.contextInfo ||\n  msg.extendedTextMessage?.contextInfo ||\n  msg.imageMessage?.contextInfo ||\n  msg.videoMessage?.contextInfo ||\n  msg.documentMessage?.contextInfo ||\n  msg.audioMessage?.contextInfo ||\n  {};\n\nconst quoted = ctx.quotedMessage || {};\n\nfunction getTextFromMessage(m = {}) {\n  return (\n    m.conversation ||\n    m.extendedTextMessage?.text ||\n    m.imageMessage?.caption ||\n    m.videoMessage?.caption ||\n    m.documentMessage?.caption ||\n    \"\"\n  );\n}\n\nfunction detectMedia(m = {}) {\n  if (m.imageMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"image\",\n      kind: \"imageMessage\",\n      mimetype: m.imageMessage.mimetype || \"image/jpeg\",\n      caption: m.imageMessage.caption || \"\",\n      message: m.imageMessage,\n    };\n  }\n\n  if (m.videoMessage) {\n    const isGif = !!m.videoMessage.gifPlayback;\n    return {\n      exists: true,\n      source: null,\n      type: isGif ? \"gif\" : \"video\",\n      kind: \"videoMessage\",\n      mimetype: m.videoMessage.mimetype || \"video/mp4\",\n      caption: m.videoMessage.caption || \"\",\n      message: m.videoMessage,\n    };\n  }\n\n  if (m.audioMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"audio\",\n      kind: \"audioMessage\",\n      mimetype: m.audioMessage.mimetype || \"audio/ogg\",\n      caption: \"\",\n      message: m.audioMessage,\n    };\n  }\n\n  if (m.documentMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"document\",\n      kind: \"documentMessage\",\n      mimetype: m.documentMessage.mimetype || \"application/octet-stream\",\n      caption: m.documentMessage.caption || \"\",\n      fileName: m.documentMessage.fileName || \"\",\n      message: m.documentMessage,\n    };\n  }\n\n  if (m.stickerMessage) {\n    return {\n      exists: true,\n      source: null,\n      type: \"sticker\",\n      kind: \"stickerMessage\",\n      mimetype: m.stickerMessage.mimetype || \"image/webp\",\n      caption: \"\",\n      message: m.stickerMessage,\n    };\n  }\n\n  return {\n    exists: false,\n    source: null,\n    type: null,\n    kind: null,\n    mimetype: null,\n    caption: \"\",\n    message: null,\n  };\n}\n\nconst currentText = getTextFromMessage(msg).trim();\nconst quotedText = getTextFromMessage(quoted).trim();\n\nconst currentMedia = detectMedia(msg);\ncurrentMedia.source = \"current\";\n\nconst quotedMedia = detectMedia(quoted);\nquotedMedia.source = \"quoted\";\n\nconst selectedMedia = currentMedia.exists ? currentMedia : quotedMedia.exists ? quotedMedia : null;\n\nconst textLower = currentText.toLowerCase();\n\nconst mentionedJid = ctx.mentionedJid || [];\nconst botLids = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", \"${$env.MY_WA_NUMBER}\"];\nconst isMentionBot =\n  botLids.some(b => currentText.includes(\"@\" + b)) ||\n  mentionedJid.some(j => botLids.some(b => j.includes(b)));\n\nconst quotedParticipant = ctx.participant || ctx.quotedMessageSender || \"\";\nconst isReplyingToBot = botLids.some(b => quotedParticipant.includes(b));\n\nconst isAskCommand = textLower.startsWith(\"/ask\");\nconst isStickerCommand = textLower.startsWith(\"/stiker\") || textLower.startsWith(\"/sticker\");\n\nconst cleanText = currentText\n  .replace(/@171619058196619/g, \"\")\n  .replace(/@195095164887244/g, \"\")\n  .replace(/@158613192614132/g, \"\")\n  .replace(/@6283130151476/g, \"\")\n  .replace(/^\\/ask/i, \"\")\n  .replace(/^\\/stiker/i, \"\")\n  .replace(/^\\/sticker/i, \"\")\n  .trim();\n\nconst remoteJid = data.key?.remoteJid || \"\";\nconst participant = data.key?.participant || data.key?.participantAlt || remoteJid;\nconst isGroup = remoteJid.endsWith(\"@g.us\");\nconst isDevGroup = remoteJid === ($env.WA_GROUP_DEV || \"120363336434287340@g.us\");\n\nconst isManda = remoteJid.includes($env.MANDA_WA_NUMBER) || participant.includes($env.MANDA_WA_NUMBER);\nconst isOkta = remoteJid.includes($env.MY_WA_NUMBER) || participant.includes($env.MY_WA_NUMBER);\n\n// Deteksi Titip Pesan Dua Arah\nconst isTitipPesanToOkta = !isOkta && /titip|bilang|kasih tau|suruh|ingetin okta|sampaikan ke okta|pesan buat okta/i.test(currentText);\nconst isTitipPesanToManda = isOkta && /titip|bilang|kasih tau|suruh|ingetin manda|sampaikan ke manda|pesan buat manda/i.test(currentText);\nconst isTitipPesan = isTitipPesanToOkta || isTitipPesanToManda;\nconst titipTargetNumber = isTitipPesanToOkta ? $env.MY_WA_NUMBER : isTitipPesanToManda ? $env.MANDA_WA_NUMBER : null;\nconst titipTitle = isTitipPesanToOkta ? \"💌 *Titip Pesan dari Kak Manda untuk Okta:*\" : \"💌 *Titip Pesan dari Okta untuk Kak Manda:*\";\n\nconst hasAudio = selectedMedia?.type === \"audio\";\n\n// Vision Query Detection\nconst isScheduleQuery = Boolean(hasAudio || /jadwal|agenda|kuliah|tugas|uas|kelas|acara|free|kosong|sibuk|kegiatan|besok|hari ini|lusa|ngapain|padet/i.test(currentText));\nconst isAnnouncementQuery = Boolean(/pengumuman|siam|berita kampus|info dosen|info kuliah|asinkron|dinas luar/i.test(currentText));\nconst isPresensiQuery = Boolean(/presensi|absen|absensi|kehadiran/i.test(currentText));\n\nreturn [\n  {\n    json: {\n      ...root,\n      wa: {\n        remoteJid,\n        fromMe: data.key?.fromMe || false,\n        messageId: data.key?.id || \"\",\n        participant,\n        participantAlt: data.key?.participantAlt || \"\",\n        pushName: data.pushName || \"\",\n        dateTime: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Jakarta\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WIB\",\n        dateTimeWib: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Jakarta\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WIB\",\n        dateTimeWita: new Date().toLocaleString(\"id-ID\", {\n          timeZone: \"Asia/Makassar\",\n          weekday: \"long\",\n          year: \"numeric\",\n          month: \"long\",\n          day: \"numeric\",\n          hour: \"2-digit\",\n          minute: \"2-digit\",\n          second: \"2-digit\",\n          hour12: false\n        }) + \" WITA\",\n\n        isManda,\n        isOkta,\n        isGroup,\n        isDevGroup,\n\n        currentText,\n        quotedText,\n        cleanText,\n\n        isMentionBot,\n        isReplyingToBot,\n        isAskCommand,\n        isStickerCommand,\n        isTitipPesan,\n        isTitipPesanToOkta,\n        isTitipPesanToManda,\n        titipTargetNumber,\n        titipTitle,\n\n        hasAudio,\n        isScheduleQuery,\n        isAnnouncementQuery,\n        isPresensiQuery,\n\n        hasCurrentMedia: currentMedia.exists,\n        hasQuotedMedia: quotedMedia.exists,\n        hasAnyMedia: !!selectedMedia,\n\n        currentMedia,\n        quotedMedia,\n        selectedMedia,\n\n        selectedMediaSummary: selectedMedia\n          ? `${selectedMedia.source} ${selectedMedia.type} (${selectedMedia.mimetype})`\n          : \"-\",\n\n        quotedPayload: {\n          key: {\n            remoteJid: data.key?.remoteJid,\n            fromMe: data.key?.fromMe,\n            id: data.key?.id,\n            participant: data.key?.participant || data.participant,\n          },\n          message: data.message,\n        },\n      },\n    },\n  },\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -680,
+          0
+        ],
+        "id": "b37f3393-000e-4186-8353-9c7615a172c0",
+        "name": "Normalize WA Context"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wa_chat_memory (room_jid, sender_jid, sender_name, role, message_type, content, quoted_content)\nVALUES (\n  '{{ $json.wa.remoteJid }}',\n  '{{ $json.wa.participant || $json.wa.remoteJid }}',\n  '{{ ($json.wa.pushName || \"User\").replace(/'/g, \"''\") }}',\n  'user',\n  '{{ $json.wa.hasAnyMedia ? \"media\" : \"text\" }}',\n  '{{ ($json.wa.currentText || $json.wa.cleanText || \"[Media]\").replace(/'/g, \"''\") }}',\n  '{{ ($json.wa.quotedText || \"\").replace(/'/g, \"''\") }}'\n);"
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          -460,
+          0
+        ],
+        "id": "9e808165-443b-4d1b-9c20-b4c1cf03ac06",
+        "name": "[PG] Save Incoming Chat",
+        "credentials": {
+          "postgres": {
+            "id": "pgChatMemory0001",
+            "name": "Postgres Chat Memory"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT role, sender_name, content, message_type, created_at \nFROM wa_chat_memory \nWHERE room_jid = '{{ $('Normalize WA Context').item.json.wa.remoteJid }}'\n  AND created_at >= NOW() - INTERVAL '14 days'\nORDER BY created_at DESC \nLIMIT 40;"
+        },
+        "alwaysOutputData": true,
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          -240,
+          0
+        ],
+        "id": "c9adec9a-f273-46d2-815c-f9165adc5a30",
+        "name": "[PG] Fetch History",
+        "credentials": {
+          "postgres": {
+            "id": "pgChatMemory0001",
+            "name": "Postgres Chat Memory"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nlet historyLines = [];\n\nfor (const item of items) {\n  const row = item.json;\n  if (!row || !row.role || !row.content) continue;\n  \n  const roleLabel = row.role === 'assistant' ? 'Asisten (Bot)' : (row.sender_name || 'User');\n  \n  const msgDate = new Date(row.created_at);\n  const nowDate = new Date();\n  const isToday = msgDate.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' }) === nowDate.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' });\n  \n  const timeStr = isToday\n    ? msgDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })\n    : msgDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });\n    \n  const timeTag = timeStr ? ` [${timeStr}]` : '';\n  historyLines.push(`- ${roleLabel}${timeTag}: ${row.content}`);\n}\n\n// URUTAN KRONOLOGIS: Dari pesan lama ke pesan terbaru\nhistoryLines.reverse();\n\nconst memoryContext = historyLines.length > 0 \n  ? historyLines.join('\\n')\n  : '(Tidak ada percakapan sebelumnya dalam 14 hari terakhir)';\n\nconst prevItem = $('Normalize WA Context').item.json;\n\nreturn [{\n  json: {\n    ...prevItem,\n    memoryContext: memoryContext\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -20,
+          0
+        ],
+        "id": "2792379e-206d-4426-b682-064d58d5ecce",
+        "name": "Format Memory Context"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "32bf90bc-8085-4c1c-87af-7099b88b8862",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isManda && !$('Normalize WA Context').item.json.wa.isGroup }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda-pc"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "28f5859b-4c4a-47fc-8b33-1716024001ce",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isMentionBot && !$('Normalize WA Context').item.json.wa.cleanText }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "ngetag doang"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0f95fe25-2e7b-4e54-bda7-839538edaddf",
+                      "leftValue": "={{ ($('Normalize WA Context').item.json.wa.isMentionBot || $('Normalize WA Context').item.json.wa.isReplyingToBot || $('Normalize WA Context').item.json.wa.isDevGroup) && (!!$('Normalize WA Context').item.json.wa.cleanText || $('Normalize WA Context').item.json.wa.hasAudio) }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "ada chat - grup"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "1e875925-de12-483d-b382-5d5216d162a8",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isAskCommand && !$('Normalize WA Context').item.json.wa.cleanText }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "/ask doang - pc"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "aad40f3b-d8fa-453e-9a7d-545570094067",
+                      "leftValue": "={{ ($('Normalize WA Context').item.json.wa.isOkta || $('Normalize WA Context').item.json.wa.isAskCommand) && (!!$('Normalize WA Context').item.json.wa.cleanText || $('Normalize WA Context').item.json.wa.hasAudio) }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "ada chat - pc"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "02a53d38-5db3-4efb-ba42-d0b0ce669171",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isStickerCommand }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "stiker"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          2140,
+          260
+        ],
+        "id": "446aa5b9-e6d8-4709-8924-71115331dfb9",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0a0e6d6e-ec5d-4c0a-b247-e83f3ecb3dcb",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.remoteJid }}",
+                      "rightValue": "={{ $env.MANDA_WA_NUMBER }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "66a38192-a385-4e22-9609-2d0e9d77bc1d",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.participantAlt }}",
+                      "rightValue": "={{ $env.MANDA_WA_NUMBER }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda-alt"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "fa2de863-8fbc-431c-8740-9aae3ec82ca2",
+                      "leftValue": "={{ true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "bukan manda"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          440,
+          -100
+        ],
+        "id": "360e8def-55c2-4b70-ac78-e77294537932",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3d76ebbc-10e4-403c-b7c8-1431d3eadddf",
+                "leftValue": "={{ $('Normalize WA Context').item.json.wa.isMentionBot }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          440,
+          150
+        ],
+        "id": "40d6270d-b7bc-4c6f-9d3f-4cf6dec02dbd",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "function getRandomSapaan() {\n  const sapaan = [\n    \"hmm kenapaa\", \"ada yang dicari?\", \"halo bro\", \"halo bang\", \"yoi?\", \"apa kabar?\",\n    \"lagi butuh apa nih?\", \"wah manggil nih\", \"kenapa cuy?\", \"siap bosku\", \"hadir 😎\",\n    \"yo wassup\", \"apa nih?\", \"gimana gimana?\", \"cerita dong\", \"lagi kenapa?\", \"wkwk iya ada apa\",\n    \"masukkk\", \"siapp\", \"iya kak?\", \"haloo\", \"halooo ada apa\", \"yo bro\", \"ada yang bisa gue bantu?\",\n    \"manggil gue?\", \"gue dengerin nih\", \"sini cerita\", \"ada apa boss\", \"lagi butuh bantuan?\",\n    \"siap sedia 🫡\", \"aku di sini 👋\", \"siapp broo\"\n  ];\n  return sapaan[Math.floor(Math.random() * sapaan.length)];\n}\nreturn [{ json: { message: getRandomSapaan() + \"??\" } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          150
+        ],
+        "id": "85ba316e-3986-4719-b519-d32d3106cc57",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Normalize WA Context').item.json.wa.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.message }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          880,
+          150
+        ],
+        "id": "940219a2-02b1-4259-806d-ddccf395e18f",
+        "name": "[HTTP Whatsapp] Send Message",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\nconst randomKey = apiKeys.length > 0 ? apiKeys[Math.floor(Math.random() * apiKeys.length)] : '';\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          -220
+        ],
+        "id": "78fd85de-9837-4c16-8e31-e09acef6b7e5",
+        "name": "Javascript Randomize API Key 1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\nconst randomKey = apiKeys.length > 0 ? apiKeys[Math.floor(Math.random() * apiKeys.length)] : '';\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          -20
+        ],
+        "id": "98180338-7882-431b-bad1-1dfd09520ea3",
+        "name": "Javascript Randomize API Key "
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.base64Audio ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Pribadi dan Perwakilan Resmi Okta untuk Kak Manda.\n\nKONTEKS HUBUNGAN:\n- Kak Manda (Amanda Syalwa Nadira) adalah pacar tersayang Okta.\n- Mahasiswi Farmasi Universitas Lambung Mangkurat (ULM), asal Banjarmasin.\n- Panggilan resmi & wajib untuknya: \"Kak Manda\".\n- Okta (Oktavianus Samuel Minarto) adalah developer yang membangun kamu.\n\nATURAN PERAN (PENTING):\n1. Kamu BUKAN Okta dan TIDAK BOLEH berpura-pura menjadi Okta.\n2. Posisikan dirimu sebagai perwakilan, ajudan, atau asisten pribadi Okta yang siap membantu Kak Manda.\n3. Gaya komunikasi: Hangat, sopan, ramah, santai, manis, tapi TIDAK ALAY atau berlebihan (cringe).\n4. Gunakan bahasa Indonesia kasual yang natural (aku, kamu, yaa, hehe, siap Kak Manda).\n5. Jika Kak Manda mengirim pesan suara (voice note), dengarkan audio yang terlampir dengan teliti lalu tanggapi pesannya dengan ramah.\n6. TITIP PESAN KE OKTA:\n   - Jika Kak Manda menitipkan pesan untuk Okta (misal: \"titip pesan\", \"bilang ke okta\", \"ingetin okta\"):\n     - Beritahu dengan manis bahwa pesan Kak Manda sudah kamu catat dan sudah otomatis kamu teruskan ke WhatsApp pribadi Okta sekarang juga!\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, pengumuman, atau presensi secara to-the-point, ramah, dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / kosong, sampaikan dengan ramah bahwa jadwal kosong.` : ''}\n\nINFORMASI SAAT INI:\n- Waktu Sekarang (Kak Manda di Banjarmasin): ${$json.wa.dateTimeWita || $json.wa.dateTime}\\n- Waktu Okta di Malang/Jawa: ${$json.wa.dateTimeWib || $json.wa.dateTime}\n- Pesan Masuk dari Kak Manda: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : '[Media]')}\"\n- Pesan yang Di-quote: \"${$json.wa.quotedText || '-'}\"\n\n\n==================================================\nFITUR AKSI OTOMATIS: PEMBUATAN TUGAS & AGENDA (ACTION TRIGGER)\n==================================================\nJika Kak Manda meminta kamu untuk MEMBUAT, MENCATAT, MENAMBAH, atau MENJADWALKAN tugas, deadline, agenda, jadwal, rapat, atau kegiatan:\n- Termasuk jika merujuk ke obrolan sebelumnya! (Contoh: \"buatin tugas yang tadi disebut deadlinenya lusa jam 23.59\", \"jadiin task ya\").\n- Analisis riwayat percakapan sebelumnya untuk menemukan judul kegiatan/tugas secara spesifik!\n\nATURAN OUTPUT ACTION:\n1. Berikan respon ramah dan manis bahwa tugas/agenda tersebut langsung diproses ke kalender.\n2. DI BARIS PALING AKHIR responmu, WAJIB sertakan SATU ATAU LEBIH baris perintah aksi dengan format persis:\n<<<ACTION:TUGAS|TARGET|DETAIL>>>\natau\n<<<ACTION:JADWAL|TARGET|DETAIL>>>\n\nPenjelasan Parameter:\n- TUGAS: untuk deadline tugas kuliah farmasi, PR, laporan praktikum, dsb.\n- JADWAL: untuk agenda kegiatan, meeting, acara, janji temu, dsb.\n- TARGET:\n  * \"manda\" -> default kalender Kak Manda.\n  * \"okta\" -> jika Kak Manda minta membuatkan jadwal/tugas untuk Okta.\n- DETAIL: Tuliskan nama/judul kegiatan secara lengkap beserta waktu dan tanggal spesifik yang sudah kamu hitung (misal: \"Laporan Farmasi deadline Kamis 22 Oktober 2026 jam 23.59 WITA\"). Jika tidak menyebut jam, gunakan jam default \"jam 23.59\" untuk tugas dan \"jam 09.00\" untuk jadwal.\n\nCATATAN:\n- JANGAN sertakan tag ACTION jika hanya mengecek jadwal/tugas. Tag ACTION HANYA untuk PEMBUATAN baru.\n\n\nJawablah pesan Kak Manda dengan ramah, hangat, dan to-the-point sebagai asisten perwakilan Okta:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( $json.base64Audio ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          900,
+          -220
+        ],
+        "id": "a016f4be-3d75-4de2-906a-cbd64924df3c",
+        "name": "[HTTP] Gemini Build Message1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.base64Audio ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Cerdas untuk WhatsApp.\n\nLOGIKA PERAN:\n1. JIKA PENGIRIM ADALAH OKTA (${$env.MY_WA_NUMBER}):\n   - Kamu adalah co-pilot developer & asisten pribadi Okta.\n   - Bersikap sigap, efisien, to-the-point, santai (panggil \"bro\" atau \"Okta\").\n   - Jika Okta mengirimkan pesan suara (voice note), dengarkan audio yang terlampir dengan seksama lalu responi.\n   - TITIP PESAN KE KAK MANDA:\n     - Jika Okta menitipkan pesan untuk Kak Manda (misal: \"titip pesan ke manda\", \"bilang ke manda\"):\n       - Konfirmasi bahwa pesan untuk Kak Manda sudah dicatat dan langsung otomatis diteruskan ke WhatsApp Kak Manda!\n\n2. JIKA DI GRUP ATAU PENGIRIM LAIN:\n   - Bersikap ramah, santai, solutif, ringkas, dan menyesuaikan obrolan.\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, pengumuman, atau presensi secara to-the-point dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / kosong, sampaikan dengan jelas bahwa jadwal kosong / tidak ada acara.` : ''}\n\nINFORMASI SAAT INI:\n- Pengirim: ${$json.wa.pushName || \"User\"} (${$json.wa.participant || $json.wa.remoteJid})\n- Waktu Sekarang: ${$json.wa.dateTimeWib || $json.wa.dateTime} (WIB / UTC+7)\n- Pesan: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : '[Media]')}\"\n- Quoted: \"${$json.wa.quotedText || '-'}\"\n\n\n==================================================\nFITUR AKSI OTOMATIS: PEMBUATAN TUGAS & AGENDA (ACTION TRIGGER)\n==================================================\nPerhatikan baik-baik: Jika pengguna (Okta atau Kak Manda) meminta kamu untuk MEMBUAT, MENCATAT, MENAMBAH, atau MENJADWALKAN tugas, deadline, agenda, jadwal, rapat, atau kegiatan:\n- Termasuk jika permintaan merujuk ke obrolan sebelumnya! (Contoh: \"buatin tugas yang aku sebut tadi deadlinenya lusa jam 23.59\", \"jadiin task lusa jam 23.59 dua duanya\", \"catat agenda yang tadi dibahas besok jam 10 pagi\").\n- Analisis riwayat percakapan sebelumnya untuk menemukan judul kegiatan/tugas yang dimaksud secara spesifik!\n\nATURAN OUTPUT ACTION:\n1. Berikan respon ramah dan konfirmasi singkat bahwa tugas/agenda tersebut langsung diproses ke kalender.\n2. DI BARIS PALING AKHIR responmu, WAJIB sertakan SATU ATAU LEBIH baris perintah aksi dengan format persis:\n<<<ACTION:TUGAS|TARGET|DETAIL>>>\natau\n<<<ACTION:JADWAL|TARGET|DETAIL>>>\n\nPenjelasan Parameter:\n- TUGAS: untuk deadline tugas kuliah, PR, project, laporan, submit paper, dsb.\n- JADWAL: untuk agenda kegiatan, meeting, rapat, acara, janji temu, dsb.\n- TARGET:\n  * \"okta\" -> jika kalender tujuan adalah kalender Okta (default jika pengirim adalah Okta, atau jika diminta buat Okta).\n  * \"manda\" -> jika kalender tujuan adalah kalender Kak Manda (jika pengirim adalah Kak Manda, atau jika diminta buat Manda).\n- DETAIL: Tuliskan nama/judul kegiatan secara lengkap beserta waktu dan tanggal spesifik yang sudah kamu hitung berdasarkan waktu sekarang (misal: \"PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59\" atau \"Meeting Project Kerjago besok jam 14.00\"). Jika pengguna tidak menyebut kata jam, selalu cantumkan kata \"jam HH.MM\" (default tugas adalah jam 23.59, default jadwal agenda adalah jam 09.00).\n\nCONTOH MULTI-ACTION (PENTING):\nJika pengguna bilang: \"jadiin task aja deadlinenya lusa 23.59 dua duanya\" dan di riwayat obrolan ada \"PPT Pengabdian\" dan \"PPT Scope\":\nMaka responmu harus menyertakan DUA baris aksi di paling akhir:\n<<<ACTION:TUGAS|okta|PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59>>>\n<<<ACTION:TUGAS|okta|PPT Scope deadline Kamis 22 Oktober 2026 jam 23.59>>>\n\nCATATAN:\n- JANGAN sertakan tag ACTION jika pengguna HANYA MENANYAKAN atau MENGECEK jadwal/tugas (misal: \"ada tugas apa?\", \"cek jadwal besok\"). Tag ACTION HANYA untuk permintaan PEMBUATAN/PENCATATAN baru.\n\n\nJawablah dengan ringkas dan solutif:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( $json.base64Audio ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          900,
+          -20
+        ],
+        "id": "3f19e1f7-292a-465b-971f-adb939c38a9a",
+        "name": "[HTTP] Gemini Build Message"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Normalize WA Context').item.json.wa.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.cleanText || $json.candidates?.[0]?.content?.parts?.[0]?.text || 'Halo kak Manda, pesan sudah aku terima yaa!' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1300,
+          -320
+        ],
+        "id": "21a4e611-0926-4af7-bce8-7b64c025bbfe",
+        "name": "[HTTP Whatsapp] Send Message2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Normalize WA Context').item.json.wa.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.cleanText || $json.candidates?.[0]?.content?.parts?.[0]?.text || 'Siap, pesan sudah diterima.' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1300,
+          80
+        ],
+        "id": "7aa6a87c-480d-4a3e-afd6-cbd1a9992434",
+        "name": "[HTTP Whatsapp] Send Message1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "ec0c6f2a-46c5-4908-8f42-36b070101a18",
+                "leftValue": "={{ $('Normalize WA Context').item.json.wa.isTitipPesan }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1360,
+          -320
+        ],
+        "id": "e3df5f3b-9aea-4781-bfe8-877a26dde49f",
+        "name": "If Titip Pesan"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Normalize WA Context').item.json.wa.titipTargetNumber }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $('Normalize WA Context').item.json.wa.titipTitle + '\\n\\n\"' + ($('Normalize WA Context').item.json.wa.currentText || $('Normalize WA Context').item.json.wa.cleanText || '[Pesan Suara / Voice Note]') + '\"\\n\\n_Waktu: ' + $('Normalize WA Context').item.json.wa.dateTime + '_' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1580,
+          -320
+        ],
+        "id": "7bbbb799-2acd-4a96-a378-e02c2366fd36",
+        "name": "[HTTP Whatsapp] Forward Note to Target",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wa_chat_memory (room_jid, sender_jid, sender_name, role, message_type, content)\nVALUES (\n  '{{ $('Normalize WA Context').item.json.wa.remoteJid }}',\n  'bot',\n  'Asisten Okta',\n  'assistant',\n  'text',\n  '{{ (() => {\n    let text = \"\";\n    try { text = $('Process AI Output & Actions1').item.json.cleanText; } catch(e){}\n    if (!text) {\n      try { text = $('Process AI Output & Actions').item.json.cleanText; } catch(e){}\n    }\n    if (!text) {\n      try { text = $('[HTTP] Gemini Build Message1').item.json.candidates[0].content.parts[0].text; } catch(e){}\n    }\n    if (!text) {\n      try { text = $('[HTTP] Gemini Build Message').item.json.candidates[0].content.parts[0].text; } catch(e){}\n    }\n    if (!text && $json.message) {\n      const m = $json.message;\n      text = typeof m === \"string\" ? m : (m.conversation || m.extendedTextMessage?.text || \"\");\n    }\n    return (text || \"Pesan terkirim\").replace(/'/g, \"''\");\n  })() }}'\n);"
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          1400,
+          -60
+        ],
+        "id": "262a97c4-ead2-439a-9b55-7ab2adc98ef4",
+        "name": "[PG] Save Bot Reply",
+        "credentials": {
+          "postgres": {
+            "id": "pgChatMemory0001",
+            "name": "Postgres Chat Memory"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "2ef7ece1-c591-46af-89f2-e57a7e204b60",
+                "leftValue": "={{ $('Normalize WA Context').item.json.wa.hasAnyMedia }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          440,
+          350
+        ],
+        "id": "bfb80987-7b9f-40bc-b9e7-2ae486ca2c69",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Normalize WA Context').item.json.wa.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "=Kirim gambar, gif, atau video pendek dulu bro baru ketik /stiker (atau quote gambarnya lalu ketik /stiker)! 🎨"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          680,
+          480
+        ],
+        "id": "f420f939-46c8-4d69-8e08-c96c7c996fbb",
+        "name": "[HTTP Whatsapp] Send Message3",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $('Normalize WA Context').item.json;\nconst data = item.body?.data || {};\nconst wa = item.wa || {};\nconst media = wa.selectedMedia || {};\nconst ctx = data.contextInfo || data.message?.extendedTextMessage?.contextInfo || {};\n\nlet keyObj = {};\nlet msgObj = {};\n\nif (media.source === 'current') {\n  keyObj = data.key;\n  msgObj = data.message;\n} else {\n  keyObj = {\n    remoteJid: data.key?.remoteJid,\n    fromMe: ctx.participant ? (ctx.participant.includes(\"171619058196619\") || ctx.participant.includes(\"195095164887244\")) : false,\n    id: ctx.stanzaId,\n    participant: ctx.participant\n  };\n  msgObj = ctx.quotedMessage || {};\n}\n\nreturn [{\n  json: {\n    number: wa.remoteJid,\n    payload: {\n      message: {\n        key: keyObj,\n        message: msgObj\n      },\n      convertToMp4: false\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          320
+        ],
+        "id": "f833ef4b-b45a-41ab-b804-877dd1caf556",
+        "name": "Prepare Media Payload"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/chat/getBase64FromMediaMessage/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.payload }}",
+          "options": {
+            "timeout": 20000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          900,
+          320
+        ],
+        "id": "b432acc7-572b-4c5f-92f8-fd08f20bc2c7",
+        "name": "[HTTP] Evolution Get Base64",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendSticker/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $('Prepare Media Payload').item.json.number }}\",\n  \"sticker\": \"{{ $json.base64 }}\"\n}",
+          "options": {
+            "timeout": 20000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1140,
+          320
+        ],
+        "id": "be2db0ce-3f82-476a-b0c3-3e4fa97fedba",
+        "name": "[HTTP] Evolution Send Sticker",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "fbdb8f72-3713-4b39-baf9-144d14232e4b",
+                "leftValue": "={{ $('Normalize WA Context').item.json.wa.hasAudio }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1320,
+          0
+        ],
+        "id": "251ece34-e4db-4951-b3a5-4c30f8ffbdcd",
+        "name": "If Has Audio"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $('Normalize WA Context').item.json;\nconst data = item.body?.data || {};\nconst wa = item.wa || {};\n\nreturn [{\n  json: {\n    payload: {\n      message: {\n        key: data.key,\n        message: data.message\n      },\n      convertToMp4: false\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1520,
+          -120
+        ],
+        "id": "dbc3da92-8b4a-4fab-909b-af5b4c29d089",
+        "name": "Prepare Audio Payload"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/chat/getBase64FromMediaMessage/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.payload }}",
+          "options": {
+            "timeout": 20000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1720,
+          -120
+        ],
+        "id": "f5aa1daf-6cfe-4957-978e-9a56035bf399",
+        "name": "[HTTP] Evolution Get Base64 Audio",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const audioResult = $input.first().json;\n\nlet prevItem = {};\ntry { prevItem = $('Format Calendar Vision').item.json; } catch(e){}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Pengumuman Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Presensi Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  try { prevItem = $('Format Default Vision').item.json; } catch(e){}\n}\nif (!prevItem || !prevItem.wa) {\n  prevItem = $('Format Memory Context').item.json;\n}\n\nlet b64 = audioResult.base64 || '';\nif (b64.includes('base64,')) {\n  b64 = b64.split('base64,')[1];\n}\n\nreturn [{\n  json: {\n    ...prevItem,\n    base64Audio: b64\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          -120
+        ],
+        "id": "007f5d6b-9f0e-4666-a376-d0a2043d2460",
+        "name": "Attach Audio Base64"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "1ce0f990-9b36-4814-b79e-c9b8a613dfe9",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isScheduleQuery }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "schedule"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "d204f9a9-a268-45d7-9ed9-84e4e7bcc798",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isAnnouncementQuery }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "pengumuman"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "a6d347cd-6818-4a9d-9bdd-20ed7a9f0348",
+                      "leftValue": "={{ $('Normalize WA Context').item.json.wa.isPresensiQuery }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "presensi"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "dc1193ba-d8c0-4c9e-ab17-f52a48ab1fa7",
+                      "leftValue": "={{ true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "none"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          60,
+          0
+        ],
+        "id": "8740dfe4-7c5b-440b-beb2-e4a2a742fb64",
+        "name": "Switch Vision Query"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({ days: 2 }).endOf('day').toISO() }}",
+          "options": {
+            "singleEvents": true
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          260,
+          -260
+        ],
+        "id": "1321a08e-d2f9-48cb-8262-e3348f3efe6c",
+        "name": "Get GCal Okta Agenda",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_OKTA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({ days: 2 }).endOf('day').toISO() }}",
+          "options": {
+            "singleEvents": true
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          460,
+          -260
+        ],
+        "id": "68a37f13-5085-4588-b020-af21880cc4f4",
+        "name": "Get GCal Okta Kuliah",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_AGENDA }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Makassar').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Makassar').plus({ days: 2 }).endOf('day').toISO() }}",
+          "options": {
+            "singleEvents": true
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          660,
+          -260
+        ],
+        "id": "36e8cd34-a407-4fcb-bd89-fb8ea55b5062",
+        "name": "Get GCal Manda Agenda",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "value": "={{ $env.GCAL_MANDA_KULIAH }}",
+            "mode": "id"
+          },
+          "returnAll": true,
+          "timeMin": "={{ $now.setZone('Asia/Makassar').startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Makassar').plus({ days: 2 }).endOf('day').toISO() }}",
+          "options": {
+            "singleEvents": true
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          860,
+          -260
+        ],
+        "id": "1c23533a-0bd5-4923-a40f-65843633dad9",
+        "name": "Get GCal Manda Kuliah",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "kXkpk4YfItv3zvuT",
+            "name": "Google Calendar account"
+          }
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "function extractEvents(nodeName, label, tz = 'Asia/Jakarta') {\n  let raw = [];\n  try {\n    raw = $(nodeName).all();\n  } catch (e) {}\n  \n  const valid = raw.filter(e => e.json && (e.json.summary || e.json.id));\n  if (valid.length === 0) return `${label}: Tidak ada jadwal.`;\n  \n  const lines = [];\n  for (const item of valid) {\n    const d = item.json;\n    const summary = d.summary || '(Tanpa judul)';\n    if (d.start?.date) {\n      lines.push(`  • ${summary} [Seharian - ${d.start.date}]`);\n    } else if (d.start?.dateTime) {\n      const start = new Date(d.start.dateTime);\n      const end = d.end?.dateTime ? new Date(d.end.dateTime) : null;\n      const startStr = start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz });\n      const endStr = end ? end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }) : '';\n      const dateStr = start.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', timeZone: tz });\n      const timeRange = endStr ? `${startStr} - ${endStr}` : startStr;\n      lines.push(`  • ${summary} (${dateStr}, ${timeRange})`);\n    }\n  }\n  return `${label}:\\n` + lines.join('\\n');\n}\n\nconst oktaKuliah = extractEvents('Get GCal Okta Kuliah', 'Jadwal Kuliah Okta', 'Asia/Jakarta');\nconst oktaAgenda = extractEvents('Get GCal Okta Agenda', 'Agenda Pribadi Okta', 'Asia/Jakarta');\nconst mandaKuliah = extractEvents('Get GCal Manda Kuliah', 'Jadwal Kuliah Kak Manda', 'Asia/Makassar');\nconst mandaAgenda = extractEvents('Get GCal Manda Agenda', 'Agenda Kak Manda', 'Asia/Makassar');\n\nconst visionText = `📅 DATA GOOGLE CALENDAR TERKINI (HARI INI & BESOK):\\n\\n${oktaKuliah}\\n\\n${oktaAgenda}\\n\\n${mandaKuliah}\\n\\n${mandaAgenda}`;\n\nconst prev = $('Format Memory Context').item.json;\nreturn [{\n  json: {\n    ...prev,\n    visionContext: visionText\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1080,
+          -260
+        ],
+        "id": "5ef6231d-ad11-4529-8c80-245e7ba8001c",
+        "name": "Format Calendar Vision"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://brone-auth:3000/get-siam-pengumuman",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { username: $env.BRONE_USERNAME, password: $env.BRONE_PASSWORD } }}",
+          "options": {
+            "timeout": 8000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          360,
+          -80
+        ],
+        "id": "f55548ee-5093-427e-a813-ebd13fd30060",
+        "name": "[HTTP] Get SIAM Pengumuman",
+        "continueOnFail": true
+      },
+      {
+        "parameters": {
+          "jsCode": "let raw = {};\ntry {\n  raw = $input.first().json;\n} catch (e) {}\n\nlet visionText = \"📢 DATA PENGUMUMAN SIAM UB TERKINI:\\n\";\nconst list = raw.data || [];\nif (Array.isArray(list) && list.length > 0) {\n  const entries = [];\n  for (const item of list.slice(0, 5)) {\n    const matkul = item.matkul || item.kode || \"Kuliah\";\n    const pList = item.daftar_pengumuman || [];\n    for (const p of pList.slice(0, 2)) {\n      entries.push(`• [${matkul} | ${p.tanggal || '-'}]: ${p.isi || '-'}`);\n    }\n  }\n  visionText += entries.length > 0 ? entries.join('\\n\\n') : \"(Tidak ada pengumuman baru di SIAM)\";\n} else {\n  visionText += \"(Tidak ada pengumuman baru dari SIAM UB saat ini)\";\n}\n\nconst prev = $('Format Memory Context').item.json;\nreturn [{\n  json: {\n    ...prev,\n    visionContext: visionText\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          -80
+        ],
+        "id": "1edc2b7e-6823-4d02-89af-d390a02dab5f",
+        "name": "Format Pengumuman Vision"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://brone-auth:3000/get-siam-presensi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { username: $env.BRONE_USERNAME, password: $env.BRONE_PASSWORD } }}",
+          "options": {
+            "timeout": 8000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          360,
+          80
+        ],
+        "id": "8f28b4d0-a79d-4bdf-a0c0-09c72c27112a",
+        "name": "[HTTP] Get SIAM Presensi",
+        "continueOnFail": true
+      },
+      {
+        "parameters": {
+          "jsCode": "let raw = {};\ntry {\n  raw = $input.first().json;\n} catch (e) {}\n\nlet visionText = \"📋 STATUS PRESENSI SIAM UB HARI INI:\\n\";\nconst list = raw.data || [];\nif (Array.isArray(list) && list.length > 0) {\n  const entries = [];\n  for (const item of list) {\n    entries.push(`• ${item.nama || item.matkul || 'Kuliah'}: Status ${item.status || 'Tersedia'}`);\n  }\n  visionText += entries.join('\\n');\n} else {\n  visionText += \"(Belum ada jadwal presensi yang aktif atau semua kelas hari ini sudah terpresensi)\";\n}\n\nconst prev = $('Format Memory Context').item.json;\nreturn [{\n  json: {\n    ...prev,\n    visionContext: visionText\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          80
+        ],
+        "id": "bd94bd5b-36e8-4203-9aa6-8b934fea52bb",
+        "name": "Format Presensi Vision"
+      },
+      {
+        "parameters": {
+          "jsCode": "const prev = $('Format Memory Context').item.json;\nreturn [{\n  json: {\n    ...prev,\n    visionContext: \"\"\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          360,
+          240
+        ],
+        "id": "f99c2363-d470-4589-8208-1c940bd271f0",
+        "name": "Format Default Vision"
+      },
+      {
+        "parameters": {
+          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags: <<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const target = match[2].toLowerCase();\n  const detail = match[3].trim();\n  \n  const cmd = actionType === 'tugas' ? '/tugas' : '/jadwal';\n  const commandText = target === 'manda'\n    ? `${cmd} manda ${detail}`\n    : `${cmd} ${detail}`;\n\n  actions.push({\n    actionType,\n    target,\n    detail,\n    commandText\n  });\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1080,
+          -20
+        ],
+        "id": "code-proc-actions-okta",
+        "name": "Process AI Output & Actions"
+      },
+      {
+        "parameters": {
+          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags: <<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const target = match[2].toLowerCase();\n  const detail = match[3].trim();\n  \n  const cmd = actionType === 'tugas' ? '/tugas' : '/jadwal';\n  const commandText = target === 'manda'\n    ? `${cmd} manda ${detail}`\n    : `${cmd} ${detail}`;\n\n  actions.push({\n    actionType,\n    target,\n    detail,\n    commandText\n  });\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:(TUGAS|JADWAL)\\|(okta|manda)\\|(.*?)>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1080,
+          -220
+        ],
+        "id": "code-proc-actions-manda",
+        "name": "Process AI Output & Actions1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "action-cond-01",
+                "leftValue": "={{ $json.hasActions }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1340,
+          -100
+        ],
+        "id": "if-has-cal-actions",
+        "name": "If Has Calendar Actions"
+      },
+      {
+        "parameters": {
+          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\n\nif (!actions || actions.length === 0) {\n  return [];\n}\n\nconst items = [];\nconst defaultOktaNumber = $env.MY_WA_NUMBER || \"${$env.MY_WA_NUMBER}\";\nconst defaultMandaNumber = $env.MANDA_WA_NUMBER || \"${$env.MANDA_WA_NUMBER}\";\n\nfor (const act of actions) {\n  const isMandaTarget = act.target === 'manda';\n  const senderNumber = isMandaTarget ? defaultMandaNumber : defaultOktaNumber;\n  const remoteJid = wa.remoteJid || `${senderNumber}@s.whatsapp.net`;\n\n  items.push({\n    json: {\n      target: act.target,\n      actionType: act.actionType,\n      detail: act.detail,\n      commandText: act.commandText,\n      body: {\n        data: {\n          key: {\n            remoteJid: remoteJid,\n            participant: `${senderNumber}@s.whatsapp.net`,\n            participantAlt: `${senderNumber}@s.whatsapp.net`\n          },\n          message: {\n            conversation: act.commandText\n          }\n        }\n      }\n    }\n  });\n}\n\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1540,
+          -100
+        ],
+        "id": "code-prep-cal-payloads",
+        "name": "Prepare Calendar Payloads"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "target-okta-cond",
+                      "leftValue": "={{ $json.target }}",
+                      "rightValue": "okta",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "okta"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "target-manda-cond",
+                      "leftValue": "={{ $json.target }}",
+                      "rightValue": "manda",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1740,
+          -100
+        ],
+        "id": "switch-cal-target",
+        "name": "Switch Target Calendar"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "U43zT3sJktIA9LaL",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/U43zT3sJktIA9LaL",
+            "cachedResultName": "wa-to-gcal-assistant"
+          },
+          "mode": "each",
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1980,
+          -180
+        ],
+        "id": "call-okta-gcal-subwf",
+        "name": "Call 'wa-to-gcal-assistant'"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "TcoP1qZ8e4dvKU9F",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/TcoP1qZ8e4dvKU9F",
+            "cachedResultName": "manda-gcal-assistant"
+          },
+          "mode": "each",
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1980,
+          -20
+        ],
+        "id": "call-manda-gcal-subwf",
+        "name": "Call 'manda-to-gcal-assistant'"
+      }
+    ],
+    "connections": {
+      "wa-msg": {
+        "main": [
+          [
+            {
+              "node": "Normalize WA Context",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize WA Context": {
+        "main": [
+          [
+            {
+              "node": "[PG] Save Incoming Chat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[PG] Save Incoming Chat": {
+        "main": [
+          [
+            {
+              "node": "[PG] Fetch History",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[PG] Fetch History": {
+        "main": [
+          [
+            {
+              "node": "Format Memory Context",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Memory Context": {
+        "main": [
+          [
+            {
+              "node": "Switch Vision Query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Javascript Randomize API Key 1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Javascript Randomize API Key 1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Javascript Randomize API Key ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Javascript Randomize API Key 1": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Gemini Build Message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Javascript Randomize API Key ": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Gemini Build Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Gemini Build Message1": {
+        "main": [
+          [
+            {
+              "node": "Process AI Output & Actions1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Gemini Build Message": {
+        "main": [
+          [
+            {
+              "node": "Process AI Output & Actions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP Whatsapp] Send Message2": {
+        "main": [
+          [
+            {
+              "node": "[PG] Save Bot Reply",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Titip Pesan",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP Whatsapp] Send Message1": {
+        "main": [
+          [
+            {
+              "node": "[PG] Save Bot Reply",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Titip Pesan",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Titip Pesan": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Forward Note to Target",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP Whatsapp] Send Message": {
+        "main": [
+          [
+            {
+              "node": "[PG] Save Bot Reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Prepare Media Payload",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Media Payload": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Evolution Get Base64",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Evolution Get Base64": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Evolution Send Sticker",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Has Audio": {
+        "main": [
+          [
+            {
+              "node": "Prepare Audio Payload",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Audio Payload": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Evolution Get Base64 Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Evolution Get Base64 Audio": {
+        "main": [
+          [
+            {
+              "node": "Attach Audio Base64",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Attach Audio Base64": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch Vision Query": {
+        "main": [
+          [
+            {
+              "node": "Get GCal Okta Agenda",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP] Get SIAM Pengumuman",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP] Get SIAM Presensi",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Format Default Vision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get GCal Okta Agenda": {
+        "main": [
+          [
+            {
+              "node": "Get GCal Okta Kuliah",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get GCal Okta Kuliah": {
+        "main": [
+          [
+            {
+              "node": "Get GCal Manda Agenda",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get GCal Manda Agenda": {
+        "main": [
+          [
+            {
+              "node": "Get GCal Manda Kuliah",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get GCal Manda Kuliah": {
+        "main": [
+          [
+            {
+              "node": "Format Calendar Vision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Calendar Vision": {
+        "main": [
+          [
+            {
+              "node": "If Has Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Get SIAM Pengumuman": {
+        "main": [
+          [
+            {
+              "node": "Format Pengumuman Vision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Pengumuman Vision": {
+        "main": [
+          [
+            {
+              "node": "If Has Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP] Get SIAM Presensi": {
+        "main": [
+          [
+            {
+              "node": "Format Presensi Vision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Presensi Vision": {
+        "main": [
+          [
+            {
+              "node": "If Has Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Default Vision": {
+        "main": [
+          [
+            {
+              "node": "If Has Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process AI Output & Actions": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Calendar Actions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process AI Output & Actions1": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Calendar Actions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Has Calendar Actions": {
+        "main": [
+          [
+            {
+              "node": "Prepare Calendar Payloads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Calendar Payloads": {
+        "main": [
+          [
+            {
+              "node": "Switch Target Calendar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch Target Calendar": {
+        "main": [
+          [
+            {
+              "node": "Call 'wa-to-gcal-assistant'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'manda-to-gcal-assistant'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call 'wa-to-gcal-assistant'": {
+        "main": [
+          []
+        ]
+      },
+      "Call 'manda-to-gcal-assistant'": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate",
+      "timeSavedMode": "fixed",
+      "timezone": "Asia/Jakarta",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "55186b7d-1717-44fa-b29d-65740ba33719",
+    "activeVersionId": "55186b7d-1717-44fa-b29d-65740ba33719",
+    "versionCounter": 661,
+    "triggerCount": 0,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-05-05T15:46:35.418Z",
+        "createdAt": "2026-05-05T15:46:35.418Z",
+        "role": "workflow:owner",
+        "workflowId": "WmvJdI22Wr5O1k9y",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

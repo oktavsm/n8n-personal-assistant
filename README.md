@@ -1,268 +1,239 @@
-# n8n Personal Assistant
+# ⚡ n8n Personal Assistant & Academic Co-Pilot
 
-This repository is my personal automation hub built on n8n.
+[![n8n](https://img.shields.io/badge/n8n-v2.14.2-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Evolution API](https://img.shields.io/badge/Evolution_API-v2-00E676?logo=whatsapp&logoColor=white)](https://github.com/EvolutionAPI/evolution-api)
+[![Google Gemini](https://img.shields.io/badge/Gemini_3.5_Flash_Lite-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
+[![Docker](https://img.shields.io/badge/Docker_Compose-Multi--Container-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
+[![Timezone](https://img.shields.io/badge/Timezone-WIB_(UTC%2B7)_%26_WITA_(UTC%2B8)-blue)](#-multi-timezone-synchronization)
 
-It started as a single email notifier, then evolved into a multi-workflow personal assistant for daily reminders, campus tasks, and WhatsApp-driven automation.
+An enterprise-grade, multi-workflow personal automation system built on **n8n**, **Docker**, **PostgreSQL**, **Evolution API (WhatsApp)**, and **Google Gemini 3.5 Flash Lite / 2.5 Flash**.
 
-All exported workflows in this repo are sanitized for public sharing.
+What began as an email notifier has evolved into an autonomous personal assistant for daily agendas, multi-user calendar scheduling, university academic monitoring (Universitas Brawijaya SIAM & Brone LMS), voice-note understanding, multimodal vision, bidirectional partner messaging, and remote VPS administration.
 
-## 📸 Project Showcase
+---
 
-### 1. User Experience (WhatsApp Bot View)
-Here is how the assistant interacts on WhatsApp.
+## 📸 Showcase & User Experience
 
-| 🤖 Main Menu (`/help`) | 🚨 Auto-Notifier (SIAM/Brone) | 📅 GCal Integration |
+### 1. Interactive WhatsApp Interface
+| 🤖 Natural Language & Actions | 📅 Calendar Confirmation Card | 📚 Academic & SIAM Notifier |
 | :---: | :---: | :---: |
-| <img src="./assets/screenshot/help.jpeg" width="250"> | <img src="./assets/screenshot/pengumuman.jpeg" width="250"> | <img src="./assets/screenshot/jadwal.jpeg" width="250"> |
-| *List of available commands.* | *The bot sends attendance/announcement notifications.* | *The bot manages schedule creation via chat.* |
+| <img src="./assets/screenshot/help.jpeg" width="260" alt="Bot Chat View"> | <img src="./assets/screenshot/jadwal.jpeg" width="260" alt="GCal Card"> | <img src="./assets/screenshot/pengumuman.jpeg" width="260" alt="SIAM View"> |
+| *Conversational multi-turn memory & natural task creation* | *Instant GCal booking & automated WhatsApp confirmation* | *Automated SIAM class announcements & attendance alerts* |
 
-<br>
+---
 
-### 2. Under the Hood (n8n Architecture)
-The backend architecture uses a *Master-Sub Workflow* approach to avoid *webhook* conflicts and make scaling easier.
+## 🏛️ System Architecture
 
-| Master Router (Main Entry Point) | SIAM Automation Logic (Puppeteer + API) |
-| :---: | :---: |
-| <img src="./assets/screenshot/master-router.png" width="400"> | <img src="./assets/screenshot/siam-announcement.png" width="400"> |
-| *Receives messages, filters keywords, and executes sub-workflows.* | *Loops and filters SIAM schedule/announcement data.* |
+```mermaid
+flowchart TD
+    subgraph WhatsApp["📱 WhatsApp Layer"]
+        UserOkta["👤 Okta (WIB / UTC+7)"]
+        UserManda["👩 Kak Manda (WITA / UTC+8)"]
+        GroupChat["👥 Dev & Family Groups"]
+        EvoAPI["📡 Evolution API (v2)"]
+    end
 
-## Tech Stack
+    UserOkta --> EvoAPI
+    UserManda --> EvoAPI
+    GroupChat --> EvoAPI
 
-- n8n
-- Evolution API (WhatsApp gateway)
-- PostgreSQL
-- Gemini 2.5 Flash
-- Custom `brone-auth` helper service
+    subgraph CoreRouter["🔀 Router & Webhook"]
+        EvoAPI -->|"Webhook: /webhook/wa-assistant"| MasterRouter["master-router-webhook\n(yViHMhfkTHv6uNFC)"]
+    end
 
-## Services Overview
+    subgraph ConversationalCore["🧠 Conversational & Action Core"]
+        MasterRouter -->|"Private Chat / @Mention / /ask"| WAC["wa-conversation\n(WmvJdI22Wr5O1k9y)"]
+        WAC --> NormalizeContext["Normalize Context\n(LID, Name, WIB/WITA dates)"]
+        NormalizeContext --> PGChatMemory[("🐘 PostgreSQL\nwa_chat_memory\n(40 turns / 14 days)")]
+        PGChatMemory --> VisionBranch["Vision Context\n(GCal, SIAM, Presensi)"]
+        VisionBranch --> AudioBranch["Audio Pipeline\n(Gemini 2.5 Flash)"]
+        AudioBranch --> LLMReasoning["Gemini 3.5 Flash Lite\n(Action Tag Engine)"]
+        LLMReasoning --> ActionParser["[Code] Parse Actions & Clean Text"]
+        ActionParser -->|"Send Chat Reply"| SendWAReply["[HTTP] Send WA Message"]
+        ActionParser -->|"If Has Actions"| ActionDispatcher["Action Dispatcher\n(mode: each)"]
+    end
 
-- `db` (PostgreSQL)
-  - Stores data for both n8n (`n8n_db`) and Evolution API (`evo_db`).
-- `n8n`
-  - Workflow orchestrator and webhook entrypoint.
-- `evolution-api`
-  - WhatsApp gateway used by notification and command workflows.
-- `brone-auth`
-  - Internal helper API (Puppeteer-based) that logs in to Brone/SIAM and fetches academic data for n8n workflows.
+    subgraph CalendarSuite["📅 Google Calendar Suite"]
+        ActionDispatcher -->|"Target: Okta"| WAGCal["wa-to-gcal-assistant\n(U43zT3sJktIA9LaL)"]
+        ActionDispatcher -->|"Target: Manda"| MandaGCal["manda-gcal-assistant\n(TcoP1qZ8e4dvKU9F)"]
+        MasterRouter -->|"/jadwal, /tugas, /cek"| WAGCal
+        MasterRouter -->|"/jadwal manda, /tugas manda"| MandaGCal
+        WAGCal --> GCalOkta[("Google Calendar\nOkta (WIB)")]
+        MandaGCal --> GCalManda[("Google Calendar\nManda (WITA)")]
+        Cron1m["Cron (1 min)"] --> GCalReminder["gcal-to-wa-assistant\n(eCtWrmeyciUgg8f2)"]
+        GCalReminder -->|"Anti-Spam Filter & StaticData"| EvoAPI
+    end
 
-## Current Workflows
+    subgraph AcademicSuite["🎓 Academic & Automation Suite (UB SIAM & Brone)"]
+        BroneCron["Cron Monitor"] --> BroneTask["automatic-brone-task-notifier\n(hpEygIQDgIYN7IVy)"]
+        SIAMPresensiCron["Cron Monitor"] --> SIAMPresensi["siam-presensi-notifier\n(H5lVT2ani2aaNkyV)"]
+        SIAMPengumumanCron["Cron Monitor"] --> SIAMPengumuman["siam-announcement-notifier\n(OOvaMsCEOkqLuIL8)"]
+        BroneTask --> BroneAuth["brone-auth\n(Node.js + Puppeteer)"]
+        SIAMPresensi --> BroneAuth
+        SIAMPengumuman --> BroneAuth
+        BroneAuth -->|"Keycloak API / Cloudflare Bypass"| SIAMAPI["SIAM / Brone UB"]
+    end
 
-Located in `n8n/workflow/`:
-
-- `automatic-email-notifier-workflow.json`
-  - Reads incoming email, summarizes with Gemini, and sends notification to WhatsApp/Discord.
-- `wa-to-gcal-assistant.json`
-  - Reads WhatsApp command and creates Google Calendar events.
-- `gcal-to-wa-assistant.json`
-  - Periodically checks calendar windows and sends smart reminders to WhatsApp.
-- `automatic-brone-task-notifier.json`
-  - Monitors Brone task updates and sends notifications.
-- `siam-announcement-notifier.json`
-  - Sends SIAM announcement reminders to WhatsApp.
-- `siam-presensi-notifier.json`
-  - Sends SIAM attendance/presence reminders to WhatsApp.
-- `router-webhook.json`
-  - Central webhook router for WhatsApp command routing and response handling.
-
-## Repository Structure
-
-```text
-.
-├── docker-compose.yaml
-├── .env.example
-├── init-dbs.sh
-├── brone-auth/
-│   ├── Dockerfile
-│   ├── package.json
-│   └── server.js
-└── n8n/
-    └── workflow/
-        ├── automatic-brone-task-notifier.json
-        ├── automatic-email-notifier-workflow.json
-        ├── gcal-to-wa-assistant.json
-        ├── router-webhook.json
-        ├── siam-announcement-notifier.json
-        ├── siam-presensi-notifier.json
-        └── wa-to-gcal-assistant.json
+    subgraph ManagementOps["🛠️ Management, Ops & Telemetry"]
+        MasterRouter -->|"/agent, /vps"| VPSRunner["vps-cli-runner\n(vpsCLIRunner0001)"]
+        VPSRunner -->|"SSH Execution"| ServerHost["Host VPS (pg-bcc)"]
+        HousekeepingCron["Cron (Daily)"] --> MemCleanup["memory-housekeeping-cron\n(memHousekeep01)"]
+        MemCleanup -->|"Prune > 30d"| PGChatMemory
+        ErrorTrigger["Any Workflow Error"] --> GlobalError["global-error-notifier\n(ERRnotif01UB2026)"]
+        GlobalError -->|"Urgent Alert"| UserOkta
+    end
 ```
 
-## Sanitized Placeholders
+---
 
-Sensitive values were replaced with placeholders in workflow exports:
+## 🌟 Key Capabilities
 
-- `{{GEMINI_API_KEY_PLACEHOLDER}}`
-- `{{WHATSAPP_TARGET_NUMBER}}`
-- `{{WA_INSTANCE_NAME}}`
-- `{{PRIMARY_CALENDAR_ID}}`
-- `{{GOOGLE_CALENDAR_ID}}`
-- `{{WEBHOOK_ID}}`
-- `{{DISCORD_WEBHOOK_USERNAME}}`
-- `{{CONTACT_PERSON_1}}`
-- `{{CONTACT_PERSON_2}}`
-- `{{N8N_INSTANCE_ID}}`
-- `{{N8N_CREDENTIAL_ID}}`
+### 1. 🎯 Natural Language Action Triggering
+The assistant doesn't just chat—it **takes direct action**. Users can talk conversationally or reference past messages, and the assistant will automatically parse parameters, resolve dates, and trigger the appropriate sub-workflow to create the event in Google Calendar:
+* **Example:** `@n8n buatin tugas yang aku sebut tadi (di chat sebelumnya ada tugas ppt) deadlinenya lusa jam 23.59`
+  1. AI inspects PostgreSQL conversation memory (`wa_chat_memory`), finds *PPT Pengabdian* and *PPT Scope*.
+  2. Resolves relative time: "lusa jam 23.59" $\rightarrow$ `Kamis, 22 Oktober 2026 jam 23.59 WIB`.
+  3. Emits discrete action tags:
+     ```text
+     <<<ACTION:TUGAS|okta|PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59>>>
+     <<<ACTION:TUGAS|okta|PPT Scope deadline Kamis 22 Oktober 2026 jam 23.59>>>
+     ```
+  4. Automatically dispatches each item into `wa-to-gcal-assistant` (`mode: each`).
+  5. Both tasks are created in Google Calendar and official confirmation cards are sent to the WhatsApp chat room.
 
-Replace these values after importing workflows into your own n8n instance.
+### 2. 👥 Dual-User & Multi-Timezone Architecture
+* **Okta:** Localized to **WIB (Asia/Jakarta, UTC+7)**. Controls personal agendas, university courses, and developer tools.
+* **Kak Manda:** Localized to **WITA (Asia/Makassar, UTC+8)**. Manages pharmacy school coursework, clinical agendas, and personal reminders.
+* **Cross-Calendar Scheduling:** Okta can request tasks/agendas for Kak Manda (`target: manda`), and Kak Manda can request tasks/agendas for Okta (`target: okta`).
 
-## Setup
+### 3. 🎙️ Multimodal Voice Notes & Vision Injection
+* **Voice Notes (VN):** Outbound audio messages in private chats or groups are converted to Base64, processed by `gemini-2.5-flash` with native audio understanding, and answered immediately.
+* **Vision Queries:** When users ask about schedules, SIAM announcements, or attendance, the system queries live data upstream and injects it as `visionContext` into Gemini 3.5 Flash Lite, preventing hallucinations.
 
-1. Clone repository.
+### 4. 💌 Bidirectional Note Relay (Titip Pesan)
+* Okta can say: *"Titip pesan ke Manda: jangan lupa minum vitamin ya"* $\rightarrow$ Bot automatically forwards the formatted note directly to Kak Manda's WhatsApp.
+* Kak Manda can say: *"Titip pesan ke Okta: nanti malam kabarin ya"* $\rightarrow$ Bot forwards it directly to Okta.
 
-```bash
-git clone https://github.com/<your-username>/n8n-personal-assistant.git
-cd n8n-personal-assistant
-```
+### 5. 🤖 Autonomous VPS Agent (`/agent` & `/vps`)
+* Send `/agent <prompt>` or `/vps <command>` on WhatsApp to execute server maintenance, inspect Docker containers, check RAM/disk usage, or trigger script automation safely via `vps-cli-runner`.
 
-2. Create environment file.
+### 6. 🧠 Chronological PostgreSQL Memory (40 Turns / 14 Days)
+* Chat history is siloed strictly by `room_jid` (private chat Okta, private chat Kak Manda, group chats are completely separated for privacy).
+* Queries the latest **40 messages** across **14 days**, reversed chronologically (`oldest -> newest`) with intelligent timestamps (`[10.19]` for today, `[18 Okt, 15.30]` for prior dates) to preserve context.
+* Background cron (`memory-housekeeping-cron`) prunes records older than 30 days.
+
+### 7. 🛡️ GCal Anti-Spam & Deduplication
+* Prevents Google Calendar API overlap spam using strict minute checks (`diffMinutes === targetMinute`) and `$getWorkflowStaticData('global')` state deduplication across 15m, 30m, 60m, 12h, and 36h windows.
+
+---
+
+## 📦 Complete Workflows Catalog (15 Workflows)
+
+| # | Workflow Name | Workflow ID | Trigger | Description |
+|---|---|---|---|---|
+| 1 | **master-router-webhook** | `yViHMhfkTHv6uNFC` | Webhook (`/wa-assistant`) | Central webhook router from Evolution API; routes commands, mentions, and private chats |
+| 2 | **wa-conversation** | `WmvJdI22Wr5O1k9y` | Sub-workflow | Multimodal conversational assistant, voice note processing, memory retrieval & action trigger engine |
+| 3 | **wa-to-gcal-assistant** | `U43zT3sJktIA9LaL` | Sub-workflow / Slash | Creates events & checks Okta's Google Calendar (`GCAL_OKTA_AGENDA`, `GCAL_OKTA_TUGAS`) |
+| 4 | **manda-gcal-assistant** | `TcoP1qZ8e4dvKU9F` | Sub-workflow / Slash | Creates events & checks Kak Manda's Google Calendar (`GCAL_MANDA_AGENDA`, `GCAL_MANDA_TUGAS`) |
+| 5 | **gcal-to-wa-assistant** | `eCtWrmeyciUgg8f2` | Cron (Every 1 min) | Proactive agenda reminders (15m, 30m, 60m, 12h, 36h) with stateful anti-spam deduplication |
+| 6 | **automatic-email-notifier-workflow** | `GNtnCWmLXbMF5iON` | IMAP / Email | Summarizes urgent incoming emails with Gemini and alerts WhatsApp |
+| 7 | **automatic-brone-task-notifier** | `hpEygIQDgIYN7IVy` | Cron | Scrapes Brone LMS course tasks via `brone-auth` and pushes assignment notifications |
+| 8 | **siam-announcement-notifier** | `OOvaMsCEOkqLuIL8` | Cron | Fetches university announcements from UB SIAM API and notifies students |
+| 9 | **siam-presensi-notifier** | `H5lVT2ani2aaNkyV` | Cron | Monitors daily lecture attendance slots on UB SIAM and reminds to check in |
+| 10 | **vps-cli-runner** | `vpsCLIRunner0001` | Sub-workflow | Executes shell commands & Codex tasks securely on the VPS host |
+| 11 | **memory-housekeeping-cron** | `memHousekeep01` | Cron (Daily at 03:00) | Prunes conversation memory in `wa_chat_memory` older than 30 days |
+| 12 | **global-error-notifier** | `ERRnotif01UB2026` | Error Trigger | Catch-all error workflow sending structured crash alerts to WhatsApp |
+| 13 | **personal-porto-chatbot** | `vunnMOdxPHnUhABI` | Webhook | Portfolio interactive Q&A assistant |
+| 14 | **personal-porto-generate-article** | `wmv1KZ32E8OnHmYc` | Webhook | Content generation workflow for tech portfolio articles |
+| 15 | **My workflow 4** | `M8b8EyT5nJkzsGPQ` | Manual / Sub-workflow | Custom utility and testing pipeline |
+
+---
+
+## 💬 WhatsApp Command Reference
+
+### Google Calendar Commands
+| Command | Target | Description |
+|---|---|---|
+| `/cek` | Okta / Manda | Check schedule for today |
+| `/besok` | Okta / Manda | Check schedule for tomorrow |
+| `/agenda` | Okta / Manda | View upcoming agenda for the next 7 days |
+| `/tugas` | Okta / Manda | View pending academic deadlines and tasks |
+| `/uas` | Okta / Manda | Check exam schedule |
+| `/jadwal <detail>` | Okta / Manda | Create a calendar event (e.g. `/jadwal Meeting Tim besok jam 14.00`) |
+| `/tugas <detail>` | Okta / Manda | Create a task deadline (e.g. `/tugas Laporan PAPB Jumat jam 23.59`) |
+
+### Conversational & Natural Language Actions
+| Natural Input | Target | Behavior |
+|---|---|---|
+| `"@n8n buatin tugas PPT deadlinenya lusa jam 23.59"` | Okta / Manda | Auto-extracts tasks, triggers `wa-to-gcal-assistant`, books in Google Calendar |
+| `"@n8n catat agenda meeting koordinasi besok jam 10 pagi"` | Okta / Manda | Auto-extracts meeting time, books in Google Calendar agenda |
+| `"titip pesan ke manda: semangat ya praktikumnya"` | Relay | Relays formatted card to Kak Manda's WhatsApp |
+| `[Voice Note]` | Conversational | Transcribes audio via Gemini 2.5 Flash, answers naturally or executes actions |
+
+### VPS & Developer Commands
+| Command | Access | Description |
+|---|---|---|
+| `/agent <prompt>` | Okta Only | Autonomous server agent execution |
+| `/vps <command>` | Okta Only | Direct bash command execution (e.g. `/vps docker ps`, `/vps df -h`) |
+| `/stiker` or `/sticker` | General | Converts media image into WhatsApp sticker |
+
+---
+
+## ⚙️ Environment Variables Reference
+
+Copy `.env.example` to `.env` and fill in your credentials:
 
 ```bash
 cp .env.example .env
 ```
 
-3. Fill required variables in `.env`.
+| Variable | Description |
+|---|---|
+| `DB_USER`, `DB_PASSWORD`, `DB_NAME` | PostgreSQL credentials for `notifier_db` (`n8n_db` and `evo_db`) |
+| `N8N_ENCRYPTION_KEY` | 32-character random string for encrypting n8n credentials |
+| `N8N_USER`, `N8N_PASSWORD` | Basic Auth login for n8n web UI |
+| `N8N_PORT`, `EVO_PORT` | Port mappings (Default: n8n `5679->5678`, Evolution `9001->8080`) |
+| `WA_API_TOKEN` | Evolution API Global API Token for authenticating HTTP requests |
+| `GEMINI_API_KEY` | Google Gemini API key(s) (comma-separated for auto-rotation) |
+| `MY_WA_NUMBER` | Okta's WhatsApp number in international format (`628xxxxxxxxx`) |
+| `MANDA_WA_NUMBER` | Kak Manda's WhatsApp number (`628xxxxxxxxx`) |
+| `WA_GROUP_DEV`, `WA_GROUP_NOTIF` | Whitelisted WhatsApp group JIDs (`xxxx@g.us`) |
+| `GCAL_OKTA_AGENDA`, `GCAL_OKTA_TUGAS` | Google Calendar IDs for Okta's events and deadlines |
+| `GCAL_MANDA_AGENDA`, `GCAL_MANDA_TUGAS`| Google Calendar IDs for Kak Manda's events and deadlines |
+| `BRONE_USERNAME`, `BRONE_PASSWORD` | University SIAM/Brone credentials used by `brone-auth` |
 
-Minimum required:
-- `DB_USER`
-- `DB_PASSWORD`
-- `BRONE_USERNAME`
-- `BRONE_PASSWORD`
-- `N8N_ENCRYPTION_KEY`
-- `N8N_PORT`
-- `EVO_PORT`
-- `WA_API_TOKEN`
-- `GEMINI_API_KEY`
+---
 
-Important compose notes:
-- `docker-compose.yaml` currently sets `N8N_HOST` and `WEBHOOK_URL` to a fixed domain (`oktaavsm.bccdev.id`).
-- If you run locally or on another server, update those values in `docker-compose.yaml` first.
-- Named volumes are configured as external:
-  - `email-notifier_postgres_data`
-  - `email-notifier_evolution_instances`
-  Create them before first run if they do not exist.
+## 🚀 Deployment & Workflow Synchronization
 
-4. Start services.
-
+### 1. Launch with Docker Compose
 ```bash
-docker volume create email-notifier_postgres_data
-docker volume create email-notifier_evolution_instances
-docker compose up -d --build
-docker compose ps
+docker compose up -d
 ```
 
-## brone-auth API Endpoints
-
-`brone-auth` is consumed internally by n8n workflows and exposes these endpoints:
-
-- `POST /get-cookies`
-  - Logs in to Brone and returns `cookieString` plus `sesskey`.
-- `POST /get-siam-pengumuman`
-  - Logs in to SIAM and returns filtered class announcements.
-- `POST /get-siam-presensi`
-  - Logs in to SIAM and returns active attendance/presence data.
-
-These endpoints run on the internal Docker network (`http://brone-auth:3000`) and are not meant to be exposed publicly.
-
-## Evolution API Instance Setup
-
-After containers are running, create and connect your WhatsApp instance.
-
-1. Create instance.
-
+### 2. Bidirectional Workflow Synchronization
+To pull all 15 workflows from the remote VPS n8n container to the local repository:
 ```bash
-curl --location --request POST 'http://localhost:<EVO_PORT>/instance/create' \
-  --header 'apikey: <WA_API_TOKEN>' \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-    "instanceName": "<WA_INSTANCE_NAME>",
-    "qrcode": true,
-    "integration": "WHATSAPP-BAILEYS"
-  }'
+./scripts/sync-workflows.sh
+```
+* Exports workflows cleanly.
+* Formats JSON with pretty-indentation.
+* Scans automatically for leaked credentials or API keys.
+
+### 3. Deploy Workflows to Remote VPS
+```bash
+python3 scripts/deploy_workflows.py
 ```
 
-2. Request connect data / QR.
+---
 
-```bash
-curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connect/<WA_INSTANCE_NAME>' \
-  --header 'apikey: <WA_API_TOKEN>'
-```
+## 🔒 Security & Privacy Audit
+* All workflow JSON files are strictly sanitized before commit: **0 hardcoded credentials, API keys, passwords, or personal phone numbers**.
+* All sensitive credentials and endpoints utilize `$env.*` expressions.
+* Automated security scanning script (`scripts/sanitize_credentials_and_privacy.py`) runs in the CI/CD pipeline to block accidental secret leaks.
 
-3. Scan the QR from your WhatsApp app.
+---
 
-4. Verify connection status.
-
-```bash
-curl --location --request GET 'http://localhost:<EVO_PORT>/instance/connectionState/<WA_INSTANCE_NAME>' \
-  --header 'apikey: <WA_API_TOKEN>'
-```
-
-If the state is `open` or `connected`, the instance is ready.
-
-5. Set Webhook to n8n Router.
-
-```bash
-curl --location --request POST 'http://localhost:<EVO_PORT>/webhook/set/<WA_INSTANCE_NAME>' \
-  --header 'apikey: <WA_API_TOKEN>' \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-    "webhook": "[http://oktaavsm.bccdev.id/n8n/webhook/wa-assistant](http://oktaavsm.bccdev.id/n8n/webhook/wa-assistant)",
-    "events": ["MESSAGES_UPSERT"]
-  }'
-  ```
-
-## Import and Configure Workflows
-
-1. Open n8n at `http://localhost:<N8N_PORT>`.
-2. Import all files from `n8n/workflow/`.
-3. Recreate or rebind credentials in n8n:
-   - IMAP
-   - Google Calendar OAuth2
-   - HTTP Header Auth (Evolution API)
-   - Discord Webhook (if used)
-4. For Brone/SIAM workflows, make sure request bodies include valid credentials (`BRONE_USERNAME`, `BRONE_PASSWORD`) and required course metadata where applicable.
-5. Replace placeholder values in each workflow.
-6. Run manual test execution for each workflow.
-7. Activate workflows.
-
-## Security Notes
-
-- Keep `.env` private.
-- Do not commit real secrets into workflow exports.
-- Rotate credentials immediately if previously exposed.
-- Put n8n and Evolution API behind HTTPS reverse proxy for public deployments.
-
-## Storage Full Prevention
-
-This repo now includes two built-in protections:
-
-- Docker log rotation on every service (`max-size` + `max-file`) via `docker-compose.yaml`
-- `ops/storage-guard.sh` for threshold-based cleanup of unused Docker artifacts
-
-Run manually:
-
-```bash
-bash ops/storage-guard.sh
-```
-
-Recommended weekly cron on host:
-
-```bash
-0 3 * * 0 cd /path/to/n8n-personal-assistant && /usr/bin/env bash ops/storage-guard.sh >> /var/log/storage-guard.log 2>&1
-```
-
-Optional environment knobs for the guard script:
-
-- `DISK_THRESHOLD_PERCENT` (default `85`)
-- `CONTAINER_PRUNE_UNTIL` (default `168h`)
-- `IMAGE_PRUNE_UNTIL` (default `240h`)
-- `BUILDER_PRUNE_UNTIL` (default `240h`)
-- `JOURNAL_RETENTION` (default `7d`)
-- `ENABLE_VOLUME_PRUNE` (default `false`, keep this off unless you really want dangling volumes removed)
-
-## Useful Commands
-
-```bash
-docker compose up -d --build
-docker compose down
-docker compose logs -f
-docker compose ps
-```
+## 📄 License
+MIT License. Built with ❤️ for personal productivity and academic automation.

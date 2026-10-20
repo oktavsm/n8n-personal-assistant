@@ -1,0 +1,132 @@
+[
+  {
+    "updatedAt": "2026-10-19T13:31:08.492Z",
+    "createdAt": "2026-10-19T13:07:40.698Z",
+    "id": "ERRnotif01UB2026",
+    "name": "global-error-notifier",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          300
+        ],
+        "id": "c01824ab-0101-447a-8fbb-91bc3501a001",
+        "name": "Error Trigger"
+      },
+      {
+        "parameters": {
+          "jsCode": "const err = $input.first().json;\nconst wf = err.workflow || {};\nconst exec = err.execution || {};\nconst errorObj = exec.error || {};\n\nconst wfName = wf.name || 'Unknown Workflow';\nconst wfId = wf.id || '-';\nconst execId = exec.id || '-';\nconst lastNode = exec.lastNodeExecuted || '-';\nconst errorMessage = errorObj.message || 'Tidak ada pesan error spesifik.';\nconst execUrl = exec.url || `https://oktaavsm.bccdev.id/n8n/execution/${execId}`;\n\nconst timeStr = new Date().toLocaleString('id-ID', {\n  timeZone: 'Asia/Jakarta',\n  dateStyle: 'full',\n  timeStyle: 'medium',\n});\n\nconst message = `🚨 *ALERT: WORKFLOW ERROR TERDETEKSI!*\n\n📌 *Workflow:* ${wfName}\n🆔 *ID:* \\`${wfId}\\`\n⚙️ *Node Error:* \\`${lastNode}\\`\n🕒 *Waktu:* ${timeStr} WIB\n\n❌ *Detail Error:*\n${errorMessage}\n\n🔗 *Link Investigasi Eksekusi:*\n${execUrl}\n\n_Pesan ini dikirim otomatis oleh n8n Error Trigger._`;\n\nreturn [{\n  json: {\n    message,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ],
+        "id": "c01824ab-0101-447a-8fbb-91bc3501a002",
+        "name": "Format Error Message"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.MY_WA_NUMBER }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.message }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          700,
+          300
+        ],
+        "id": "c01824ab-0101-447a-8fbb-91bc3501a003",
+        "name": "[HTTP Whatsapp] Send Error Alert",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Format Error Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Error Message": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "Asia/Jakarta"
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": null,
+    "versionId": "1edcfecd-9af3-424f-b02e-0c9642ae5675",
+    "activeVersionId": "1edcfecd-9af3-424f-b02e-0c9642ae5675",
+    "versionCounter": 18,
+    "triggerCount": 0,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-10-19T13:07:40.698Z",
+        "createdAt": "2026-10-19T13:07:40.698Z",
+        "role": "workflow:owner",
+        "workflowId": "ERRnotif01UB2026",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

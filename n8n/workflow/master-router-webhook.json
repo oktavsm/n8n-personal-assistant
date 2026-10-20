@@ -1,0 +1,2779 @@
+[
+  {
+    "updatedAt": "2026-10-19T16:35:44.247Z",
+    "createdAt": "2026-04-06T02:19:40.562Z",
+    "id": "yViHMhfkTHv6uNFC",
+    "name": "master-router-webhook",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "wa-assistant",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -176,
+          96
+        ],
+        "id": "a74c5659-fa90-4885-b690-00f15cd1c601",
+        "name": "Webhook",
+        "webhookId": "f17bee80-3626-440f-8cd8-f2bf3daa005f"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "6a18a673-4e69-4038-8740-bb33eabbcc06",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "/agenda",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "agenda"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "6e80d184-6ca1-4444-a051-69c60b1c10ee",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "/besok",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "besok"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "18cfd8db-497f-4408-920f-f873f2256ff2",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "/tugas",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "tugas"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/jadwal",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      },
+                      "id": "e9b54299-e9d3-4a26-afc6-a3ee93785e29"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "buat_jadwal"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "aa6477c9-1adf-40db-a1b0-ac967c105d37",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/cek",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "cek_jadwal"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "417500d7-aa0a-4a0c-81ec-ac9e31bdff47",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "/uas",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "cek uas"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "49170118-d0c1-463a-afde-796c94bcf5e4",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/brone",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "cek_brone"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "628635fe-fd47-4415-a03a-d018b767bd9e",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/pengumuman",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "cek_pengumuman"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "77b486dc-e2d6-48b8-a97b-8957a5448767",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/presensi",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "cek_presensi"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "74e6a077-6397-4f04-8dd5-c59dd96f2b9d",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/help",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "help"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0323c168-67a9-422b-93ce-01f7bf6a3fe7",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=jembut",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "troll"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "f0d87e4c-cc96-44df-9d18-3f9925dd9000",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=fasta",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "fasta"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "bfd59fbc-5d8a-481b-a72d-866a5d94bf9e",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=abil",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "abil"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "91ac0995-aa09-4b4e-95f5-01287ed95516",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "diaturun",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "diaturun"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "71990e0e-d7d6-49c0-8ef8-227e3112269d",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "eze",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "eze"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "44f5e47c-899a-4985-8a64-19f543deb61b",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "kicau",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "kicau"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "5a4d026f-8f98-4d55-b026-d46086432872",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "jokowi",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "jokowi"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "4bed6907-c663-4c73-968c-54cf3f259638",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "=/ask",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "ask"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0ead7aaf-0738-47b8-812d-1a8749332b67",
+                      "leftValue": "={{ ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').toLowerCase().trim() }}",
+                      "rightValue": "/kewajiban okta",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "b7460ef6-fb59-4c5e-b0b5-046d7747bba1",
+                      "leftValue": "={{ (() => { const text = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || $json.body?.data?.message?.imageMessage?.caption || $json.body?.data?.message?.videoMessage?.caption || '').toLowerCase().trim(); return Boolean(text.startsWith('/stiker') || text.startsWith('/sticker')); })() }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "stiker"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "95f2ae0e-d5b7-44c9-bd37-6ee1bfa34a71",
+                      "leftValue": "={{ (() => { const jid = $json.body?.data?.key?.remoteJid || ''; const part = $json.body?.data?.key?.participantAlt || ''; const isGroup = jid.endsWith('@g.us'); const isManda = jid.includes($env.MANDA_WA_NUMBER) || part.includes($env.MANDA_WA_NUMBER); return Boolean(!isGroup && isManda); })() }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "manda_pc"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "cb9037f4-e3bc-4bab-a9f7-f484cd1484e0",
+                      "leftValue": "={{ (() => { const text = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || '').trim(); const lower = text.toLowerCase(); const jid = $json.body?.data?.key?.remoteJid || ''; const part = $json.body?.data?.key?.participant || $json.body?.data?.key?.participantAlt || ''; const isOkta = jid.includes($env.MY_WA_NUMBER) || part.includes($env.MY_WA_NUMBER); return Boolean(isOkta && (lower.startsWith('/vps') || lower.startsWith('/agent'))); })() }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "vps_agent"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": false,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "2e85d60f-75f8-4e3d-992f-e53ba8be873b",
+                      "leftValue": "={{ (() => { const jid = $json.body?.data?.key?.remoteJid || ''; const part = $json.body?.data?.key?.participant || ''; const isGroup = jid.endsWith('@g.us'); const isOkta = jid.includes($env.MY_WA_NUMBER) || part.includes($env.MY_WA_NUMBER); return Boolean(!isGroup && isOkta); })() }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "okta_pc"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          288,
+          96
+        ],
+        "id": "e178771d-3f43-4a8c-92c4-0d32e36162b7",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "U43zT3sJktIA9LaL",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/U43zT3sJktIA9LaL",
+            "cachedResultName": "wa-to-gcal-assistant"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1920,
+          -128
+        ],
+        "id": "6c3c5b6f-3122-47b2-b9d8-2fd75604b5ac",
+        "name": "Call 'wa-to-gcal-assistant'"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "hpEygIQDgIYN7IVy",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/hpEygIQDgIYN7IVy",
+            "cachedResultName": "automatic-brone-task-notifier"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          896,
+          208
+        ],
+        "id": "9fba4d5c-0336-49f7-9a64-d86d3c0b46ac",
+        "name": "Call 'automatic-brone-task-notifier'"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "OOvaMsCEOkqLuIL8",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/OOvaMsCEOkqLuIL8",
+            "cachedResultName": "siam-announcement-notifier"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          800,
+          352
+        ],
+        "id": "d2e45d27-5e40-4a84-bbe1-0b78935c5d61",
+        "name": "Call 'siam-pengumuman'"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "H5lVT2ani2aaNkyV",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/H5lVT2ani2aaNkyV",
+            "cachedResultName": "siam-presensi-notifier"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          800,
+          512
+        ],
+        "id": "86fcd75a-8d7f-4dff-9cc3-a645d786a2f4",
+        "name": "Call 'siam-presensi-notifier'"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Webhook').item.json.body.data.key.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1040,
+          960
+        ],
+        "id": "335a8cde-9fc3-4386-94ed-563db62aa81d",
+        "name": "[HTTP Whatsapp] Send Message",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "jsCode": "const textMsg = `📋 *MENU PERSONAL ASSISTANT*\n\nHalo! Berikut panduan lengkap perintah dan fitur yang tersedia:\n\n📅 *GOOGLE CALENDAR (OKTA & MANDA)*\n• */jadwal [keterangan]*\n  Buat jadwal atau agenda baru ke Google Calendar.\n• */cek*\n  Cek agenda jadwal hari ini.\n• */besok*\n  Cek jadwal untuk besok.\n• */agenda*\n  Rekap seluruh agenda 7 hari ke depan.\n\n📚 *TUGAS & DEADLINE*\n• */tugas*\n  Cek daftar deadline tugas kuliah.\n• */tugas [keterangan]*\n  Catat deadline tugas baru ke kalender.\n\n🎓 *AKADEMIK FILKOM UB*\n• */brone*\n  Cek tugas dan kuis terbaru dari LMS Brone.\n• */uas*\n  Cek jadwal UAS perkuliahan.\n• */pengumuman*\n  Cek rilis pengumuman akademik terbaru dari SIAM UB.\n• */presensi*\n  Cek status presensi perkuliahan hari ini.\n• */presensi hadir | sakit | izin*\n  Presensi otomatis status tertentu.\n\n🎨 *STIKER WHATSAPP*\n• */stiker* atau */sticker*\n  Kirim foto/video pendek/GIF dengan caption ini, atau reply pesan media apa saja untuk membuat stiker WA langsung.\n\n⚡ *VPS AI AGENT (Khusus Dev)*\n• */agent [instruksi]* atau */vps [instruksi]*\n  Jalankan tugas atau cek server via OpenAI Codex Agent langsung di host VPS.\n  _Contoh:_ \\`/agent cek uptime VPS dan sisa RAM\\`\n\n🤖 *AI CONVERSATION & MEMORI*\n• */ask [pertanyaan]*\n  Tanya apa saja kepada asisten (dilengkapi memori chat PostgreSQL).\n• *@PA [pertanyaan]*\n  Tag bot di grup untuk berdiskusi tanpa /ask.\n• *Asisten Kak Manda:*\n  Di ruang chat Kak Manda, bot bertindak ramah sebagai perwakilan Okta dan bisa meneruskan pesan titipan langsung ke WA Okta.\n\n❓ *BANTUAN*\n• */help*\n  Menampilkan menu panduan ini.\n`;\n\nreturn { json: { text: textMsg } };\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          832,
+          960
+        ],
+        "id": "13e03357-ef48-4be5-8927-6de1e756b7d4",
+        "name": "[Script] Message Builder"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "401bd7fc-45bb-4b7e-a9fd-b9c4534ce75d",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "3e09ca91-4214-464d-96af-4979a24b2e58",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2928,
+          3696
+        ],
+        "id": "22a29be3-8ec3-4cb1-bf87-b7c416693d39",
+        "name": "sender check6"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"={{ $env.MY_WA_NUMBER }}\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1904,
+          3920
+        ],
+        "id": "d4ee4987-96e8-4d94-b4f1-39fc4a188228",
+        "name": "[HTTP Whatsapp] Send Message1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "url": "http://brone-auth:3000/media/troll.mp3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -2608,
+          3776
+        ],
+        "id": "fadbed41-9dbe-443c-94ee-f8235718ab2f",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Looping untuk memproses data\nfor (const item of $input.all()) {\n  // Ambil file binary bernama 'data' dari node HTTP sebelumnya\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  // Convert buffer file tersebut jadi teks Base64\n  item.json.base64Audio = buffer.toString('base64');\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2352,
+          3808
+        ],
+        "id": "99e572fd-7f40-4b0a-9f54-a4cc2e1c1653",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      },
+                      "id": "43b237fb-ee17-4b13-87b3-296187917789"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "grup"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "36ae2022-fa93-473e-b373-3a111deb7dfe",
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "okta"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -2144,
+          3808
+        ],
+        "id": "ab425c11-dd3b-48ec-98e3-6030f6295c63",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"120363336434287340@g.us\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1904,
+          3728
+        ],
+        "id": "6b8ef5c3-ba54-4b27-80bc-02cdda474ddb",
+        "name": "[HTTP Whatsapp] Send Message2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"={{ $env.MY_WA_NUMBER }}\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -848,
+          3408
+        ],
+        "id": "f57439a3-679d-414c-9f63-4c3408c4aa74",
+        "name": "[HTTP Whatsapp] Send Message3",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "url": "http://brone-auth:3000/media/trollwkwk.mp3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1792,
+          3296
+        ],
+        "id": "c8119e0e-edf6-4739-93a7-adbe6b82fe94",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Looping untuk memproses data\nfor (const item of $input.all()) {\n  // Ambil file binary bernama 'data' dari node HTTP sebelumnya\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  // Convert buffer file tersebut jadi teks Base64\n  item.json.base64Audio = buffer.toString('base64');\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1536,
+          3328
+        ],
+        "id": "68c8a1bc-7693-4adf-9886-02a06782a97e",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      },
+                      "id": "43b237fb-ee17-4b13-87b3-296187917789"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "grup"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "36ae2022-fa93-473e-b373-3a111deb7dfe",
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "okta"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -1328,
+          3328
+        ],
+        "id": "52fc24de-953b-4af4-9641-a68bd88e66e7",
+        "name": "Switch2"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"120363336434287340@g.us\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -880,
+          3248
+        ],
+        "id": "49adbb12-aad9-42d2-b84e-fd4d60b4ec05",
+        "name": "[HTTP Whatsapp] Send Message4",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "401bd7fc-45bb-4b7e-a9fd-b9c4534ce75d",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "3e09ca91-4214-464d-96af-4979a24b2e58",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2016,
+          3312
+        ],
+        "id": "d1424d99-dc4a-4fe1-9d02-fe442350bad4",
+        "name": "sender check7"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "a18b7ce6-8c4b-4c26-bd06-cf9b44a1c053",
+                "leftValue": "={{ $('Webhook').item.json.body.data.key.participantAlt }}",
+                "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "7317615e-becb-4135-9e65-ef49b8190c27",
+                "leftValue": "={{ $('Webhook').item.json.body.data.key.participantAlt }}",
+                "rightValue": "=6282132377147",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "152d7e19-1c61-4573-9294-da02440984d8",
+                "leftValue": "={{ $('Webhook').item.json.body.data.key.participantAlt }}",
+                "rightValue": "=6287771869550",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "a62df5d8-d16c-4a4c-817d-8aeaf7ca5a62",
+                "leftValue": "={{ $('Webhook').item.json.body.data.key.participantAlt }}",
+                "rightValue": "=6282132377147",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "20eaeb24-a539-46da-a96a-dc897acefe34",
+                "leftValue": "={{ $('Webhook').item.json.body.data.key.participantAlt }}",
+                "rightValue": "=6282171302329",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "e0f50399-7254-4c1e-bb2a-1ef1efb33542",
+                "leftValue": "={{ $('Webhook').item.json.body.data.key.participantAlt }}",
+                "rightValue": "=62895412658963",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1120,
+          3280
+        ],
+        "id": "80e4332a-8bf3-4d6d-aa6c-5ecd5519a982",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "function generateText() {\n  const name = \"abil\";\n  const curseWords = [\"jembut\", \"asu\", \"gay\", \"bangsat\", \"anjing\", \"cuki\", \"pler\", \"jomok\", \"pantek\",\"bugil\",\"memek\",\"kontol\",\"sempak\", \"tai\",\"jembot\",\"jembud\",\"biji\", \"peli\", \"longor\", \"pantat\",\"bogol\",\"ghufron\",\"titit\",\"peli\", \"turok\", \"ngapusi\",\"jancok\"];\n\n  const randomIndex = Math.floor(Math.random() * curseWords.length);\n  const randomWord = curseWords[randomIndex];\n\n  return `${name} ${randomWord}`;\n}\n\nconst textMsg = generateText();\nreturn { json: { text: textMsg } };"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1472,
+          2448
+        ],
+        "id": "8bad84a2-1d31-4e68-b10e-28cc390432b5",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $env.WA_GROUP_DEV }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1088,
+          2496
+        ],
+        "id": "5885f1dc-41ea-46e5-afb3-af8168a4327a",
+        "name": "[HTTP Whatsapp] Send Message5",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "jsCode": "const msg = $json.body.data.message.conversation?.toLowerCase() || \"\";\nconst keywords = [\"kelas tih\", \"mahal\", \"gin\", \"gacor\", \"kelas\", \"hebat\"];\n\nconst isMatch = keywords.some(k => msg.includes(k));\n\nif (isMatch) {\n  return [{ json: $json }];\n} else {\n  return []; // ini bikin workflow stop\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2304,
+          1616
+        ],
+        "id": "46288e20-ac40-4f33-a56f-4b531181653c",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"={{ $env.MY_WA_NUMBER }}\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -880,
+          1744
+        ],
+        "id": "ef9f6701-b954-4a4e-b5a8-eff7006b1adc",
+        "name": "[HTTP Whatsapp] Send Message6",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "url": "http://brone-auth:3000/media/diaturun.mp3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1792,
+          1616
+        ],
+        "id": "ab857686-b23e-417b-a737-871eba13793b",
+        "name": "HTTP Request2"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Looping untuk memproses data\nfor (const item of $input.all()) {\n  // Ambil file binary bernama 'data' dari node HTTP sebelumnya\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  // Convert buffer file tersebut jadi teks Base64\n  item.json.base64Audio = buffer.toString('base64');\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1568,
+          1664
+        ],
+        "id": "7ee5f529-55cb-4c56-b3a4-6ec67899bb75",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      },
+                      "id": "43b237fb-ee17-4b13-87b3-296187917789"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "grup"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "36ae2022-fa93-473e-b373-3a111deb7dfe",
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "okta"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -1360,
+          1664
+        ],
+        "id": "383a6d98-8dbb-4f95-ab3c-57da77d85a44",
+        "name": "Switch3"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"120363336434287340@g.us\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -912,
+          1584
+        ],
+        "id": "daf62a4f-872b-403a-87c2-b29d6c242036",
+        "name": "[HTTP Whatsapp] Send Message7",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "401bd7fc-45bb-4b7e-a9fd-b9c4534ce75d",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "3e09ca91-4214-464d-96af-4979a24b2e58",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2048,
+          1632
+        ],
+        "id": "edd34d98-090a-4f5e-b032-486786a111bf",
+        "name": "sender check8"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "401bd7fc-45bb-4b7e-a9fd-b9c4534ce75d",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "3e09ca91-4214-464d-96af-4979a24b2e58",
+                "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1488,
+          2688
+        ],
+        "id": "713df84f-6ddd-4e46-90af-6dae5fb33170",
+        "name": "sender check9"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"={{ $env.MY_WA_NUMBER }}\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -464,
+          2912
+        ],
+        "id": "ab3b14d8-498a-463b-afcb-595303a4b43a",
+        "name": "[HTTP Whatsapp] Send Message8",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "url": "http://brone-auth:3000/media/abil.mp3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1168,
+          2768
+        ],
+        "id": "e80a745b-fd5e-4f67-8801-363f730e6aa2",
+        "name": "HTTP Request3"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.WA_GROUP_DEV }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      },
+                      "id": "43b237fb-ee17-4b13-87b3-296187917789"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "grup"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "36ae2022-fa93-473e-b373-3a111deb7dfe",
+                      "leftValue": "={{ $json.body.data.key.remoteJid }}",
+                      "rightValue": "={{ $env.MY_WA_NUMBER }}",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "okta"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -704,
+          2800
+        ],
+        "id": "18a6b1de-e575-44e3-93d5-bf2d29430bf7",
+        "name": "Switch4"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"120363336434287340@g.us\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -464,
+          2720
+        ],
+        "id": "9afd17f3-2da1-4e19-8358-fe25b80bc967",
+        "name": "[HTTP Whatsapp] Send Message9",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "url": "http://brone-auth:3000/media/kicau.mp3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -4288,
+          2256
+        ],
+        "id": "5bc127ac-6786-4efb-a204-d7d79bd7c2f6",
+        "name": "HTTP Request5"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Looping untuk memproses data\nfor (const item of $input.all()) {\n  // Ambil file binary bernama 'data' dari node HTTP sebelumnya\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  // Convert buffer file tersebut jadi teks Base64\n  item.json.base64Audio = buffer.toString('base64');\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -4032,
+          2288
+        ],
+        "id": "0aa28816-89ef-47c8-83b7-e6cfdb048a77",
+        "name": "Code in JavaScript7"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendSticker/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $('Webhook').item.json.body.data.key.remoteJid }}\",\n  \"sticker\": \"http://172.19.0.4:3000/media/kicau-stiker.gif\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -4256,
+          2064
+        ],
+        "id": "e32a9f8c-9890-40c8-8d8d-7a4d8dd52b50",
+        "name": "[HTTP Whatsapp] Send Message14",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $('Webhook').item.json.body.data.key.remoteJid }}\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -3664,
+          2576
+        ],
+        "id": "428a8495-b160-4971-80c7-64e561b053b0",
+        "name": "[HTTP Whatsapp] Send Message15",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "url": "http://brone-auth:3000/media/hidup-jokowi.mp3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -4176,
+          1280
+        ],
+        "id": "3464a8c6-a5cb-4869-986a-5d8da981b4fb",
+        "name": "HTTP Request6"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Looping untuk memproses data\nfor (const item of $input.all()) {\n  // Ambil file binary bernama 'data' dari node HTTP sebelumnya\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  \n  // Convert buffer file tersebut jadi teks Base64\n  item.json.base64Audio = buffer.toString('base64');\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3920,
+          1312
+        ],
+        "id": "28c2ecc9-0657-444b-8570-3a7a5b653296",
+        "name": "Code in JavaScript8"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=http://evolution-api:8080/message/sendSticker/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $('Webhook').item.json.body.data.key.remoteJid }}\",\n  \"sticker\": \"http://172.19.0.4:3000/media/wowo.gif\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -4160,
+          1040
+        ],
+        "id": "6202fe5e-3147-4457-ab73-f260e5c5816c",
+        "name": "[HTTP Whatsapp] Send Message16",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $('Webhook').item.json.body.data.key.remoteJid }}\",\n  \"audio\": \"{{ $json.base64Audio }}\",\n  \"delay\": 1500\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -3552,
+          1600
+        ],
+        "id": "c9085435-1e83-4a17-b5c7-97e3ac8bc1e9",
+        "name": "[HTTP Whatsapp] Send Message17",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "WmvJdI22Wr5O1k9y",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/WmvJdI22Wr5O1k9y",
+            "cachedResultName": "wa-conversation"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          688,
+          704
+        ],
+        "id": "61b8aa7e-df98-4e85-be2b-59cc8b8a0fd0",
+        "name": "Call 'wa-conversation'"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "mention-check-1",
+                "leftValue": "={{ (() => {\n  const body = $json.body || {};\n  const data = body.data || {};\n  const msg = data.message || {};\n  const remoteJid = data.key?.remoteJid || '';\n  const isGroup = remoteJid.endsWith('@g.us');\n\n  const text = (\n    msg.conversation ||\n    msg.extendedTextMessage?.text ||\n    msg.imageMessage?.caption ||\n    msg.videoMessage?.caption ||\n    msg.documentMessage?.caption ||\n    ''\n  ).toLowerCase().trim();\n\n  // If explicit command handled by switch, let switch handle it\n  if (text.startsWith('/ask') || text.startsWith('/vps') || text.startsWith('/agent')) return false;\n\n  const ctx = data.contextInfo ||\n    msg.extendedTextMessage?.contextInfo ||\n    msg.imageMessage?.contextInfo ||\n    msg.videoMessage?.contextInfo ||\n    msg.documentMessage?.contextInfo ||\n    msg.audioMessage?.contextInfo ||\n    {};\n\n  const botLids = ['195095164887244', '171619058196619', '158613192614132', '6283130151476', $env.MY_WA_NUMBER];\n\n  // 1. Tag / Mention check\n  const jids = ctx.mentionedJid || [];\n  const isMentioned = jids.some(j => botLids.some(b => j.includes(b))) ||\n    botLids.some(b => text.includes('@' + b));\n\n  // 2. Quoted / Swipe-reply check (user replied to the bot's message)\n  const quotedParticipant = ctx.participant || ctx.quotedMessageSender || '';\n  const isReplyingToBot = botLids.some(b => quotedParticipant.includes(b));\n\n  // 3. Dev Group check\n  const isDevGroup = remoteJid === ($env.WA_GROUP_DEV || '120363336434287340@g.us');\n\n  // 4. Audio check\n  const hasAudio = Boolean(msg.audioMessage || ctx.quotedMessage?.audioMessage);\n\n  if (isGroup) {\n    return Boolean(isMentioned || isReplyingToBot || (isDevGroup && (hasAudio || text.startsWith('/bot') || text.startsWith('@bot'))));\n  }\n\n  return false;\n})() }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          272,
+          736
+        ],
+        "id": "27fe9432-2a71-4dfb-ad36-2bb166daebbd",
+        "name": "mentioned"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3f8709eb-dd6a-4503-beb1-11dc54f7fe7c",
+                "leftValue": "={{ [\n  '/cek manda',\n  '/besok manda',\n  '/tugas manda',\n  '/agenda manda'\n].includes($json.body.data.message.conversation.toLowerCase().trim()) }}",
+                "rightValue": "manda",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1504,
+          -48
+        ],
+        "id": "abadfd0c-411d-4a9b-a4d4-cb75c7823b1c",
+        "name": "jadwal manda?"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "TcoP1qZ8e4dvKU9F",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/TcoP1qZ8e4dvKU9F",
+            "cachedResultName": "manda-gcal-assistant"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1920,
+          48
+        ],
+        "id": "3a009e7b-8093-49c6-890b-6b8056507a3c",
+        "name": "Call 'manda-to-gcal-assistant'"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "8c5cde32-ba41-4789-9891-4a0b70b99b2b",
+                "leftValue": "={{                                                                       \n      (                                                                      \n        ($json.body.data.key.remoteJid || '').includes($env.MY_WA_NUMBER) ||   \n        ($json.body.data.key.participantAlt || '').includes($env.MY_WA_NUMBER) \n      )                                                                                                     \n    }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1120,
+          32
+        ],
+        "id": "0ecd0e2a-7bc9-4dd3-b973-83ea01c448c6",
+        "name": "pengirim okta?"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "8c5cde32-ba41-4789-9891-4a0b70b99b2b",
+                "leftValue": "={{                                                                       \n      (                                                                      \n        ($json.body.data.key.remoteJid || '').includes($env.MANDA_WA_NUMBER) ||   \n        ($json.body.data.key.participantAlt || '').includes($env.MANDA_WA_NUMBER) \n      )                                                                                                     \n    }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1312,
+          96
+        ],
+        "id": "3e59b39c-8f0f-4510-a080-d92f60de5373",
+        "name": "pengirim manda?"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3f8709eb-dd6a-4503-beb1-11dc54f7fe7c",
+                "leftValue": "={{ [\n  '/cek okta',\n  '/besok okta',\n  '/tugas okta',\n  '/agenda okta'\n].includes($json.body.data.message.conversation.toLowerCase().trim()) }}",
+                "rightValue": "okta",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1504,
+          144
+        ],
+        "id": "75824771-0ab5-4ce3-addd-8ffaa89133a4",
+        "name": "jadwal okta?"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $('Webhook').item.json.body.data.key.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1040,
+          1280
+        ],
+        "id": "05f23ff7-84a1-4af9-8ef9-731d52cb81df",
+        "name": "[HTTP Whatsapp] Send Message10",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "jsCode": "const textMsg = `*KEWAJIBAN OKTA*\n\n📚 *Detail: Mencintai Amanda Syalwa Nadira*\n📅 *Waktu: Setiap hari, setiap jam, setiap detik*\n`;\n\nreturn { json: { text: textMsg } };"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          752,
+          1216
+        ],
+        "id": "f26263e9-602e-4aa1-8373-dd7e3d4f5661",
+        "name": "[Script] Message Builder1"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "vpsCLIRunner0001",
+            "mode": "list",
+            "cachedResultUrl": "/n8n/workflow/vpsCLIRunner0001",
+            "cachedResultName": "vps-cli-runner"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          440,
+          500
+        ],
+        "id": "6088aa91-0a5c-4143-8fb6-1e9765485879",
+        "name": "Call 'vps-cli-runner'"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "mentioned",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "pengirim okta?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "pengirim okta?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "pengirim okta?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "pengirim okta?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "pengirim okta?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "pengirim okta?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'automatic-brone-task-notifier'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'siam-pengumuman'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'siam-presensi-notifier'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[Script] Message Builder",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "sender check6",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "sender check7",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "sender check9",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message14",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request5",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message16",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request6",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'wa-conversation'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[Script] Message Builder1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'wa-conversation'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'wa-conversation'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'vps-cli-runner'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'wa-conversation'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Script] Message Builder": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "sender check6": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[HTTP Whatsapp] Send Message": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Switch2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch2": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "sender check7": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Switch3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch3": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message7",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "sender check8": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "sender check8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "sender check9": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request3": {
+        "main": [
+          [
+            {
+              "node": "Switch4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch4": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message9",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request5": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript7": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message15",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request6": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript8": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message17",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "mentioned": {
+        "main": [
+          [
+            {
+              "node": "Call 'wa-conversation'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "pengirim okta?": {
+        "main": [
+          [
+            {
+              "node": "jadwal manda?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "pengirim manda?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "jadwal manda?": {
+        "main": [
+          [
+            {
+              "node": "Call 'manda-to-gcal-assistant'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'wa-to-gcal-assistant'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "pengirim manda?": {
+        "main": [
+          [
+            {
+              "node": "jadwal okta?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "jadwal okta?": {
+        "main": [
+          [
+            {
+              "node": "Call 'wa-to-gcal-assistant'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'manda-to-gcal-assistant'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Script] Message Builder1": {
+        "main": [
+          [
+            {
+              "node": "[HTTP Whatsapp] Send Message10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate",
+      "timeSavedMode": "fixed",
+      "timezone": "Asia/Jakarta",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "5a929267-9f56-4bcb-929f-93c038fe7c49",
+    "activeVersionId": "5a929267-9f56-4bcb-929f-93c038fe7c49",
+    "versionCounter": 1075,
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-04-06T02:19:40.562Z",
+        "createdAt": "2026-04-06T02:19:40.562Z",
+        "role": "workflow:owner",
+        "workflowId": "yViHMhfkTHv6uNFC",
+        "projectId": "i65plRtLrJ6nwcW3",
+        "project": {
+          "updatedAt": "2026-04-01T10:16:47.014Z",
+          "createdAt": "2026-04-01T09:18:06.138Z",
+          "id": "i65plRtLrJ6nwcW3",
+          "name": "Oktavianus Samuel <oktaavsm@student.ub.ac.id>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "b008b61c-4f38-44c0-91e1-94c0408664c0"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
