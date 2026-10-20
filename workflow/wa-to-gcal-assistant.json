@@ -1145,8 +1145,8 @@
             "mode": "id"
           },
           "returnAll": true,
-          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 30}).toISO() }}",
-          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 90}).toISO() }}",
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 14}).startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 60}).endOf('day').toISO() }}",
           "options": {}
         },
         "type": "n8n-nodes-base.googleCalendar",
@@ -1163,7 +1163,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1174,8 +1175,8 @@
             "mode": "id"
           },
           "returnAll": true,
-          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 30}).toISO() }}",
-          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 90}).toISO() }}",
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 14}).startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 60}).endOf('day').toISO() }}",
           "options": {}
         },
         "type": "n8n-nodes-base.googleCalendar",
@@ -1192,7 +1193,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1203,8 +1205,8 @@
             "mode": "id"
           },
           "returnAll": true,
-          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 30}).toISO() }}",
-          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 90}).toISO() }}",
+          "timeMin": "={{ $now.setZone('Asia/Jakarta').minus({days: 14}).startOf('day').toISO() }}",
+          "timeMax": "={{ $now.setZone('Asia/Jakarta').plus({days: 60}).endOf('day').toISO() }}",
           "options": {}
         },
         "type": "n8n-nodes-base.googleCalendar",
@@ -1221,7 +1223,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1234,7 +1237,8 @@
           1100
         ],
         "id": "okta-code-safe-action-01",
-        "name": "Process Safe Calendar Action"
+        "name": "Process Safe Calendar Action",
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1254,7 +1258,8 @@
             "id": "pgChatMemory0001",
             "name": "Postgres Chat Memory"
           }
-        }
+        },
+        "executeOnce": true
       },
       {
         "parameters": {

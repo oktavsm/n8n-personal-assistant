@@ -1100,7 +1100,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1131,7 +1132,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1162,7 +1164,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1193,7 +1196,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1206,7 +1210,8 @@
           -260
         ],
         "id": "5ef6231d-ad11-4529-8c80-245e7ba8001c",
-        "name": "Format Calendar Vision"
+        "name": "Format Calendar Vision",
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1840,7 +1845,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       },
       {
         "parameters": {
@@ -1871,7 +1877,8 @@
             "name": "Google Calendar account"
           }
         },
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "executeOnce": true
       }
     ],
     "connections": {
