@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-20T06:21:53.458Z",
+    "updatedAt": "2026-10-20T07:07:30.031Z",
     "createdAt": "2026-04-04T13:02:29.813Z",
     "id": "U43zT3sJktIA9LaL",
     "name": "wa-to-gcal-assistant",
@@ -1885,9 +1885,9 @@
       "templateCredsSetupCompleted": true
     },
     "pinData": {},
-    "versionId": "d2e99571-85d3-4bc8-b620-7e750d1c7d24",
-    "activeVersionId": "d2e99571-85d3-4bc8-b620-7e750d1c7d24",
-    "versionCounter": 800,
+    "versionId": "4c4ab93e-c725-4665-927e-da1cc2366c64",
+    "activeVersionId": "4c4ab93e-c725-4665-927e-da1cc2366c64",
+    "versionCounter": 802,
     "triggerCount": 0,
     "tags": [],
     "shared": [

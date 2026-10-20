@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-20T06:20:54.955Z",
+    "updatedAt": "2026-10-20T07:06:30.689Z",
     "createdAt": "2026-04-06T02:19:40.562Z",
     "id": "yViHMhfkTHv6uNFC",
     "name": "master-router-webhook",
@@ -448,7 +448,7 @@
                   "conditions": [
                     {
                       "id": "4bed6907-c663-4c73-968c-54cf3f259638",
-                      "leftValue": "={{ (() => { const raw = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || \"\").trim(); const cleaned = raw.replace(/@\\d+\\s*/g, \"\").trim().toLowerCase(); const jid = $json.body?.data?.key?.remoteJid || \"\"; const ctx = $json.body?.data?.message?.extendedTextMessage?.contextInfo || {}; const mentionedJid = ctx.mentionedJid || []; const botNumbers = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", $env.MY_WA_NUMBER]; const isAsk = cleaned.startsWith(\"/ask\"); const isMention = botNumbers.some(b => raw.includes(\"@\" + b)) || mentionedJid.some(j => botNumbers.some(b => j.includes(b))) || raw.toLowerCase().includes(\"@n8n\") || raw.toLowerCase().includes(\"@bot\"); const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\"); const isDoneCmd = cleaned.startsWith(\"/done\") || cleaned.startsWith(\"/selesai\") || cleaned.startsWith(\"/hapus-jadwal\"); return Boolean(isAsk || isMention || isNoteCmd || isDoneCmd); })() }}",
+                      "leftValue": "={{ (() => {\n  const data = $json.body?.data || {};\n  const msg = data.message || {};\n  const raw = (msg.conversation || msg.extendedTextMessage?.text || \"\").trim();\n  const cleaned = raw.replace(/@[a-zA-Z0-9_\\-\\.]+\\s*/g, \"\").trim().toLowerCase();\n  const jid = data.key?.remoteJid || \"\";\n  const ctx = msg.extendedTextMessage?.contextInfo || {};\n  const mentionedJid = ctx.mentionedJid || [];\n  const botNumbers = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", $env.MY_WA_NUMBER];\n\n  // If this is an agent or vps command, do NOT consume it here; let Rule 21 handle it\n  if (cleaned.startsWith(\"/agent\") || cleaned.startsWith(\"/vps\")) {\n    return false;\n  }\n\n  // If this is a presensi command, do NOT consume it here; let Rule 8 handle it\n  if (cleaned.startsWith(\"/presensi\") || [\"hadir\", \"absen\"].includes(cleaned)) {\n    return false;\n  }\n\n  const isAsk = cleaned.startsWith(\"/ask\");\n  const isMention = botNumbers.some(b => b && raw.includes(\"@\" + b)) ||\n                    mentionedJid.some(j => botNumbers.some(b => b && j.includes(b))) ||\n                    raw.toLowerCase().includes(\"@n8n\") ||\n                    raw.toLowerCase().includes(\"@bot\");\n  const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\");\n  const isDoneCmd = cleaned.startsWith(\"/done\") || cleaned.startsWith(\"/selesai\") || cleaned.startsWith(\"/hapus-jadwal\");\n  const isExpenseCmd = cleaned.startsWith(\"/expense\") || cleaned.startsWith(\"/pengeluaran\");\n\n  return Boolean(isAsk || isMention || isNoteCmd || isDoneCmd || isExpenseCmd);\n})() }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",
@@ -546,7 +546,7 @@
                   "conditions": [
                     {
                       "id": "cb9037f4-e3bc-4bab-a9f7-f484cd1484e0",
-                      "leftValue": "={{ (() => { const raw = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || \"\").trim(); const cleaned = raw.replace(/@\\d+\\s*/g, \"\").trim(); const lower = cleaned.toLowerCase(); const jid = $json.body?.data?.key?.remoteJid || \"\"; const part = $json.body?.data?.key?.participant || $json.body?.data?.key?.participantAlt || \"\"; const isOkta = jid.includes($env.MY_WA_NUMBER) || part.includes($env.MY_WA_NUMBER); const isGroup = jid.endsWith(\"@g.us\"); const allowedGroups = ($env.ALLOWED_AGENT_GROUPS || `${$env.WA_GROUP_DEV || \"\"},${$env.WA_GROUP_SHARED || \"\"},120363336434287340@g.us,120363426033987537@g.us`).split(\",\").map(s => s.trim()).filter(Boolean); const isAllowedChat = !isGroup || allowedGroups.some(g => jid.includes(g) || g.includes(jid)); return Boolean(isOkta && isAllowedChat && (lower.startsWith(\"/vps\") || lower.startsWith(\"/agent\"))); })() }}",
+                      "leftValue": "={{ (() => {\n  const data = $json.body?.data || {};\n  const msg = data.message || {};\n  const raw = (msg.conversation || msg.extendedTextMessage?.text || \"\").trim();\n  const cleaned = raw.replace(/@[a-zA-Z0-9_\\-\\.]+\\s*/g, \"\").trim();\n  const lower = cleaned.toLowerCase();\n  const jid = data.key?.remoteJid || \"\";\n  const part = data.key?.participant || data.key?.participantAlt || \"\";\n  const fromMe = Boolean(data.key?.fromMe);\n\n  // Authorize: fromMe (Okta account) or Okta phone number or Okta LID\n  const isOkta = fromMe ||\n                 jid.includes($env.MY_WA_NUMBER) ||\n                 part.includes($env.MY_WA_NUMBER) ||\n                 part.includes(\"158613192614132\");\n\n  const isGroup = jid.endsWith(\"@g.us\");\n  const allowedGroups = ($env.ALLOWED_AGENT_GROUPS || \"\").split(\",\").map(s => s.trim()).filter(Boolean);\n  const knownGroups = [\n    \"120363415512376146@g.us\", // [General] Okta & Manda\n    \"120363426033987537@g.us\", // WA_GROUP_SHARED\n    \"120363336434287340@g.us\", // WA_GROUP_DEV\n    \"120363413257057355@g.us\", // WA_GROUP_NOTIF\n    $env.WA_GROUP_DEV,\n    $env.WA_GROUP_SHARED,\n    $env.WA_GROUP_NOTIF\n  ].filter(Boolean);\n\n  const isAllowedChat = !isGroup ||\n                        allowedGroups.length === 0 ||\n                        allowedGroups.some(g => jid.includes(g) || g.includes(jid)) ||\n                        knownGroups.some(g => jid.includes(g) || g.includes(jid));\n\n  return Boolean(isOkta && isAllowedChat && (lower.startsWith(\"/vps\") || lower.startsWith(\"/agent\")));\n})() }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",
@@ -2749,9 +2749,9 @@
     "staticData": null,
     "meta": null,
     "pinData": {},
-    "versionId": "a0afe05f-9904-475e-860d-fd905bd5eb5a",
-    "activeVersionId": "a0afe05f-9904-475e-860d-fd905bd5eb5a",
-    "versionCounter": 1077,
+    "versionId": "549c378d-3428-4dd4-8754-303477a984a9",
+    "activeVersionId": "549c378d-3428-4dd4-8754-303477a984a9",
+    "versionCounter": 1079,
     "triggerCount": 1,
     "tags": [],
     "shared": [

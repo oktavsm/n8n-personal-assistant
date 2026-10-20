@@ -9,19 +9,19 @@ Direktori ini memuat seluruh dokumen perancangan arsitektur, katalog fitur workf
 ## 📑 Daftar Dokumen
 
 ### 1. 📖 [User Guide & Panduan Fitur Baru](user-guide-features.md)
-* **Deskripsi:** Panduan lengkap penggunaan seluruh fitur baru: Akses VPS Agent dari grup WhatsApp, One-Click & Conversational Presensi UB, Sistem Catatan Pribadi & Dua Arah (`/catat`, `/notes`), Multimodal Image OCR & Vision Q&A, dan Lifecycle Google Calendar (`[SELESAI]` / Hapus).
+* **Deskripsi:** Panduan lengkap penggunaan seluruh fitur baru: Akses VPS Agent dari grup WhatsApp, One-Click Presensi UB, Sistem Catatan Pribadi & Dua Arah (`/catat`, `/notes`), Multimodal Image OCR & Vision Q&A, Lifecycle Google Calendar (`[SELESAI]` / Hapus), Smart Expense Tracker (`/expense`), dan Morning Audio Briefing (Voice Note TTS).
 * **Status:** Implemented & Production Ready.
 
 ### 2. 🚀 [Strategic Roadmap & Expansion Ideas](roadmap.md)
 * **Deskripsi:** Rencana pengembangan inovasi jangka panjang: *Long-term Semantic Memory (`pgvector`)*, *Morning Audio Briefing (TTS Voice Note)*, *Receipt & Expense Tracker via Vision OCR*, *One-Click Auto Presensi UB*, dan *Intelligent Calendar Conflict Resolver*.
-* **Status:** Implemented (Phase 1 & 2) / Ongoing.
+* **Status:** Phase 1, 2, & 3 Completed & Active.
 
 ### 3. 🧠 [WhatsApp Chatbot Evolution Plan](evolution-plan.md)
 * **Deskripsi:** Rencana arsitektur evolusi asisten WhatsApp: *Master Router*, integrasi model bahasa ganda (Gemini 3.5 Flash Lite untuk teks & 2.5 Flash untuk audio/image), pemisahan memori per room chat, dan penanganan multi-timezone WIB/WITA.
 * **Status:** Implemented & Verified.
 
 ### 4. 📦 [Workflow Feature Catalog](workflow-catalog.md)
-* **Deskripsi:** Katalog komprehensif 15 workflow n8n yang aktif: pemetaan ID workflow, node trigger, sub-workflow caller, dan matriks fungsionalitas kalender/akademik/ops.
+* **Deskripsi:** Katalog komprehensif 16 workflow n8n yang aktif: pemetaan ID workflow, node trigger, sub-workflow caller, dan matriks fungsionalitas kalender/akademik/ops.
 * **Status:** Implemented & Synced.
 
 ### 5. 🛠️ [Workflow Improvement & Bugfix Report](improvement-report.md)

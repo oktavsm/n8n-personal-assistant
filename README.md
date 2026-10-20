@@ -4,6 +4,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Evolution API](https://img.shields.io/badge/Evolution_API-v2-00E676?logo=whatsapp&logoColor=white)](https://github.com/EvolutionAPI/evolution-api)
 [![Google Gemini](https://img.shields.io/badge/Gemini_3.5_Flash_Lite-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
+[![edge-tts](https://img.shields.io/badge/edge--tts-v7.3.1_Neural_Voice-0078D4)](https://github.com/rany2/edge-tts)
 [![Docker](https://img.shields.io/badge/Docker_Compose-Multi--Container-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
 [![Timezone](https://img.shields.io/badge/Timezone-WIB_(UTC%2B7)_%26_WITA_(UTC%2B8)-blue)](#-multi-timezone-synchronization)
 
@@ -151,9 +152,26 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 * Cancel / delete events: `/hapus-jadwal Meeting Tim` or `@n8n meeting tim tadi di-cancel, tolong hapus` removes the event from Google Calendar.
 * Interactive follow-up: Bot asks *"Mau ditandai [SELESAI] di kalender atau langsung dihapus aja bro?"* when intent is ambiguous.
 
+### 13. 🎙️ Proactive Morning Audio Briefing (Voice Note TTS 07:00 WIB)
+* Autonomous Cron fires every morning at **07:00 WIB**.
+* Fetches all Google Calendar events and academic deadlines for Okta and Kak Manda.
+* Google Gemini crafts an engaging morning radio host script.
+* Synthesized into natural Indonesian speech (`id-ID-ArdiNeural`) using `edge-tts` on the VPS host.
+* Dispatched as a **WhatsApp Voice Note (PTT)** directly to target notification groups and private chats via Evolution API, accompanied by a clean summary text card.
+
+### 14. 💰 Smart Expense Tracker & Receipt OCR (`user_expenses`)
+* Persistent expense tracking stored in PostgreSQL `user_expenses`.
+* Manual entry via `/expense 50000 Makan Siang` or natural chat: `@n8n catat pengeluaran beli bensin 30rb`.
+* Receipt OCR: Send or quote a receipt photo with *"catat pengeluaran ini"*, and Gemini Vision will extract the merchant, total amount, category, and line items automatically.
+* Check totals & recaps: `/expense`, `/pengeluaran`, or `@n8n rekap pengeluaran bulan ini`.
+
+### 15. 🛡️ Intelligent Calendar Conflict Detector
+* Real-time conflict checking when scheduling events.
+* Scans overlapping intervals and provides proactive warnings + alternate open slot recommendations.
+
 ---
 
-## 📦 Complete Workflows Catalog (15 Workflows)
+## 📦 Complete Workflows Catalog (16 Workflows)
 
 | # | Workflow Name | Workflow ID | Trigger | Description |
 |---|---|---|---|---|
@@ -171,7 +189,8 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 | 12 | **global-error-notifier** | `ERRnotif01UB2026` | Error Trigger | Catch-all error workflow sending structured crash alerts to WhatsApp |
 | 13 | **personal-porto-chatbot** | `vunnMOdxPHnUhABI` | Webhook | Portfolio interactive Q&A assistant |
 | 14 | **personal-porto-generate-article** | `wmv1KZ32E8OnHmYc` | Webhook | Content generation workflow for tech portfolio articles |
-| 15 | **My workflow 4** | `M8b8EyT5nJkzsGPQ` | Manual / Sub-workflow | Custom utility and testing pipeline |
+| 15 | **morning-audio-briefing** | `morningBrief0001` | Cron (Daily at 07:00) | Morning radio-style voice note (TTS) briefing & calendar agenda dispatch |
+| 16 | **My workflow 4** | `M8b8EyT5nJkzsGPQ` | Manual / Sub-workflow | Custom utility and testing pipeline |
 
 ---
 
@@ -210,6 +229,15 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 | `/presensi hadir` | Manual attendance for active lecture |
 | `/presensi hadir daring` | Online attendance submission |
 | `"@n8n tolong absenkan kelas sekarang"` | Conversational attendance trigger |
+
+### Smart Expense Tracking Commands (`/expense` & `/pengeluaran`)
+| Command / Input | Target | Description |
+|---|---|---|
+| `/expense <jumlah> <nama>` | Self | Record expense (e.g. `/expense 45000 Nasi Padang`) |
+| `/pengeluaran <jumlah> <nama>`| Self | Alias for `/expense` |
+| `/expense` or `/pengeluaran` | Self | Show recent expense transactions and 30-day total recap |
+| `"@n8n catat pengeluaran beli bensin 30rb"` | Conversational | Conversational expense logging |
+| `[Photo of Receipt]` + *"catat pengeluaran ini"* | Vision OCR | Extracts merchant, amount, category, and items from receipt image |
 
 ### Multimodal & Conversational Actions
 | Natural Input | Target | Behavior |
@@ -287,11 +315,12 @@ python3 scripts/deploy_workflows.py
 
 ## 📚 Detailed Documentation Hub
 
-Detailed architecture designs, technical postmortems, catalogs, and strategic roadmaps are documented under the [`docs/`](docs/) directory:
+Detailed architecture designs, technical postmortems, user guides, catalogs, and strategic roadmaps are documented under the [`docs/`](docs/) directory:
 
-* 🚀 **[Strategic Roadmap & Feature Expansion Ideas](docs/roadmap.md):** Next-generation roadmap covering RAG memory (`pgvector`), morning voice briefings, receipt expense tracking, and auto-presensi.
+* 📖 **[User Guide: New WhatsApp Features](docs/user-guide-features.md):** Complete guide to group agent access, one-click presensi, personal notes, image OCR, calendar lifecycle (`[SELESAI]`), expense tracking, and morning voice briefs.
+* 🚀 **[Strategic Roadmap & Feature Expansion Ideas](docs/roadmap.md):** Implementation status and next-generation roadmap covering RAG memory (`pgvector`) and academic milestones.
 * 🧠 **[WhatsApp Chatbot Evolution Plan](docs/evolution-plan.md):** Dual-model architecture (Gemini 3.5 Flash Lite + 2.5 Flash), audio understanding, and multi-timezone routing.
-* 📦 **[Complete Workflow Catalog](docs/workflow-catalog.md):** Deep breakdown of all 15 active workflows, IDs, triggers, and execution flows.
+* 📦 **[Complete Workflow Catalog](docs/workflow-catalog.md):** Deep breakdown of all 16 active workflows, IDs, triggers, and execution flows.
 * 🛠️ **[Workflow Improvement & Bugfix Report](docs/improvement-report.md):** Technical postmortem of GCal anti-spam deduplication, system-wide WIB/WITA synchronization, and Codex runner diagnostics.
 * 🔍 **[Incident Postmortem & Memory Audit](issues/issue.md):** Chrome/Puppeteer `/tmp` disk footprint analysis and containment safeguards.
 

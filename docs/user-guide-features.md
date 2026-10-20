@@ -6,6 +6,9 @@ Dokumen ini menjelaskan cara menggunakan seluruh fitur baru yang telah diimpleme
 3. **Sistem Catatan Pribadi & Dua Arah (`/catat`, `/notes`)**
 4. **Multimodal Image OCR & Vision Q&A (Tanya Foto / Soal / Struk)**
 5. **Lifecycle Tugas/Agenda di Google Calendar (`[SELESAI]` / Hapus)**
+6. **Smart Expense Tracker Database & Struk OCR (`/expense`, `/pengeluaran`)**
+7. **Proactive Morning Audio Briefing (Voice Note TTS 07:00 WIB)**
+8. **Intelligent Calendar Conflict Resolver (Deteksi & Resolusi Bentrok)**
 
 ---
 
@@ -174,3 +177,71 @@ Jika suatu acara atau janji temu dibatalkan:
 Jika pengguna hanya bilang *"tugas X udah kelar"*, asisten akan otomatis mengonfirmasi:
 > *"Tugas **PPT Pengabdian** ditemukan di kalender! Mau ditandai **[SELESAI]** di kalender atau langsung **dihapus** aja bro?"*
 * Cukup balas *"tandai selesai"* atau *"hapus aja"*, bot langsung memprosesnya!
+
+---
+
+## 💰 6. Smart Expense Tracker & Struk OCR (`/expense`, `/pengeluaran`)
+
+Catat pengeluaran keuangan pribadi secara otomatis ke database PostgreSQL (`user_expenses`) via teks percakapan santai, slash command, maupun foto struk belanjaan (Multimodal OCR).
+
+### A. Catat Pengeluaran Manual
+* **Slash Command:**
+  ```text
+  /expense 45000 Makan Nasi Padang
+  /pengeluaran 25000 Kopi Kenangan
+  /expense 150000 Belanja Bulanan di Superindo
+  ```
+* **Bahasa Santai:**
+  ```text
+  @n8n catat pengeluaran tadi beli bensin 30 ribu
+  bro catat makan siang 20.000
+  ```
+
+### B. Catat Pengeluaran Otomatis via Foto Struk (Vision OCR)
+1. Kirim foto struk belanja (Indomaret, Alfamart, restoran, nota kafe) ke WhatsApp.
+2. Berikan caption atau quote foto dengan teks:
+   ```text
+   Catat pengeluaran dari struk ini ya bro
+   ```
+3. Gemini Vision akan melakukan OCR, membaca nama merchant, total nominal, kategori, dan daftar item belanja, lalu menyimpannya langsung ke database `user_expenses`.
+4. Asisten mengonfirmasi data tersimpan dalam bentuk struk ringkas.
+
+### C. Cek Rekap Pengeluaran
+* **Perintah:**
+  ```text
+  /expense
+  /pengeluaran
+  @n8n rekap pengeluaranku bulan ini dong
+  bro total pengeluaranku berapa ya?
+  ```
+* Asisten akan menampilkan riwayat transaksi terbaru beserta **Total Pengeluaran** dalam periode 30 hari terakhir.
+
+---
+
+## 🎙️ 7. Proactive Morning Audio Briefing (Voice Note TTS 07:00 WIB)
+
+Setiap pagi pukul **07:00 WIB**, asisten secara proaktif mengirimkan **Voice Note Audio (PTT / Voice Note WhatsApp)** yang membacakan agenda hari ini dengan gaya penyiar radio profesional yang bersahabat.
+
+### Karakteristik & Fitur:
+* **Audio Voice Note (PTT):** Menggunakan model Neural TTS Bahasa Indonesia (`id-ID-ArdiNeural` via `edge-tts`). Pesan dikirim sebagai *voice note* asli WhatsApp (bisa diputar langsung dengan waveform).
+* **Konten Siaran Pagi:**
+  1. Ucapan salam pagi semangat.
+  2. Ringkasan seluruh agenda Google Calendar hari ini (jadwal kuliah, rapat, janji temu).
+  3. Tugas & deadline akademik terdekat (LMS Brone & SIAM UB).
+  4. Perkiraan cuaca Malang / kota terkait.
+  5. Pesan motivasi singkat untuk memulai hari.
+* **Teks Pendamping:** Selain voice note audio, bot juga menyertakan pesan teks berformat rapi sebagai rangkuman visual cepat.
+
+---
+
+## 🛡️ 8. Intelligent Calendar Conflict Resolver (Deteksi & Resolusi Bentrok)
+
+Mencegah tumpang tindih waktu saat menambahkan agenda baru ke Google Calendar.
+
+### Cara Kerja:
+1. Saat membuat agenda baru (misal *"Rapat Organisasi besok jam 10.00 - 12.00"*), asisten secara otomatis memindai seluruh acara pada rentang jam tersebut.
+2. Jika terdeteksi adanya bentrok (misal bertabrakan dengan *"Kuliah Pemrograman Bergerak jam 09.30 - 11.30"*):
+   * Asisten memberi peringatan jelas:
+     > ⚠️ *Peringatan Bentrok Waktu! Agenda 'Rapat Organisasi' bertabrakan dengan 'Kuliah Pemrograman Bergerak' (09.30 - 11.30 WIB).*
+   * Asisten menyarankan slot waktu kosong terdekat yang aman.
+   * Pengguna diberikan pilihan untuk tetap menjadwalkan atau memindahkan ke slot rekomendasi.

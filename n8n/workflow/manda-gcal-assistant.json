@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-10-20T06:22:09.985Z",
+    "updatedAt": "2026-10-20T07:07:44.750Z",
     "createdAt": "2026-08-29T10:20:13.568Z",
     "id": "TcoP1qZ8e4dvKU9F",
     "name": "manda-gcal-assistant",
@@ -1885,9 +1885,9 @@
       "templateCredsSetupCompleted": true
     },
     "pinData": {},
-    "versionId": "cebfdc13-1efb-496d-b7ce-43d6f8be9c70",
-    "activeVersionId": "cebfdc13-1efb-496d-b7ce-43d6f8be9c70",
-    "versionCounter": 140,
+    "versionId": "2b991db4-7efb-4f45-abe4-a3fccd38a0ca",
+    "activeVersionId": "2b991db4-7efb-4f45-abe4-a3fccd38a0ca",
+    "versionCounter": 142,
     "triggerCount": 0,
     "tags": [],
     "shared": [

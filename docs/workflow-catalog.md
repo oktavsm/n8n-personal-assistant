@@ -1,6 +1,6 @@
 # 📖 Katalog Fitur Ekosistem n8n Personal Assistant (Versi Update)
 
-Dokumentasi ini merangkum seluruh fitur, alur kerja, dan integrasi dari **14 workflow aktif** pada sistem **n8n Personal Assistant** yang berjalan di VPS `pg-bcc`.
+Dokumentasi ini merangkum seluruh fitur, alur kerja, dan integrasi dari **16 workflow aktif** pada sistem **n8n Personal Assistant** yang berjalan di VPS `pg-bcc`.
 
 ---
 
@@ -84,6 +84,15 @@ Menjalankan agen AI langsung di host VPS via WhatsApp:
 - Cron harian yang otomatis membaca agenda dan jadwal kuliah pagi hari.
 - Mengirimkan ringkasan briefing harian ke WhatsApp Okta dan grup kuliah.
 
+### D. Proactive Morning Audio Briefing (`morning-audio-briefing` - `morningBrief0001`)
+- **Jadwal Eksekusi:** Cron aktif setiap hari pukul **07:00 WIB**.
+- **Alur Kerja:**
+  1. Menarik data jadwal Google Calendar Okta & Kak Manda hari ini.
+  2. Meringkas deadline tugas terdekat dan info penting harian.
+  3. Menggunakan Gemini 3.5 Flash Lite untuk menyusun naskah radio siaran pagi yang santai, positif, dan terstruktur.
+  4. Mensintesis audio via `edge-tts` (Indonesian Neural Voice `id-ID-ArdiNeural`) di VPS host via SSH.
+  5. Mengirimkan **Voice Note Audio (PTT)** langsung ke WhatsApp via Evolution API `POST /message/sendWhatsAppAudio/okta_wa` beserta ringkasan teks.
+
 ---
 
 ## 🎓 3. Notifier Akademik & Kampus
@@ -109,11 +118,15 @@ Menjalankan agen AI langsung di host VPS via WhatsApp:
 
 ## 🛡️ 4. Monitoring & Error Reliability
 
-### Global Error Notifier (`global-error-notifier` - `ERRnotif01UB2026`)
+### A. Global Error Notifier (`global-error-notifier` - `ERRnotif01UB2026`)
 - Ditetapkan sebagai **Default Error Workflow** di seluruh n8n (`N8N_DEFAULT_ERROR_WORKFLOW`).
 - Jika ada workflow yang crash, error API eksternal, atau timeout:
   - Otomatis menangkap nama workflow, ID, node yang gagal, dan stack trace error.
   - Mengirim alert instan langsung ke nomor WhatsApp Okta lengkap dengan link direct execution untuk debugging cepat.
+
+### B. Memory Housekeeping Cron (`memory-housekeeping-cron` - `memHousekeep01`)
+- **Jadwal Eksekusi:** Berjalan otomatis setiap hari pukul **03:00 WIB**.
+- **Fungsi:** Membersihkan memori percakapan lama di PostgreSQL (`wa_chat_memory`) yang berusia lebih dari 30 hari untuk menjaga performa query tetap secepat kilat dan hemat storage.
 
 ---
 

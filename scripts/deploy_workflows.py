@@ -9,8 +9,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 workflows_to_deploy = [
     "workflow/master-router-webhook.json",
     "workflow/vps-cli-runner.json",
-    "workflow/siam-presensi-notifier.json",
     "workflow/wa-conversation.json",
+    "workflow/morning-audio-briefing.json",
     "workflow/wa-to-gcal-assistant.json",
     "workflow/manda-gcal-assistant.json"
 ]
@@ -56,4 +56,7 @@ for wf in workflows_to_deploy:
         res = subprocess.run(["ssh", host, act_cmd], capture_output=True, text=True)
         print(f"  Published/Activated: {wf_id}")
 
-print("🎉 All workflows deployed and published successfully!")
+print("🔄 Restarting notifier_n8n to reload all active webhooks & crons...")
+subprocess.run(["ssh", host, f"docker restart {container}"], check=True)
+
+print("🎉 All workflows deployed, published, and n8n reloaded successfully!")

@@ -109,11 +109,11 @@ mindmap
 
 ---
 
-## 📈 Roadmap Timeline Saran
+## 📈 Roadmap Timeline & Status Pelaksanaan
 
-| Phase | Fokus Utama | Deliverables |
-|---|---|---|
-| **Phase 1** | *Immediate Polish* | Aktifkan Auto-Presensi satu kata (`"absen"`), aktifkan conflict checker di GCal |
-| **Phase 2** | *Audio & Proactive* | Morning Brief VN jam 07.00 WIB, Voice-to-Voice reply |
-| **Phase 3** | *RAG & Permanent Memory* | Integrasi `pgvector`, penyimpanan fakta jangka panjang |
-| **Phase 4** | *Finance & Vision* | Expense tracking via struk foto WhatsApp |
+| Phase | Fokus Utama | Deliverables | Status |
+|---|---|---|---|
+| **Phase 1** | *Immediate Polish & Core Lifecycle* | One-click presensi (`"hadir"`, `"absen"`), sistem catatan (`/catat`, `/notes`), lifecycle agenda GCal (`[SELESAI]`, hapus) | **SELESAI (Aktif)** ✅ |
+| **Phase 2** | *Audio & Proactive Briefing* | Proactive Morning Audio Brief VN jam 07.00 WIB (`edge-tts` ArdiNeural), Multimodal Vision OCR | **SELESAI (Aktif)** ✅ |
+| **Phase 3** | *Smart Expense & Group Access* | Smart Expense Tracker (`user_expenses` table + struk OCR), Akses Agent dari Group Chat (`@n8n`, `/agent`) | **SELESAI (Aktif)** ✅ |
+| **Phase 4** | *RAG & Long-Term Memory* | Integrasi `pgvector` di PostgreSQL untuk fakta permanen lintas bulan, Academic KHS Grade Watcher | *Next Sprint* 🚀 |

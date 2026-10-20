@@ -35,7 +35,12 @@ def sanitize_filename(name: str) -> str:
     return f"{clean}.json"
 
 def run_ssh(host: str, cmd: str) -> str:
-    res = subprocess.run(["ssh", host, cmd], capture_output=True, text=True)
+    res = subprocess.run(
+        ["ssh", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=10", host, cmd],
+        capture_output=True,
+        text=True,
+        timeout=60
+    )
     if res.returncode != 0:
         raise RuntimeError(f"SSH command failed ({res.returncode}): {res.stderr.strip()}")
     return res.stdout
