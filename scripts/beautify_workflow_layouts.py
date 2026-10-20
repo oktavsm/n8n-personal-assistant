@@ -77,12 +77,15 @@ WA_CONV_POSITIONS = {
     "[HTTP] Gemini Build Message": [4240, 60],
     "Process AI Output & Actions": [4480, 60],
 
-    # 6. Response Delivery
-    "[HTTP Whatsapp] Send Message2": [4740, -200],
-    "[HTTP Whatsapp] Send Message1": [4740, 60],
-    "[PG] Save Bot Reply": [4980, 60],
-    "If Titip Pesan": [4980, -200],
-    "[HTTP Whatsapp] Forward Note to Target": [5220, -200],
+    # 6. Response Delivery (with safe suppression during calendar actions)
+    "If Should Send Chat Reply Manda": [4720, -200],
+    "[HTTP Whatsapp] Send Message2": [4960, -200],
+    "If Titip Pesan": [5200, -200],
+    "[HTTP Whatsapp] Forward Note to Target": [5440, -200],
+
+    "If Should Send Chat Reply": [4720, 60],
+    "[HTTP Whatsapp] Send Message1": [4960, 60],
+    "[PG] Save Bot Reply": [5200, 60],
 
     # 7. Automated Action Dispatcher
     "If Has Calendar Actions": [4740, 360],
