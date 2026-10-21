@@ -149,8 +149,13 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 
 ### 12. 🗓️ Safe Calendar Lifecycle & Protection Engine
 * **Mark tasks as done:** `/done PPT Pengabdian` or `@n8n tugas PPT pengabdian udah selesai nih` updates Google Calendar event title with `[SELESAI]` and sets event color to green.
+* **In-Place Title Editing:** `/edit-jadwal <lama> | <baru>` renames an existing task or agenda without creating duplicate entries.
+* **In-Place Date/Time Rescheduling:** `/reschedule <nama> | <waktu baru>` or natural language (e.g. *"rapat TSA diundur besok jam 20.00"*, *"tugas metopen deadlinenya ganti jadi jumat 23.59"*) updates the event start and end time on Google Calendar directly.
 * **Delete events:** `/hapus <judul>` or `/hapus-jadwal <judul>` removes the event from Google Calendar.
-* **Interactive Numbered Selection (Anti-Hallucination & Non-Destructive):** If multiple/duplicate tasks match (e.g. duplicate ComVis tasks), the bot presents a numbered selection list (`1️⃣`, `2️⃣`, `batal`). Replying with `1`, `2`, or `batal` safely completes or cancels the action without accidental deletion.
+* **Interactive Numbered Selection & Fallback (Anti-Hallucination & Non-Destructive):**
+  - If multiple events match the keyword (e.g. duplicate meetings), the bot presents an interactive numbered selection list (`1️⃣`, `2️⃣`, `batal`).
+  - If 0 matches are found, the bot provides a fallback list of up to 8 active upcoming agendas/tasks to pick from.
+  - Replying with `1`, `2`, or `batal` safely applies the update/reschedule/deletion or cancels the action.
 * **Course Schedule Protection (Jadwal Kuliah):** Kuliah calendar is strictly protected and CANNOT be deleted or marked done. Room updates and holiday flags are handled via `/edit-kuliah [matkul] [ruang / LIBUR]` (e.g. `/edit-kuliah comvis F3.11` or `/edit-kuliah comvis [LIBUR]`).
 
 ### 13. 🎙️ Proactive Morning Audio Briefing (Voice Note TTS 07:00 WIB)
@@ -209,13 +214,16 @@ The assistant doesn't just chat—it **takes direct action**. Users can talk con
 | `/jadwal <detail>` | Okta / Manda | Create a calendar event (e.g. `/jadwal Meeting Tim besok jam 14.00`) |
 | `/tugas <detail>` | Okta / Manda | Create a task deadline (e.g. `/tugas Laporan PAPB Jumat jam 23.59`) |
 | `/done <judul>` / `/selesai <judul>` | Okta / Manda | Mark task/agenda as completed (`[SELESAI]`) in Google Calendar |
+| `/edit-jadwal <lama> | <baru>` | Okta / Manda | Rename existing agenda or task in Google Calendar without duplicates |
+| `/reschedule <nama> | <waktu>` | Okta / Manda | Reschedule existing agenda or deadline date/time directly |
 | `/hapus <judul>` / `/hapus-jadwal <judul>` | Okta / Manda | Delete agenda/task from Google Calendar (prompts interactive numbers if duplicates exist) |
 | `/edit-kuliah <matkul> <ruang / LIBUR>` | Okta / Manda | Update lecture room (e.g. `F3.11`) or mark `[LIBUR]` without deleting recurring course schedule |
 
 ### Notes & To-Do System (`/catat` & `/notes`)
 | Command / Input | Target | Description |
 |---|---|---|
-| `/catat <isi>` | Self | Save a note in PostgreSQL `user_notes` |
+| `/catat <isi>` | Self | Save a note in PostgreSQL `user_notes` (with timestamp) |
+| `/catat edit <id> <isi baru>` | Self | Update an existing note in-place (records last-edited timestamp) |
 | `/notes` or `/catatan` | Self | List active notes for current user |
 | `/catatan manda` | Okta | View active notes of Kak Manda |
 | `/catatan okta` | Manda | View active notes of Okta |
