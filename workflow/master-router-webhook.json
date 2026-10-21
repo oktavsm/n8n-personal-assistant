@@ -473,7 +473,7 @@
                   "conditions": [
                     {
                       "id": "4bed6907-c663-4c73-968c-54cf3f259638",
-                      "leftValue": "={{ (() => {\n  const data = $json.body?.data || {};\n  const msg = data.message || {};\n  const raw = (msg.conversation || msg.extendedTextMessage?.text || msg.imageMessage?.caption || msg.videoMessage?.caption || msg.documentMessage?.caption || \"\").trim();\n  const cleaned = raw.replace(/@[a-zA-Z0-9_\\-\\.]+\\s*/g, \"\").trim().toLowerCase();\n  const jid = data.key?.remoteJid || \"\";\n  const isGroup = jid.endsWith(\"@g.us\");\n\n  const ctx = data.contextInfo ||\n    msg.extendedTextMessage?.contextInfo ||\n    msg.imageMessage?.contextInfo ||\n    msg.videoMessage?.contextInfo ||\n    msg.documentMessage?.contextInfo ||\n    msg.audioMessage?.contextInfo ||\n    {};\n  const mentionedJid = ctx.mentionedJid || [];\n  const botNumbers = [\"171619058196619\", \"195095164887244\", \"158613192614132\", \"6283130151476\", $env.MY_WA_NUMBER];\n\n  // 1. Explicit commands handled by other switch rules: DO NOT consume here!\n  const explicitCommands = [\n    \"/agenda\", \"/besok\", \"/tugas\", \"/jadwal\", \"/cek\", \"/uas\",\n    \"/done\", \"/selesai\", \"/hapus\", \"/edit-kuliah\", \"/edit kuliah\", \"/edit\", \"/reschedule\", \"/delete\",\n    \"/brone\", \"/pengumuman\", \"/presensi\", \"/help\", \"/stiker\", \"/sticker\",\n    \"/agent\", \"/vps\"\n  ];\n  if (explicitCommands.some(cmd => cleaned.startsWith(cmd))) {\n    return false;\n  }\n  if ([\"hadir\", \"absen\", \"absen hadir\", \"hadir daring\", \"hadir online\"].includes(cleaned)) {\n    return false;\n  }\n\n  // 2. Selection replies when pending action exists: do not consume here\n  if (/^(?:hapus\\s+|selesai\\s+|pilih\\s+|#)?\\d+$/i.test(cleaned) || ['batal', 'cancel', '/batal', '/cancel'].includes(cleaned)) {\n    return false;\n  }\n\n  // 3. Ask command\n  const isAsk = cleaned.startsWith(\"/ask\");\n\n  // 4. Mentions in group\n  const isMention = botNumbers.some(b => b && raw.includes(\"@\" + b)) ||\n                    mentionedJid.some(j => botNumbers.some(b => b && j.includes(b))) ||\n                    raw.toLowerCase().includes(\"@n8n\") ||\n                    raw.toLowerCase().includes(\"@bot\");\n\n  // 5. Swipe / Quoted reply to bot in group\n  const quotedParticipant = ctx.participant || ctx.quotedMessageSender || \"\";\n  const isReplyingToBot = isGroup && botNumbers.some(b => b && quotedParticipant.includes(b));\n\n  // 6. Notes & Expense commands\n  const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\");\n  const isExpenseCmd = cleaned.startsWith(\"/expense\") || cleaned.startsWith(\"/pengeluaran\");\n\n  // 7. Voice note in dev group\n  const isDevGroup = jid === ($env.WA_GROUP_DEV || \"120363336434287340@g.us\");\n  const hasAudio = Boolean(msg.audioMessage || ctx.quotedMessage?.audioMessage);\n  const isDevAudio = Boolean(isDevGroup && hasAudio);\n\n  return Boolean(isAsk || isMention || isReplyingToBot || isNoteCmd || isExpenseCmd || isDevAudio);\n})() }}",
+                      "leftValue": "={{ (() => {\n  const data = $json.body?.data || {};\n  const msg = data.message || {};\n  const raw = (msg.conversation || msg.extendedTextMessage?.text || msg.imageMessage?.caption || msg.videoMessage?.caption || msg.documentMessage?.caption || \"\").trim();\n  const cleaned = raw.replace(/@[a-zA-Z0-9_\\-\\.]+\\s*/g, \"\").trim().toLowerCase();\n  const jid = data.key?.remoteJid || \"\";\n  const isGroup = jid.endsWith(\"@g.us\");\n\n  const ctx = data.contextInfo ||\n    msg.extendedTextMessage?.contextInfo ||\n    msg.imageMessage?.contextInfo ||\n    msg.videoMessage?.contextInfo ||\n    msg.documentMessage?.contextInfo ||\n    msg.audioMessage?.contextInfo ||\n    {};\n  const mentionedJid = ctx.mentionedJid || [];\n  const botNumbers = [\"171619058196619\", \"195095164887244\", \"6283130151476\"];\n\n  // 1. Explicit commands handled by other switch rules: DO NOT consume here!\n  const explicitCommands = [\n    \"/agenda\", \"/besok\", \"/tugas\", \"/jadwal\", \"/cek\", \"/uas\",\n    \"/done\", \"/selesai\", \"/hapus\", \"/edit-kuliah\", \"/edit kuliah\", \"/edit\", \"/reschedule\", \"/delete\",\n    \"/brone\", \"/pengumuman\", \"/presensi\", \"/help\", \"/stiker\", \"/sticker\",\n    \"/agent\", \"/vps\"\n  ];\n  if (explicitCommands.some(cmd => cleaned.startsWith(cmd))) {\n    return false;\n  }\n  if ([\"hadir\", \"absen\", \"absen hadir\", \"hadir daring\", \"hadir online\"].includes(cleaned)) {\n    return false;\n  }\n\n  // 2. Selection replies when pending action exists: do not consume here\n  if (/^(?:hapus\\s+|selesai\\s+|pilih\\s+|#)?\\d+$/i.test(cleaned) || ['batal', 'cancel', '/batal', '/cancel'].includes(cleaned)) {\n    return false;\n  }\n\n  // 3. Mentions in group\n  const isMention = botNumbers.some(b => b && raw.includes(\"@\" + b)) ||\n                    mentionedJid.some(j => botNumbers.some(b => b && j.includes(b))) ||\n                    raw.toLowerCase().includes(\"@n8n\") ||\n                    raw.toLowerCase().includes(\"@bot\");\n\n  // In a group, ONLY respond if mentioned!\n  if (isGroup) {\n    return isMention;\n  }\n\n  // Private chat triggers\n  const isAsk = cleaned.startsWith(\"/ask\");\n  const isNoteCmd = cleaned.startsWith(\"/catat\") || cleaned.startsWith(\"/notes\") || cleaned.startsWith(\"/catatan\");\n  const isExpenseCmd = cleaned.startsWith(\"/expense\") || cleaned.startsWith(\"/pengeluaran\");\n\n  return Boolean(isAsk || isMention || isNoteCmd || isExpenseCmd);\n})() }}",
                       "rightValue": "",
                       "operator": {
                         "type": "boolean",
@@ -2222,6 +2222,19 @@
           800
         ],
         "name": "Note: Fun Keywords"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || {};\nconst data = body.data || {};\nconst key = data.key || {};\nconst remoteJid = key.remoteJid || \"\";\nconst isGroup = remoteJid.endsWith(\"@g.us\");\n\n// 1. Ignore messages sent by bot itself\nif (key.fromMe) {\n  return [];\n}\n\n// 2. If in a WhatsApp group, ONLY process if bot is explicitly tagged/mentioned!\nif (isGroup) {\n  const msg = data.message || {};\n  const rawText = (\n    msg.conversation ||\n    msg.extendedTextMessage?.text ||\n    msg.imageMessage?.caption ||\n    msg.videoMessage?.caption ||\n    msg.documentMessage?.caption ||\n    \"\"\n  ).trim();\n\n  const ctx = data.contextInfo ||\n    msg.extendedTextMessage?.contextInfo ||\n    msg.imageMessage?.contextInfo ||\n    msg.videoMessage?.contextInfo ||\n    msg.documentMessage?.contextInfo ||\n    msg.audioMessage?.contextInfo ||\n    {};\n\n  const mentionedJid = ctx.mentionedJid || [];\n  const botIdentifiers = [\"171619058196619\", \"195095164887244\", \"6283130151476\"];\n\n  const isMention =\n    botIdentifiers.some(id => rawText.includes(\"@\" + id)) ||\n    mentionedJid.some(jid => botIdentifiers.some(id => jid.includes(id))) ||\n    rawText.toLowerCase().includes(\"@n8n\") ||\n    rawText.toLowerCase().includes(\"@bot\");\n\n  if (!isMention) {\n    // Drop group message! Not tagged to bot.\n    return [];\n  }\n}\n\n// Private chat or tagged group message -> proceed\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          0,
+          80
+        ],
+        "id": "gate-group-mention-01",
+        "name": "Gate: Check Group Mention"
       }
     ],
     "connections": {
@@ -2229,7 +2242,7 @@
         "main": [
           [
             {
-              "node": "Switch",
+              "node": "Gate: Check Group Mention",
               "type": "main",
               "index": 0
             }
@@ -2773,6 +2786,17 @@
           [
             {
               "node": "[HTTP Whatsapp] Send Message10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gate: Check Group Mention": {
+        "main": [
+          [
+            {
+              "node": "Switch",
               "type": "main",
               "index": 0
             }
