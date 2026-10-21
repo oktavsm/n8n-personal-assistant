@@ -2101,7 +2101,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\nconst imgActions = actions.filter(a => a.actionType === 'image_gen');\nif (!imgActions || imgActions.length === 0) return [];\n\nconst items = [];\nfor (const act of imgActions) {\n  const prompt = act.prompt || 'artistic illustration';\n  const caption = act.caption || 'Gambar AI';\n  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=flux&width=1024&height=1024&nologo=true`;\n\n  items.push({\n    json: {\n      number: wa.remoteJid,\n      mediatype: 'image',\n      mimetype: 'image/jpeg',\n      caption: `🎨 *Hasil Gambar AI (FLUX.1)*\\n\\n${caption}\\n\\n_Prompt: ${prompt}_`,\n      media: imageUrl\n    }\n  });\n}\nreturn items;"
+          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\nconst imgActions = actions.filter(a => a.actionType === 'image_gen');\nif (!imgActions || imgActions.length === 0) return [];\n\nconst items = [];\nfor (const act of imgActions) {\n  const prompt = act.prompt || 'artistic illustration';\n  const caption = act.caption || 'Gambar AI';\n  const targetNumber = wa.remoteJid;\n  const rawText = wa.userText || '';\n\n  const escapedPrompt = JSON.stringify(prompt);\n  const escapedCaption = JSON.stringify(caption);\n  const escapedRaw = JSON.stringify(rawText);\n\n  const ts = Date.now();\n  const cmd = `nohup /home/dev/venv/bin/python3 /home/dev/projects/wa-assistant/scripts/process_image_gen.py --number ${JSON.stringify(targetNumber)} --prompt ${escapedPrompt} --caption ${escapedCaption} --raw_text ${escapedRaw} > /tmp/img_gen_${ts}.log 2>&1 &`;\n\n  items.push({\n    json: {\n      number: targetNumber,\n      cmd\n    }\n  });\n}\nreturn items;"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -2109,35 +2109,28 @@
           4960,
           700
         ],
-        "id": "prepImagePayload01",
-        "name": "[Code] Prepare Image Gen Payload"
+        "id": "prepImageCommand01",
+        "name": "[Code] Prepare Image Gen Command"
       },
       {
         "parameters": {
-          "method": "POST",
-          "url": "http://evolution-api:8080/message/sendMedia/okta_wa",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "=httpHeaderAuth",
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\n  \"number\": \"{{ $json.number }}\",\n  \"mediatype\": \"image\",\n  \"mimetype\": \"image/jpeg\",\n  \"caption\": {{ JSON.stringify($json.caption) }},\n  \"media\": \"{{ $json.media }}\"\n}",
-          "options": {}
+          "resource": "command",
+          "operation": "execute",
+          "authentication": "privateKey",
+          "command": "={{ $json.cmd }}"
         },
-        "retryOnFail": true,
-        "maxTries": 3,
-        "waitBetweenTries": 2000,
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.4,
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1.1,
         "position": [
           5200,
           700
         ],
-        "id": "httpSendGenImage01",
-        "name": "[HTTP] Send Generated Image",
+        "id": "sshProcessAiImage01",
+        "name": "[SSH] Process AI Image",
         "credentials": {
-          "httpHeaderAuth": {
-            "id": "GEmHpHffIDZKhtvn",
-            "name": "Header Auth account"
+          "sshPrivateKey": {
+            "id": "sshHostDev0001",
+            "name": "SSH Host Dev"
           }
         }
       },
@@ -3046,7 +3039,7 @@
         "main": [
           [
             {
-              "node": "[Code] Prepare Image Gen Payload",
+              "node": "[Code] Prepare Image Gen Command",
               "type": "main",
               "index": 0
             }
@@ -3054,11 +3047,11 @@
           []
         ]
       },
-      "[Code] Prepare Image Gen Payload": {
+      "[Code] Prepare Image Gen Command": {
         "main": [
           [
             {
-              "node": "[HTTP] Send Generated Image",
+              "node": "[SSH] Process AI Image",
               "type": "main",
               "index": 0
             }
