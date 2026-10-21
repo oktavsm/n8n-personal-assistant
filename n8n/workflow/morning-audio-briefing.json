@@ -157,7 +157,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $json.selected_key }}",
+          "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={{ $json.selected_key }}",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah AI Co-Pilot & Asisten Pribadi Okta. Tugasmu adalah membuat naskah Voice Note \"Morning Audio Briefing\" untuk Okta yang akan dibacakan dengan suara ramah, bersemangat, to-the-point, dan santai (gaya obrolan radio / asisten cerdas panggil \"bro\" atau \"Okta\").\\n\\nDATA REAL-TIME HARI INI:\\n${$json.briefingContext}\\n\\nATURAN PENULISAN NASKAH:\\n1. Panjang naskah: MAKSIMAL 3-4 kalimat pendek (agar voice note berdurasi sekitar 20-30 detik).\\n2. Sapa Okta dan sebutkan harinya secara ringkas.\\n3. Bacakan kelas kuliah penting atau agenda utama hari ini.\\n4. Jika ada tugas/deadline mendesak, ingatkan singkat.\\n5. Tutup dengan kalimat penyemangat hari ini.\\n6. JANGAN gunakan tanda format markdown tebal (* atau **) atau bullet points di dalam teks naskah audio, karena teks ini akan langsung dibaca oleh Text-To-Speech engine.\\n\\nTuliskan NASKAH AUDIO murni saja sekarang:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      \"maxOutputTokens\": 300\n    }\n  }\n}}",
@@ -172,11 +172,15 @@
           260
         ],
         "id": "morningGeminiScript01",
-        "name": "[HTTP] Gemini Audio Script"
+        "name": "[HTTP] Gemini Audio Script",
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
-          "jsCode": "const res = $input.first().json;\nlet scriptText = \"\";\ntry {\n  scriptText = res.candidates[0].content.parts[0].text.trim();\n} catch(e) {}\n\n// Clean text for speech\nscriptText = scriptText.replace(/[*_#`~]/g, \"\").replace(/\\n+/g, \" \");\n\nconst escaped = JSON.stringify(scriptText);\nconst cmd = `/home/dev/.local/bin/edge-tts --voice id-ID-ArdiNeural --text ${escaped} --write-media /tmp/morning_brief.mp3 && base64 -w 0 /tmp/morning_brief.mp3`;\n\nreturn [{\n  json: {\n    scriptText,\n    cmd\n  }\n}];"
+          "jsCode": "const res = $input.first().json || {};\nlet scriptText = \"\";\ntry {\n  scriptText = res.candidates[0].content.parts[0].text.trim();\n} catch(e) {}\n\n// Intelligent Fallback Script if Gemini is unavailable or returns 503/error\nif (!scriptText) {\n  const now = new Date();\n  const dayName = now.toLocaleDateString(\"id-ID\", { weekday: \"long\", timeZone: \"Asia/Jakarta\" });\n  const dateStr = now.toLocaleDateString(\"id-ID\", { day: \"numeric\", month: \"long\", timeZone: \"Asia/Jakarta\" });\n\n  let kuliahList = [];\n  try {\n    kuliahList = $('Get GCal Okta Kuliah').all()\n      .map(i => i.json?.summary)\n      .filter(Boolean)\n      .filter(s => !s.toUpperCase().includes('[LIBUR]'));\n  } catch(e) {}\n\n  let agendaList = [];\n  try {\n    agendaList = $('Get GCal Okta Agenda').all()\n      .map(i => i.json?.summary)\n      .filter(Boolean);\n  } catch(e) {}\n\n  let tugasList = [];\n  try {\n    tugasList = $('Get GCal Okta Tugas').all()\n      .map(i => i.json?.summary)\n      .filter(Boolean)\n      .filter(s => !s.toUpperCase().includes('[SELESAI]'));\n  } catch(e) {}\n\n  let items = [];\n  if (kuliahList.length > 0) {\n    items.push(`ada ${kuliahList.length} kelas kuliah hari ini`);\n  }\n  if (agendaList.length > 0) {\n    items.push(`ada agenda ${agendaList[0]}`);\n  }\n\n  const activityText = items.length > 0\n    ? `Hari ini kamu ${items.join(' dan ')}.`\n    : 'Hari ini jadwalmu terpantau santai dan tidak ada kelas kuliah.';\n\n  const taskText = tugasList.length > 0\n    ? `Jangan lupa ada deadline tugas ${tugasList[0]}.`\n    : 'Tidak ada deadline tugas mendesak hari ini.';\n\n  scriptText = `Selamat pagi bro Okta! Hari ini hari ${dayName}, tanggal ${dateStr}. ${activityText} ${taskText} Semangat dan sukses buat semua aktivitasmu hari ini ya!`;\n}\n\n// Clean text for speech (strip markdown characters and extra line breaks)\nscriptText = scriptText.replace(/[*_#`~]/g, \"\").replace(/\\n+/g, \" \").trim();\n\nconst ts = Date.now();\nconst tmpFile = `/tmp/morning_brief_${ts}.mp3`;\nconst escaped = JSON.stringify(scriptText);\nconst cmd = `/home/dev/.local/bin/edge-tts --voice id-ID-ArdiNeural --text ${escaped} --write-media ${tmpFile} && base64 -w 0 ${tmpFile} && rm -f ${tmpFile}`;\n\nreturn [{\n  json: {\n    scriptText,\n    cmd\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -272,6 +276,19 @@
             "name": "Header Auth account"
           }
         }
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -600,
+          360
+        ],
+        "id": "morningManualTrigger01",
+        "name": "Manual / Call Trigger"
       }
     ],
     "connections": {
@@ -394,6 +411,17 @@
             },
             {
               "node": "[HTTP] Send Text Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manual / Call Trigger": {
+        "main": [
+          [
+            {
+              "node": "[Code] Date Calculation",
               "type": "main",
               "index": 0
             }
