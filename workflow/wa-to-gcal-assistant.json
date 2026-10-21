@@ -372,10 +372,11 @@
                     {
                       "id": "ef35be2c-1706-473d-a6de-852a0bbf94eb",
                       "leftValue": "={{\n  !$json.pesanWALower.startsWith('/edit') &&\n  !$json.pesanWALower.startsWith('/reschedule') &&\n  !$json.pesanWALower.startsWith('/hapus') &&\n  !$json.pesanWALower.startsWith('/done') &&\n  !$json.pesanWALower.startsWith('/selesai') &&\n  $json.pesanWALower.startsWith('/tugas') &&\n  !['/tugas', '/tugas okta', '/tugas manda'].includes($json.pesanWALower)\n}}",
-                      "rightValue": "/tugas",
+                      "rightValue": "",
                       "operator": {
-                        "type": "string",
-                        "operation": "contains"
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
                       }
                     }
                   ],
