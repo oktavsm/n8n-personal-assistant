@@ -483,7 +483,7 @@
           "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ ($json.base64Audio || $json.base64Image) ? 'gemini-2.5-flash' : 'gemini-3.5-flash-lite' }}:generateContent?key={{ $json.selected_key }}",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          ...( $json.base64Image ? [{\n            \"inline_data\": {\n              \"mime_type\": $json.imageMimetype || \"image/jpeg\",\n              \"data\": $json.base64Image\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Cerdas untuk WhatsApp.\n\nLOGIKA PERAN:\n1. JIKA PENGIRIM ADALAH OKTA (${$env.MY_WA_NUMBER}):\n   - Kamu adalah co-pilot developer & asisten pribadi Okta.\n   - Bersikap sigap, efisien, to-the-point, santai (panggil \"bro\" atau \"Okta\").\n   - Jika Okta mengirimkan pesan suara (voice note), dengarkan audio yang terlampir dengan seksama lalu responi.\n   - TITIP PESAN KE KAK MANDA:\n     - Jika Okta menitipkan pesan untuk Kak Manda (misal: \"titip pesan ke manda\", \"bilang ke manda\"):\n       - Konfirmasi bahwa pesan untuk Kak Manda sudah dicatat dan langsung otomatis diteruskan ke WhatsApp Kak Manda!\n\n2. JIKA DI GRUP ATAU PENGIRIM LAIN:\n   - Bersikap ramah, santai, solutif, ringkas, dan menyesuaikan obrolan.\n\n3. KEMAMPUAN MULTIMODAL & IMAGE OCR / VISION:\n   - Jika pengguna melampirkan atau me-reply/quote gambar/foto:\n     - Amati dan pahami gambar secara visual (bisa materi kuliah, slide presentasi, grafik, lembar soal tugas, struk belanja, dsb).\n     - Lakukan OCR untuk membaca teks dalam gambar secara tepat jika ditanyakan.\n     - Jelaskan maksud gambar, bantu kerjakan soal tugas, atau ekstrak data belanjaan dengan ringkas dan jelas.\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, tugas, catatan/notes, pengumuman, atau presensi secara to-the-point dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / catatan kosong, sampaikan dengan jelas bahwa tidak ada acara / catatan.` : ''}\n\nINFORMASI SAAT INI:\n- Pengirim: ${$json.wa.pushName || \"User\"} (${$json.wa.participant || $json.wa.remoteJid})\n- Waktu Sekarang: ${$json.wa.dateTimeWib || $json.wa.dateTime} (WIB / UTC+7)\n- Pesan: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : $json.wa.hasImage ? '[Foto / Gambar terlampir di atas]' : '[Media]')}\"\n- Quoted: \"${$json.wa.quotedText || '-'}\"\n\n==================================================\nFITUR AKSI OTOMATIS (ACTION TRIGGERS)\n==================================================\nJika pengguna meminta kamu melakukan suatu aksi nyata, kamu WAJIB menyertakan tag aksi di BARIS PALING AKHIR responmu:\n\n1. PEMBUATAN TUGAS & AGENDA KALENDER:\n   <<<ACTION:TUGAS|TARGET|DETAIL>>>  -> untuk tugas kuliah, PR, deadline project.\n   <<<ACTION:JADWAL|TARGET|DETAIL>>> -> untuk rapat, meeting, acara, kegiatan.\n   TARGET: \"okta\" atau \"manda\"\n   DETAIL: Judul lengkap + waktu & tanggal spesifik (contoh: \"PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59\")\n\n2. LIFECYCLE TUGAS/AGENDA KALENDER (SELESAI / HAPUS / EDIT) & PERLINDUNGAN KULIAH:\n   <<<ACTION:DONE|TARGET|JUDUL>>>                      -> tandai tugas/jadwal sebagai [SELESAI] di kalender.\n   <<<ACTION:DELETE|TARGET|JUDUL>>>                    -> hapus tugas/jadwal dari kalender.\n   <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>      -> ralat/ubah nama agenda atau tugas yang sudah ada.\n   <<<ACTION:RESCHEDULE|TARGET|JUDUL|START_ISO|END_ISO|WAKTU_TEXT>>> -> ganti tanggal/jam atau jadwalkan ulang agenda/tugas.\n   TARGET: \"okta\" atau \"manda\"\n   START_ISO: ISO string waktu mulai UTC+7 (contoh: 2026-10-22T20:00:00+07:00)\n   END_ISO: ISO string waktu selesai UTC+7 (contoh: 2026-10-22T21:00:00+07:00)\n   WAKTU_TEXT: Deskripsi waktu baru (contoh: \"Kamis, 22 Okt 2026 jam 20.00 WIB\")\n   \n   ⚠️ ATURAN KETAT RESCHEDULE & GANTI TANGGAL/JAM:\n   - JIKA PENGGUNA INGIN MENGUNDUR, MEMAJUKAN, ATAU MENGGANTI TANGGAL/JAM AGENDA ATAU TUGAS:\n     - DILARANG KERAS MENGELUARKAN <<<ACTION:JADWAL>>> ATAU <<<ACTION:TUGAS>>> karena itu akan MEMBUAT JADWAL BARU (DUPLIKAT)!\n     - WAJIB mengeluarkan tag <<<ACTION:RESCHEDULE|TARGET|JUDUL|START_ISO|END_ISO|WAKTU_TEXT>>>.\n     - Contoh:\n       User: \"rapat TSA diundur besok jam 8 malam\"\n       Baris terakhir: <<<ACTION:RESCHEDULE|okta|TSA|2026-10-22T20:00:00+07:00|2026-10-22T21:00:00+07:00|Kamis, 22 Okt 2026 jam 20.00 WIB>>>\n       User: \"deadline tugas metopen ganti jadi jumat 23.59\"\n       Baris terakhir: <<<ACTION:RESCHEDULE|okta|metopen|2026-10-23T23:59:00+07:00|2026-10-23T23:59:00+07:00|Jumat, 23 Okt 2026 jam 23.59 WIB>>>\n\n   ⚠️ ATURAN KETAT EDIT & LIFECYCLE KALENDER:\n   a. JIKA PENGGUNA INGIN MERALAT / MENGUBAH / MEMPERBAIKI NAMA AGENDA ATAU TUGAS:\n      - DILARANG KERAS MENGELUARKAN <<<ACTION:JADWAL>>> ATAU <<<ACTION:TUGAS>>> karena itu akan MEMBUAT JADWAL BARU (DUPLIKAT)!\n      - WAJIB mengeluarkan tag <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>.\n      - Contoh:\n        User: \"meet lead other itu meet Tanoto bukan ICN\" -> JUDUL_LAMA: \"ICN\", JUDUL_BARU: \"[Meeting] Tanoto Scholars Association (TSA) - Meet Lead Other\"\n        User: \"meet tanoto bisa edit jadi meet lead other gak tapi tetep meet tsa\" -> JUDUL_LAMA: \"meet tanoto\", JUDUL_BARU: \"[Meeting] Tanoto Scholars Association (TSA) - Meeting Lead Other\"\n        User: \"ubah judul tugas ppt scope jadi ppt final\" -> JUDUL_LAMA: \"ppt scope\", JUDUL_BARU: \"[Tugas] PPT Final\"\n   b. JANGAN PERNAH MENYIMPULKAN / MENGKLAIM SUDAH SELESAI ATAU SUDAH TERHAPUS DI TEKS RESPON!\n      - CUKUP balas singkat netral: \"Oke bro, aku bantu proses di kalender ya...\" atau serahkan ke sistem backend untuk mengirim laporan statusnya.\n   c. JADWAL KULIAH TIDAK DAPAT DIHAPUS ATAU DIUBAH SEMBARANGAN!\n      - Kalender kuliah dilindungi penuh. Jika user meminta hapus/edit jadwal kuliah, jelaskan bahwa ruang kelas atau status libur bisa diubah via /edit-kuliah [matkul] [ruang / LIBUR]. DILARANG mengeluarkan <<<ACTION:DELETE>>> untuk kuliah!\n\n3. PENCATATAN & TO-DO (NOTES SYSTEM):\n   <<<ACTION:NOTE_ADD|TARGET|DETAIL>>>    -> catat memo/to-do baru tanpa jam terikat.\n   <<<ACTION:NOTE_EDIT|ID|KONTEN_BARU>>>  -> perbarui/edit isi catatan yang sudah ada berdasarkan ID catatan.\n   <<<ACTION:NOTE_DONE|ID>>>              -> tandai catatan selesai berdasarkan ID catatan.\n   TARGET: \"okta\" atau \"manda\"\n\n   ⚠️ ATURAN TAMPILAN & PENGELOLAAN NOTES:\n   a. FORMAT MENAMPILKAN CATATAN:\n      Saat pengguna meminta melihat catatan (\"/notes\", \"/catatan\", \"catatan aktif\", dsb):\n      Tampilkan daftar catatan aktif dengan rapi menyertakan nomor, ID, isi, dan timestamp (tanggal & jam dibuat / diedit):\n      Contoh format:\n      📝 *CATATAN AKTIF KAMU:*\n      1. *[ID: 4]* mandi nanti malam _(Sen, 20 Okt, 16.55 WIB)_\n      2. *[ID: 6]* Perbaikan notes pakek timestamp _(Sel, 21 Okt, 10.17 WIB)_\n      3. *[ID: 7]* tambahin fitur edit notes... _(Sel, 21 Okt, 10.22 WIB - diedit)_\n   b. EDIT / UPDATE CATATAN:\n      Jika user meminta mengedit catatan (contoh: \"edit catatan 4 jadi mandi jam 8\", \"ubah catatan mandi jadi mandi jam 8\", \"/catat edit 4 mandi jam 8\"):\n      - Cari ID catatan dari konteks/vision.\n      - Keluarkan tag: <<<ACTION:NOTE_EDIT|4|mandi jam 8>>>.\n      - Berikan konfirmasi bahwa catatan berhasil diperbarui dan waktu terakhir diedit otomatis diperbarui.\n\n4. PENCATATAN PENGELUARAN & EXPENSE TRACKER (DARI FOTO STRUK ATAU TEKS):\n   - Jika pengguna mengirim foto struk/nota belanjaan ATAU mengetik pengeluaran:\n     <<<ACTION:EXPENSE_ADD|TARGET|AMOUNT|CATEGORY|MERCHANT|ITEMS>>>\n     TARGET: \"okta\" atau \"manda\"\n     AMOUNT: Angka murni tanpa titik/koma (misal: 25000)\n     CATEGORY: \"makan\", \"transport\", \"belanja\", \"tagihan\", atau \"lainnya\"\n     MERCHANT: Nama toko / warung / merchant\n     ITEMS: Ringkasan barang yang dibeli\n\n5. PRESENSI KULIAH UB:\n   <<<ACTION:PRESENSI|hadir>>> -> jika Okta meminta absen (\"@n8n tolong absenkan kelas sekarang\").\n\nJawablah dengan ringkas, cerdas, dan to-the-point:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( ($json.base64Audio || $json.base64Image) ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          ...( $json.base64Audio ? [{\n            \"inline_data\": {\n              \"mime_type\": \"audio/ogg\",\n              \"data\": $json.base64Audio\n            }\n          }] : [] ),\n          ...( $json.base64Image ? [{\n            \"inline_data\": {\n              \"mime_type\": $json.imageMimetype || \"image/jpeg\",\n              \"data\": $json.base64Image\n            }\n          }] : [] ),\n          {\n            \"text\": `Kamu adalah AI Asisten Cerdas untuk WhatsApp.\n\nLOGIKA PERAN:\n1. JIKA PENGIRIM ADALAH OKTA (${$env.MY_WA_NUMBER}):\n   - Kamu adalah co-pilot developer & asisten pribadi Okta.\n   - Bersikap sigap, efisien, to-the-point, santai (panggil \"bro\" atau \"Okta\").\n   - Jika Okta mengirimkan pesan suara (voice note), dengarkan audio yang terlampir dengan seksama lalu responi.\n   - TITIP PESAN KE KAK MANDA:\n     - Jika Okta menitipkan pesan untuk Kak Manda (misal: \"titip pesan ke manda\", \"bilang ke manda\"):\n       - Konfirmasi bahwa pesan untuk Kak Manda sudah dicatat dan langsung otomatis diteruskan ke WhatsApp Kak Manda!\n\n2. JIKA DI GRUP ATAU PENGIRIM LAIN:\n   - Bersikap ramah, santai, solutif, ringkas, dan menyesuaikan obrolan.\n\n3. KEMAMPUAN MULTIMODAL & IMAGE OCR / VISION:\n   - Jika pengguna melampirkan atau me-reply/quote gambar/foto:\n     - Amati dan pahami gambar secara visual (bisa materi kuliah, slide presentasi, grafik, lembar soal tugas, struk belanja, dsb).\n     - Lakukan OCR untuk membaca teks dalam gambar secara tepat jika ditanyakan.\n     - Jelaskan maksud gambar, bantu kerjakan soal tugas, atau ekstrak data belanjaan dengan ringkas dan jelas.\n\nRIWAYAT PERCAKAPAN SEBELUMNYA:\n${$json.memoryContext || \"(Belum ada riwayat sebelumnya)\"}\n\n${$json.visionContext ? `INFORMASI REAL-TIME SISTEM (VISION KAMU):\n${$json.visionContext}\n\nATURAN PENTING PENGGUNAAN DATA VISION DI ATAS:\n- Gunakan data real-time di atas LANGSUNG untuk menjawab pertanyaan jadwal, agenda, tugas, catatan/notes, pengumuman, atau presensi secara to-the-point dan akurat.\n- DILARANG KERAS menjawab \"bentar aku cek dulu\", \"tunggu ya aku cekin\", atau sejenisnya, KARENA KAMU SUDAH MEMEGANG DATA NYATA DI ATAS!\n- Jika di data tertulis tidak ada jadwal / catatan kosong, sampaikan dengan jelas bahwa tidak ada acara / catatan.` : ''}\n\nINFORMASI SAAT INI:\n- Pengirim: ${$json.wa.pushName || \"User\"} (${$json.wa.participant || $json.wa.remoteJid})\n- Waktu Sekarang: ${$json.wa.dateTimeWib || $json.wa.dateTime} (WIB / UTC+7)\n- Pesan: \"${$json.wa.currentText || $json.wa.cleanText || ($json.wa.hasAudio ? '[Pesan Suara / Voice Note terlampir di atas]' : $json.wa.hasImage ? '[Foto / Gambar terlampir di atas]' : '[Media]')}\"\n- Quoted: \"${$json.wa.quotedText || '-'}\"\n\n==================================================\nFITUR AKSI OTOMATIS (ACTION TRIGGERS)\n==================================================\nJika pengguna meminta kamu melakukan suatu aksi nyata, kamu WAJIB menyertakan tag aksi di BARIS PALING AKHIR responmu:\n\n1. PEMBUATAN TUGAS & AGENDA KALENDER:\n   <<<ACTION:TUGAS|TARGET|DETAIL>>>  -> untuk tugas kuliah, PR, deadline project.\n   <<<ACTION:JADWAL|TARGET|DETAIL>>> -> untuk rapat, meeting, acara, kegiatan.\n   TARGET: \"okta\" atau \"manda\"\n   DETAIL: Judul lengkap + waktu & tanggal spesifik (contoh: \"PPT Pengabdian deadline Kamis 22 Oktober 2026 jam 23.59\")\n\n2. LIFECYCLE TUGAS/AGENDA KALENDER (SELESAI / HAPUS / EDIT) & PERLINDUNGAN KULIAH:\n   <<<ACTION:DONE|TARGET|JUDUL>>>                      -> tandai tugas/jadwal sebagai [SELESAI] di kalender.\n   <<<ACTION:DELETE|TARGET|JUDUL>>>                    -> hapus tugas/jadwal dari kalender.\n   <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>      -> ralat/ubah nama agenda atau tugas yang sudah ada.\n   <<<ACTION:RESCHEDULE|TARGET|JUDUL|START_ISO|END_ISO|WAKTU_TEXT>>> -> ganti tanggal/jam atau jadwalkan ulang agenda/tugas.\n   TARGET: \"okta\" atau \"manda\"\n   START_ISO: ISO string waktu mulai UTC+7 (contoh: 2026-10-22T20:00:00+07:00)\n   END_ISO: ISO string waktu selesai UTC+7 (contoh: 2026-10-22T21:00:00+07:00)\n   WAKTU_TEXT: Deskripsi waktu baru (contoh: \"Kamis, 22 Okt 2026 jam 20.00 WIB\")\n   \n   ⚠️ ATURAN KETAT RESCHEDULE & GANTI TANGGAL/JAM:\n   - JIKA PENGGUNA INGIN MENGUNDUR, MEMAJUKAN, ATAU MENGGANTI TANGGAL/JAM AGENDA ATAU TUGAS:\n     - DILARANG KERAS MENGELUARKAN <<<ACTION:JADWAL>>> ATAU <<<ACTION:TUGAS>>> karena itu akan MEMBUAT JADWAL BARU (DUPLIKAT)!\n     - WAJIB mengeluarkan tag <<<ACTION:RESCHEDULE|TARGET|JUDUL|START_ISO|END_ISO|WAKTU_TEXT>>>.\n     - Contoh:\n       User: \"rapat TSA diundur besok jam 8 malam\"\n       Baris terakhir: <<<ACTION:RESCHEDULE|okta|TSA|2026-10-22T20:00:00+07:00|2026-10-22T21:00:00+07:00|Kamis, 22 Okt 2026 jam 20.00 WIB>>>\n       User: \"deadline tugas metopen ganti jadi jumat 23.59\"\n       Baris terakhir: <<<ACTION:RESCHEDULE|okta|metopen|2026-10-23T23:59:00+07:00|2026-10-23T23:59:00+07:00|Jumat, 23 Okt 2026 jam 23.59 WIB>>>\n\n   ⚠️ ATURAN KETAT EDIT & LIFECYCLE KALENDER:\n   a. JIKA PENGGUNA INGIN MERALAT / MENGUBAH / MEMPERBAIKI NAMA AGENDA ATAU TUGAS:\n      - DILARANG KERAS MENGELUARKAN <<<ACTION:JADWAL>>> ATAU <<<ACTION:TUGAS>>> karena itu akan MEMBUAT JADWAL BARU (DUPLIKAT)!\n      - WAJIB mengeluarkan tag <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>.\n      - Contoh:\n        User: \"meet lead other itu meet Tanoto bukan ICN\" -> JUDUL_LAMA: \"ICN\", JUDUL_BARU: \"[Meeting] Tanoto Scholars Association (TSA) - Meet Lead Other\"\n        User: \"meet tanoto bisa edit jadi meet lead other gak tapi tetep meet tsa\" -> JUDUL_LAMA: \"meet tanoto\", JUDUL_BARU: \"[Meeting] Tanoto Scholars Association (TSA) - Meeting Lead Other\"\n        User: \"ubah judul tugas ppt scope jadi ppt final\" -> JUDUL_LAMA: \"ppt scope\", JUDUL_BARU: \"[Tugas] PPT Final\"\n   b. JANGAN PERNAH MENYIMPULKAN / MENGKLAIM SUDAH SELESAI ATAU SUDAH TERHAPUS DI TEKS RESPON!\n      - CUKUP balas singkat netral: \"Oke bro, aku bantu proses di kalender ya...\" atau serahkan ke sistem backend untuk mengirim laporan statusnya.\n   c. JADWAL KULIAH TIDAK DAPAT DIHAPUS ATAU DIUBAH SEMBARANGAN!\n      - Kalender kuliah dilindungi penuh. Jika user meminta hapus/edit jadwal kuliah, jelaskan bahwa ruang kelas atau status libur bisa diubah via /edit-kuliah [matkul] [ruang / LIBUR]. DILARANG mengeluarkan <<<ACTION:DELETE>>> untuk kuliah!\n\n3. PENCATATAN & TO-DO (NOTES SYSTEM):\n   <<<ACTION:NOTE_ADD|TARGET|DETAIL>>>    -> catat memo/to-do baru tanpa jam terikat.\n   <<<ACTION:NOTE_EDIT|ID|KONTEN_BARU>>>  -> perbarui/edit isi catatan yang sudah ada berdasarkan ID catatan.\n   <<<ACTION:NOTE_DONE|ID>>>              -> tandai catatan selesai berdasarkan ID catatan.\n   TARGET: \"okta\" atau \"manda\"\n\n   ⚠️ ATURAN TAMPILAN & PENGELOLAAN NOTES:\n   a. FORMAT MENAMPILKAN CATATAN:\n      Saat pengguna meminta melihat catatan (\"/notes\", \"/catatan\", \"catatan aktif\", dsb):\n      Tampilkan daftar catatan aktif dengan rapi menyertakan nomor, ID, isi, dan timestamp (tanggal & jam dibuat / diedit):\n      Contoh format:\n      📝 *CATATAN AKTIF KAMU:*\n      1. *[ID: 4]* mandi nanti malam _(Sen, 20 Okt, 16.55 WIB)_\n      2. *[ID: 6]* Perbaikan notes pakek timestamp _(Sel, 21 Okt, 10.17 WIB)_\n      3. *[ID: 7]* tambahin fitur edit notes... _(Sel, 21 Okt, 10.22 WIB - diedit)_\n   b. EDIT / UPDATE CATATAN:\n      Jika user meminta mengedit catatan (contoh: \"edit catatan 4 jadi mandi jam 8\", \"ubah catatan mandi jadi mandi jam 8\", \"/catat edit 4 mandi jam 8\"):\n      - Cari ID catatan dari konteks/vision.\n      - Keluarkan tag: <<<ACTION:NOTE_EDIT|4|mandi jam 8>>>.\n      - Berikan konfirmasi bahwa catatan berhasil diperbarui dan waktu terakhir diedit otomatis diperbarui.\n\n4. PENCATATAN PENGELUARAN & EXPENSE TRACKER (DARI FOTO STRUK ATAU TEKS):\n   - Jika pengguna mengirim foto struk/nota belanjaan ATAU mengetik pengeluaran:\n     <<<ACTION:EXPENSE_ADD|TARGET|AMOUNT|CATEGORY|MERCHANT|ITEMS>>>\n     TARGET: \"okta\" atau \"manda\"\n     AMOUNT: Angka murni tanpa titik/koma (misal: 25000)\n     CATEGORY: \"makan\", \"transport\", \"belanja\", \"tagihan\", atau \"lainnya\"\n     MERCHANT: Nama toko / warung / merchant\n     ITEMS: Ringkasan barang yang dibeli\n\n5. PRESENSI KULIAH UB:\n   <<<ACTION:PRESENSI|hadir>>> -> jika Okta meminta absen (\"@n8n tolong absenkan kelas sekarang\").\n\n6. GENERASI GAMBAR & ILUSTRASI AI (FLUX.1):\n   Jika pengguna meminta kamu membuatkan/menggambar/ilustrasi gambar (misal: \"buatin gambar...\", \"bikinin ilustrasi...\", \"generate image...\"):\n   <<<ACTION:IMAGE_GEN|TARGET|ENHANCED_ENGLISH_PROMPT|CAPTION>>>\n   TARGET: \"okta\" atau \"manda\"\n   ENHANCED_ENGLISH_PROMPT: Prompt bahasa Inggris yang sangat detail, spesifik, artistik, dan sinematik untuk model FLUX.1.\n   CAPTION: Deskripsi singkat bahasa Indonesia untuk caption gambar.\n   Contoh:\n   User: \"buatin gambar kucing cyberpunk lagi ngoding\"\n   -> <<<ACTION:IMAGE_GEN|okta|A highly detailed cinematic shot of a cool cyberpunk cat wearing neon goggles, coding on a glowing laptop in a dark neo-tokyo alley with rain reflections, 8k octane render|Kucing cyberpunk lagi ngoding di laptop neon!>>>\n\n7. BALAS DENGAN PESAN SUARA / VOICE NOTE (TTS ENGINE):\n   Jika pengguna meminta kamu menjawab dengan suara / voice note (misal: \"balas pake vn\", \"ngomong dong\", \"jelasin lewat vn\", \"kirim vn\"):\n   <<<ACTION:VOICE_NOTE|TARGET|TEKS_AUDIO>>>\n   TARGET: \"okta\" atau \"manda\"\n   TEKS_AUDIO: Teks murni percakapan santai yang akan dibacakan oleh mesin suara (DILARANG menggunakan simbol markdown tebal * atau _ atau bullet points di TEKS_AUDIO ini).\n   Contoh:\n   User: \"bro bales pake vn dong jelasin uas manda\"\n   -> <<<ACTION:VOICE_NOTE|okta|Halo bro Okta, buat besok jadwal UAS Kak Manda ada dua matkul, yaitu Farmakoterapi jam satu siang dan Farmasi Industri jam tiga sore. Semangat ya bro!>>>\n\nJawablah dengan ringkas, cerdas, dan to-the-point:`\n          }\n        ]\n      }\n    ],\n    \"generationConfig\": {\n      ...( ($json.base64Audio || $json.base64Image) ? { \"thinkingConfig\": { \"thinkingBudget\": 0 } } : { \"maxOutputTokens\": 1024 } )\n    }\n  }\n}}",
           "options": {
             "timeout": 30000
           }
@@ -1296,7 +1296,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags:\n// <<<ACTION:TUGAS|TARGET|DETAIL>>>\n// <<<ACTION:JADWAL|TARGET|DETAIL>>>\n// <<<ACTION:DONE|TARGET|JUDUL>>>\n// <<<ACTION:DELETE|TARGET|JUDUL>>>\n// <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>\n// <<<ACTION:NOTE_ADD|TARGET|DETAIL>>>\n// <<<ACTION:NOTE_EDIT|ID|KONTEN_BARU>>>\n// <<<ACTION:NOTE_DONE|ID>>>\n// <<<ACTION:PRESENSI|hadir>>>\n// <<<ACTION:EXPENSE_ADD|TARGET|AMOUNT|CATEGORY|MERCHANT|ITEMS>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL|DONE|DELETE|EDIT|RESCHEDULE|NOTE_ADD|NOTE_EDIT|NOTE_DONE|PRESENSI|EXPENSE_ADD)(?:\\|(.*?))?>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const rawParams = match[2] || '';\n  const parts = rawParams.split('|').map(s => s.trim());\n\n  if (actionType === 'expense_add') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const amount = parseFloat(parts[1]) || 0;\n    const category = parts[2] || 'makan';\n    const merchant = parts[3] || 'Umum';\n    const itemsDetail = parts.slice(4).join(', ') || '-';\n    actions.push({\n      actionType: 'expense_add',\n      target,\n      amount,\n      category,\n      merchant,\n      itemsDetail,\n      detail: `${merchant} - Rp ${amount}`\n    });\n  } else if (actionType === 'note_edit') {\n    const id = parseInt(parts[0]) || 0;\n    const newContent = parts.slice(1).join('|').trim();\n    actions.push({\n      actionType: 'note_edit',\n      id,\n      newContent,\n      detail: `${id}|${newContent}`,\n      commandText: `/catat edit ${id} ${newContent}`\n    });\n  } else if (actionType === 'reschedule') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const query = parts[1] || '';\n    const startIso = parts[2] || '';\n    const endIso = parts[3] || '';\n    const timeText = parts[4] || '';\n    const newTitle = parts[5] || '';\n    const commandText = target === 'manda'\n      ? `/reschedule manda ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim()\n      : `/reschedule ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim();\n    actions.push({\n      actionType: 'reschedule',\n      target,\n      query,\n      startIso,\n      endIso,\n      timeText,\n      newTitle,\n      detail: `${query} -> ${timeText || startIso}`,\n      commandText\n    });\n  } else if (actionType === 'edit') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const oldTitle = parts[1] || '';\n    const newTitle = parts.slice(2).join('|').trim();\n    const commandText = target === 'manda'\n      ? `/edit-jadwal manda ${oldTitle} | ${newTitle}`\n      : `/edit-jadwal ${oldTitle} | ${newTitle}`;\n    actions.push({\n      actionType: 'edit',\n      target,\n      oldTitle,\n      newTitle,\n      detail: `${oldTitle} | ${newTitle}`,\n      commandText\n    });\n  } else {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const detail = parts.slice(1).join('|') || parts[0] || '';\n    \n    let commandText = '';\n    if (actionType === 'tugas') {\n      commandText = target === 'manda' ? `/tugas manda ${detail}` : `/tugas ${detail}`;\n    } else if (actionType === 'jadwal') {\n      commandText = target === 'manda' ? `/jadwal manda ${detail}` : `/jadwal ${detail}`;\n    } else if (actionType === 'done') {\n      commandText = target === 'manda' ? `/done manda ${detail}` : `/done ${detail}`;\n    } else if (actionType === 'delete') {\n      commandText = target === 'manda' ? `/hapus-jadwal manda ${detail}` : `/hapus-jadwal ${detail}`;\n    } else if (actionType === 'note_add') {\n      commandText = `/catat ${detail}`;\n    } else if (actionType === 'note_done') {\n      commandText = `/catat done ${detail || target}`;\n    } else if (actionType === 'presensi') {\n      commandText = `/presensi ${detail || 'hadir'}`;\n    }\n\n    actions.push({\n      actionType,\n      target,\n      detail: detail || target,\n      commandText\n    });\n  }\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:[A-Z_]+(?:\\|.*?)?>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nconst hasCalendarActions = actions.some(a => ['tugas', 'jadwal', 'done', 'delete', 'edit', 'reschedule'].includes(a.actionType));\nconst hasNoteActions = actions.some(a => ['note_add', 'note_done', 'note_edit'].includes(a.actionType));\nconst hasPresensiActions = actions.some(a => a.actionType === 'presensi');\nconst hasExpenseActions = actions.some(a => a.actionType === 'expense_add');\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    hasCalendarActions,\n    hasNoteActions,\n    hasPresensiActions,\n    hasExpenseActions,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
+          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags:\n// <<<ACTION:TUGAS|TARGET|DETAIL>>>\n// <<<ACTION:JADWAL|TARGET|DETAIL>>>\n// <<<ACTION:DONE|TARGET|JUDUL>>>\n// <<<ACTION:DELETE|TARGET|JUDUL>>>\n// <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>\n// <<<ACTION:NOTE_ADD|TARGET|DETAIL>>>\n// <<<ACTION:NOTE_EDIT|ID|KONTEN_BARU>>>\n// <<<ACTION:NOTE_DONE|ID>>>\n// <<<ACTION:PRESENSI|hadir>>>\n// <<<ACTION:EXPENSE_ADD|TARGET|AMOUNT|CATEGORY|MERCHANT|ITEMS>>>\nconst actionRegex = /<<<ACTION:(IMAGE_GEN|VOICE_NOTE|TUGAS|JADWAL|DONE|DELETE|EDIT|RESCHEDULE|NOTE_ADD|NOTE_EDIT|NOTE_DONE|PRESENSI|EXPENSE_ADD)(?:\\|(.*?))?>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const rawParams = match[2] || '';\n  const parts = rawParams.split('|').map(s => s.trim());\n\n  if (actionType === 'image_gen') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const prompt = parts[1] || '';\n    const caption = parts.slice(2).join('|').trim() || prompt || 'Gambar AI';\n    actions.push({\n      actionType: 'image_gen',\n      target,\n      prompt,\n      caption\n    });\n  } else if (actionType === 'voice_note') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const text = parts.slice(1).join('|').trim() || rawText.replace(/<<<ACTION:[A-Z_]+(?:\\|.*?)?>>>/gi, '').trim();\n    actions.push({\n      actionType: 'voice_note',\n      target,\n      text\n    });\n  } else if (actionType === 'expense_add') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const amount = parseFloat(parts[1]) || 0;\n    const category = parts[2] || 'makan';\n    const merchant = parts[3] || 'Umum';\n    const itemsDetail = parts.slice(4).join(', ') || '-';\n    actions.push({\n      actionType: 'expense_add',\n      target,\n      amount,\n      category,\n      merchant,\n      itemsDetail,\n      detail: `${merchant} - Rp ${amount}`\n    });\n  } else if (actionType === 'note_edit') {\n    const id = parseInt(parts[0]) || 0;\n    const newContent = parts.slice(1).join('|').trim();\n    actions.push({\n      actionType: 'note_edit',\n      id,\n      newContent,\n      detail: `${id}|${newContent}`,\n      commandText: `/catat edit ${id} ${newContent}`\n    });\n  } else if (actionType === 'reschedule') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const query = parts[1] || '';\n    const startIso = parts[2] || '';\n    const endIso = parts[3] || '';\n    const timeText = parts[4] || '';\n    const newTitle = parts[5] || '';\n    const commandText = target === 'manda'\n      ? `/reschedule manda ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim()\n      : `/reschedule ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim();\n    actions.push({\n      actionType: 'reschedule',\n      target,\n      query,\n      startIso,\n      endIso,\n      timeText,\n      newTitle,\n      detail: `${query} -> ${timeText || startIso}`,\n      commandText\n    });\n  } else if (actionType === 'edit') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const oldTitle = parts[1] || '';\n    const newTitle = parts.slice(2).join('|').trim();\n    const commandText = target === 'manda'\n      ? `/edit-jadwal manda ${oldTitle} | ${newTitle}`\n      : `/edit-jadwal ${oldTitle} | ${newTitle}`;\n    actions.push({\n      actionType: 'edit',\n      target,\n      oldTitle,\n      newTitle,\n      detail: `${oldTitle} | ${newTitle}`,\n      commandText\n    });\n  } else {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const detail = parts.slice(1).join('|') || parts[0] || '';\n    \n    let commandText = '';\n    if (actionType === 'tugas') {\n      commandText = target === 'manda' ? `/tugas manda ${detail}` : `/tugas ${detail}`;\n    } else if (actionType === 'jadwal') {\n      commandText = target === 'manda' ? `/jadwal manda ${detail}` : `/jadwal ${detail}`;\n    } else if (actionType === 'done') {\n      commandText = target === 'manda' ? `/done manda ${detail}` : `/done ${detail}`;\n    } else if (actionType === 'delete') {\n      commandText = target === 'manda' ? `/hapus-jadwal manda ${detail}` : `/hapus-jadwal ${detail}`;\n    } else if (actionType === 'note_add') {\n      commandText = `/catat ${detail}`;\n    } else if (actionType === 'note_done') {\n      commandText = `/catat done ${detail || target}`;\n    } else if (actionType === 'presensi') {\n      commandText = `/presensi ${detail || 'hadir'}`;\n    }\n\n    actions.push({\n      actionType,\n      target,\n      detail: detail || target,\n      commandText\n    });\n  }\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:[A-Z_]+(?:\\|.*?)?>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nconst hasCalendarActions = actions.some(a => ['tugas', 'jadwal', 'done', 'delete', 'edit', 'reschedule'].includes(a.actionType));\nconst hasNoteActions = actions.some(a => ['note_add', 'note_done', 'note_edit'].includes(a.actionType));\nconst hasPresensiActions = actions.some(a => a.actionType === 'presensi');\nconst hasExpenseActions = actions.some(a => a.actionType === 'expense_add');\nconst hasImageGenActions = actions.some(a => a.actionType === 'image_gen');\nconst hasVoiceNoteActions = actions.some(a => a.actionType === 'voice_note');\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    hasCalendarActions,\n    hasNoteActions,\n    hasPresensiActions,\n    hasExpenseActions,\n    hasImageGenActions,\n    hasVoiceNoteActions,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1309,7 +1309,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags:\n// <<<ACTION:TUGAS|TARGET|DETAIL>>>\n// <<<ACTION:JADWAL|TARGET|DETAIL>>>\n// <<<ACTION:DONE|TARGET|JUDUL>>>\n// <<<ACTION:DELETE|TARGET|JUDUL>>>\n// <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>\n// <<<ACTION:NOTE_ADD|TARGET|DETAIL>>>\n// <<<ACTION:NOTE_EDIT|ID|KONTEN_BARU>>>\n// <<<ACTION:NOTE_DONE|ID>>>\n// <<<ACTION:PRESENSI|hadir>>>\n// <<<ACTION:EXPENSE_ADD|TARGET|AMOUNT|CATEGORY|MERCHANT|ITEMS>>>\nconst actionRegex = /<<<ACTION:(TUGAS|JADWAL|DONE|DELETE|EDIT|RESCHEDULE|NOTE_ADD|NOTE_EDIT|NOTE_DONE|PRESENSI|EXPENSE_ADD)(?:\\|(.*?))?>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const rawParams = match[2] || '';\n  const parts = rawParams.split('|').map(s => s.trim());\n\n  if (actionType === 'expense_add') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const amount = parseFloat(parts[1]) || 0;\n    const category = parts[2] || 'makan';\n    const merchant = parts[3] || 'Umum';\n    const itemsDetail = parts.slice(4).join(', ') || '-';\n    actions.push({\n      actionType: 'expense_add',\n      target,\n      amount,\n      category,\n      merchant,\n      itemsDetail,\n      detail: `${merchant} - Rp ${amount}`\n    });\n  } else if (actionType === 'note_edit') {\n    const id = parseInt(parts[0]) || 0;\n    const newContent = parts.slice(1).join('|').trim();\n    actions.push({\n      actionType: 'note_edit',\n      id,\n      newContent,\n      detail: `${id}|${newContent}`,\n      commandText: `/catat edit ${id} ${newContent}`\n    });\n  } else if (actionType === 'reschedule') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const query = parts[1] || '';\n    const startIso = parts[2] || '';\n    const endIso = parts[3] || '';\n    const timeText = parts[4] || '';\n    const newTitle = parts[5] || '';\n    const commandText = target === 'manda'\n      ? `/reschedule manda ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim()\n      : `/reschedule ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim();\n    actions.push({\n      actionType: 'reschedule',\n      target,\n      query,\n      startIso,\n      endIso,\n      timeText,\n      newTitle,\n      detail: `${query} -> ${timeText || startIso}`,\n      commandText\n    });\n  } else if (actionType === 'edit') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const oldTitle = parts[1] || '';\n    const newTitle = parts.slice(2).join('|').trim();\n    const commandText = target === 'manda'\n      ? `/edit-jadwal manda ${oldTitle} | ${newTitle}`\n      : `/edit-jadwal ${oldTitle} | ${newTitle}`;\n    actions.push({\n      actionType: 'edit',\n      target,\n      oldTitle,\n      newTitle,\n      detail: `${oldTitle} | ${newTitle}`,\n      commandText\n    });\n  } else {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const detail = parts.slice(1).join('|') || parts[0] || '';\n    \n    let commandText = '';\n    if (actionType === 'tugas') {\n      commandText = target === 'manda' ? `/tugas manda ${detail}` : `/tugas ${detail}`;\n    } else if (actionType === 'jadwal') {\n      commandText = target === 'manda' ? `/jadwal manda ${detail}` : `/jadwal ${detail}`;\n    } else if (actionType === 'done') {\n      commandText = target === 'manda' ? `/done manda ${detail}` : `/done ${detail}`;\n    } else if (actionType === 'delete') {\n      commandText = target === 'manda' ? `/hapus-jadwal manda ${detail}` : `/hapus-jadwal ${detail}`;\n    } else if (actionType === 'note_add') {\n      commandText = `/catat ${detail}`;\n    } else if (actionType === 'note_done') {\n      commandText = `/catat done ${detail || target}`;\n    } else if (actionType === 'presensi') {\n      commandText = `/presensi ${detail || 'hadir'}`;\n    }\n\n    actions.push({\n      actionType,\n      target,\n      detail: detail || target,\n      commandText\n    });\n  }\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:[A-Z_]+(?:\\|.*?)?>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nconst hasCalendarActions = actions.some(a => ['tugas', 'jadwal', 'done', 'delete', 'edit', 'reschedule'].includes(a.actionType));\nconst hasNoteActions = actions.some(a => ['note_add', 'note_done', 'note_edit'].includes(a.actionType));\nconst hasPresensiActions = actions.some(a => a.actionType === 'presensi');\nconst hasExpenseActions = actions.some(a => a.actionType === 'expense_add');\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    hasCalendarActions,\n    hasNoteActions,\n    hasPresensiActions,\n    hasExpenseActions,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
+          "jsCode": "const geminiRaw = $input.first().json;\nlet rawText = \"\";\ntry {\n  rawText = geminiRaw.candidates[0].content.parts[0].text || \"\";\n} catch (e) {}\n\n// Regex for action tags:\n// <<<ACTION:TUGAS|TARGET|DETAIL>>>\n// <<<ACTION:JADWAL|TARGET|DETAIL>>>\n// <<<ACTION:DONE|TARGET|JUDUL>>>\n// <<<ACTION:DELETE|TARGET|JUDUL>>>\n// <<<ACTION:EDIT|TARGET|JUDUL_LAMA|JUDUL_BARU>>>\n// <<<ACTION:NOTE_ADD|TARGET|DETAIL>>>\n// <<<ACTION:NOTE_EDIT|ID|KONTEN_BARU>>>\n// <<<ACTION:NOTE_DONE|ID>>>\n// <<<ACTION:PRESENSI|hadir>>>\n// <<<ACTION:EXPENSE_ADD|TARGET|AMOUNT|CATEGORY|MERCHANT|ITEMS>>>\nconst actionRegex = /<<<ACTION:(IMAGE_GEN|VOICE_NOTE|TUGAS|JADWAL|DONE|DELETE|EDIT|RESCHEDULE|NOTE_ADD|NOTE_EDIT|NOTE_DONE|PRESENSI|EXPENSE_ADD)(?:\\|(.*?))?>>>/gi;\nconst actions = [];\nlet match;\n\nwhile ((match = actionRegex.exec(rawText)) !== null) {\n  const actionType = match[1].toLowerCase();\n  const rawParams = match[2] || '';\n  const parts = rawParams.split('|').map(s => s.trim());\n\n  if (actionType === 'image_gen') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const prompt = parts[1] || '';\n    const caption = parts.slice(2).join('|').trim() || prompt || 'Gambar AI';\n    actions.push({\n      actionType: 'image_gen',\n      target,\n      prompt,\n      caption\n    });\n  } else if (actionType === 'voice_note') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const text = parts.slice(1).join('|').trim() || rawText.replace(/<<<ACTION:[A-Z_]+(?:\\|.*?)?>>>/gi, '').trim();\n    actions.push({\n      actionType: 'voice_note',\n      target,\n      text\n    });\n  } else if (actionType === 'expense_add') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const amount = parseFloat(parts[1]) || 0;\n    const category = parts[2] || 'makan';\n    const merchant = parts[3] || 'Umum';\n    const itemsDetail = parts.slice(4).join(', ') || '-';\n    actions.push({\n      actionType: 'expense_add',\n      target,\n      amount,\n      category,\n      merchant,\n      itemsDetail,\n      detail: `${merchant} - Rp ${amount}`\n    });\n  } else if (actionType === 'note_edit') {\n    const id = parseInt(parts[0]) || 0;\n    const newContent = parts.slice(1).join('|').trim();\n    actions.push({\n      actionType: 'note_edit',\n      id,\n      newContent,\n      detail: `${id}|${newContent}`,\n      commandText: `/catat edit ${id} ${newContent}`\n    });\n  } else if (actionType === 'reschedule') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const query = parts[1] || '';\n    const startIso = parts[2] || '';\n    const endIso = parts[3] || '';\n    const timeText = parts[4] || '';\n    const newTitle = parts[5] || '';\n    const commandText = target === 'manda'\n      ? `/reschedule manda ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim()\n      : `/reschedule ${query} | ${startIso} | ${endIso} | ${timeText} | ${newTitle}`.trim();\n    actions.push({\n      actionType: 'reschedule',\n      target,\n      query,\n      startIso,\n      endIso,\n      timeText,\n      newTitle,\n      detail: `${query} -> ${timeText || startIso}`,\n      commandText\n    });\n  } else if (actionType === 'edit') {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const oldTitle = parts[1] || '';\n    const newTitle = parts.slice(2).join('|').trim();\n    const commandText = target === 'manda'\n      ? `/edit-jadwal manda ${oldTitle} | ${newTitle}`\n      : `/edit-jadwal ${oldTitle} | ${newTitle}`;\n    actions.push({\n      actionType: 'edit',\n      target,\n      oldTitle,\n      newTitle,\n      detail: `${oldTitle} | ${newTitle}`,\n      commandText\n    });\n  } else {\n    const target = (parts[0] || 'okta').toLowerCase();\n    const detail = parts.slice(1).join('|') || parts[0] || '';\n    \n    let commandText = '';\n    if (actionType === 'tugas') {\n      commandText = target === 'manda' ? `/tugas manda ${detail}` : `/tugas ${detail}`;\n    } else if (actionType === 'jadwal') {\n      commandText = target === 'manda' ? `/jadwal manda ${detail}` : `/jadwal ${detail}`;\n    } else if (actionType === 'done') {\n      commandText = target === 'manda' ? `/done manda ${detail}` : `/done ${detail}`;\n    } else if (actionType === 'delete') {\n      commandText = target === 'manda' ? `/hapus-jadwal manda ${detail}` : `/hapus-jadwal ${detail}`;\n    } else if (actionType === 'note_add') {\n      commandText = `/catat ${detail}`;\n    } else if (actionType === 'note_done') {\n      commandText = `/catat done ${detail || target}`;\n    } else if (actionType === 'presensi') {\n      commandText = `/presensi ${detail || 'hadir'}`;\n    }\n\n    actions.push({\n      actionType,\n      target,\n      detail: detail || target,\n      commandText\n    });\n  }\n}\n\n// Clean user response by removing action tags\nconst cleanText = rawText.replace(/<<<ACTION:[A-Z_]+(?:\\|.*?)?>>>/gi, '').trim();\n\nlet waData = {};\ntry {\n  waData = $('Normalize WA Context').item.json.wa || {};\n} catch (e) {}\n\nconst hasCalendarActions = actions.some(a => ['tugas', 'jadwal', 'done', 'delete', 'edit', 'reschedule'].includes(a.actionType));\nconst hasNoteActions = actions.some(a => ['note_add', 'note_done', 'note_edit'].includes(a.actionType));\nconst hasPresensiActions = actions.some(a => a.actionType === 'presensi');\nconst hasExpenseActions = actions.some(a => a.actionType === 'expense_add');\nconst hasImageGenActions = actions.some(a => a.actionType === 'image_gen');\nconst hasVoiceNoteActions = actions.some(a => a.actionType === 'voice_note');\n\nreturn [{\n  json: {\n    cleanText,\n    hasActions: actions.length > 0,\n    hasCalendarActions,\n    hasNoteActions,\n    hasPresensiActions,\n    hasExpenseActions,\n    hasImageGenActions,\n    hasVoiceNoteActions,\n    actions,\n    wa: waData,\n    candidates: [\n      {\n        content: {\n          parts: [\n            { text: cleanText }\n          ]\n        }\n      }\n    ]\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1892,7 +1892,7 @@
             "conditions": [
               {
                 "id": "should-send-reply-okta-01",
-                "leftValue": "={{ $json.hasCalendarActions }}",
+                "leftValue": "={{ $json.hasCalendarActions || $json.hasVoiceNoteActions }}",
                 "rightValue": "",
                 "operator": {
                   "type": "boolean",
@@ -1925,7 +1925,7 @@
             "conditions": [
               {
                 "id": "should-send-reply-manda-01",
-                "leftValue": "={{ $json.hasCalendarActions }}",
+                "leftValue": "={{ $json.hasCalendarActions || $json.hasVoiceNoteActions }}",
                 "rightValue": "",
                 "operator": {
                   "type": "boolean",
@@ -2065,6 +2065,178 @@
           380
         ],
         "name": "Note: Utilities"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cond-img-action-01",
+                "leftValue": "={{ $json.hasImageGenActions }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4720,
+          700
+        ],
+        "id": "ifHasImageActions01",
+        "name": "If Has Image Actions"
+      },
+      {
+        "parameters": {
+          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\nconst imgActions = actions.filter(a => a.actionType === 'image_gen');\nif (!imgActions || imgActions.length === 0) return [];\n\nconst items = [];\nfor (const act of imgActions) {\n  const prompt = act.prompt || 'artistic illustration';\n  const caption = act.caption || 'Gambar AI';\n  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=flux&width=1024&height=1024&nologo=true`;\n\n  items.push({\n    json: {\n      number: wa.remoteJid,\n      mediatype: 'image',\n      mimetype: 'image/jpeg',\n      caption: `🎨 *Hasil Gambar AI (FLUX.1)*\\n\\n${caption}\\n\\n_Prompt: ${prompt}_`,\n      media: imageUrl\n    }\n  });\n}\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4960,
+          700
+        ],
+        "id": "prepImagePayload01",
+        "name": "[Code] Prepare Image Gen Payload"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendMedia/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $json.number }}\",\n  \"mediatype\": \"image\",\n  \"mimetype\": \"image/jpeg\",\n  \"caption\": {{ JSON.stringify($json.caption) }},\n  \"media\": \"{{ $json.media }}\"\n}",
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          5200,
+          700
+        ],
+        "id": "httpSendGenImage01",
+        "name": "[HTTP] Send Generated Image",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cond-vn-action-01",
+                "leftValue": "={{ $json.hasVoiceNoteActions }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4720,
+          860
+        ],
+        "id": "ifHasVoiceNoteActions01",
+        "name": "If Has Voice Note Actions"
+      },
+      {
+        "parameters": {
+          "jsCode": "const parent = $input.first().json;\nconst wa = parent.wa || {};\nconst actions = parent.actions || [];\nconst vnActions = actions.filter(a => a.actionType === 'voice_note');\nif (!vnActions || vnActions.length === 0) return [];\n\nconst items = [];\nfor (const act of vnActions) {\n  let speechText = (act.text || '').replace(/[*_#`~]/g, '').replace(/\\n+/g, ' ').trim();\n  if (!speechText) speechText = 'Halo, pesan suara berhasil diproses.';\n\n  const isManda = act.target === 'manda' || wa.isManda;\n  const voiceName = isManda ? 'id-ID-GadisNeural' : 'id-ID-ArdiNeural';\n\n  const ts = Date.now();\n  const tmpFile = `/tmp/wa_vn_${ts}.mp3`;\n  const escaped = JSON.stringify(speechText);\n  const cmd = `/home/dev/.local/bin/edge-tts --voice ${voiceName} --text ${escaped} --write-media ${tmpFile} && base64 -w 0 ${tmpFile} && rm -f ${tmpFile}`;\n\n  items.push({\n    json: {\n      number: wa.remoteJid,\n      speechText,\n      cmd\n    }\n  });\n}\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4960,
+          860
+        ],
+        "id": "prepVnCommand01",
+        "name": "[Code] Prepare Voice Note Command"
+      },
+      {
+        "parameters": {
+          "resource": "command",
+          "operation": "execute",
+          "authentication": "privateKey",
+          "command": "={{ $json.cmd }}"
+        },
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1.1,
+        "position": [
+          5200,
+          860
+        ],
+        "id": "sshSynthWaAudio01",
+        "name": "[SSH] Synthesize WA Audio",
+        "credentials": {
+          "sshPrivateKey": {
+            "id": "sshHostDev0001",
+            "name": "SSH Host Dev"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendWhatsAppAudio/okta_wa",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "=httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $('[Code] Prepare Voice Note Command').item.json.number }}\",\n  \"audio\": \"{{ $json.stdout.trim() }}\",\n  \"delay\": 1200\n}",
+          "options": {}
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1500,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          5440,
+          860
+        ],
+        "id": "httpSendWaAudio01",
+        "name": "[HTTP] Send WA Voice Note",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "GEmHpHffIDZKhtvn",
+            "name": "Header Auth account"
+          }
+        }
       }
     ],
     "connections": {
@@ -2588,6 +2760,16 @@
               "node": "If Should Send Chat Reply",
               "type": "main",
               "index": 0
+            },
+            {
+              "node": "If Has Image Actions",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Voice Note Actions",
+              "type": "main",
+              "index": 0
             }
           ]
         ]
@@ -2617,6 +2799,16 @@
             },
             {
               "node": "If Should Send Chat Reply Manda",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Image Actions",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If Has Voice Note Actions",
               "type": "main",
               "index": 0
             }
@@ -2848,6 +3040,63 @@
             }
           ],
           []
+        ]
+      },
+      "If Has Image Actions": {
+        "main": [
+          [
+            {
+              "node": "[Code] Prepare Image Gen Payload",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "[Code] Prepare Image Gen Payload": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Send Generated Image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Has Voice Note Actions": {
+        "main": [
+          [
+            {
+              "node": "[Code] Prepare Voice Note Command",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "[Code] Prepare Voice Note Command": {
+        "main": [
+          [
+            {
+              "node": "[SSH] Synthesize WA Audio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[SSH] Synthesize WA Audio": {
+        "main": [
+          [
+            {
+              "node": "[HTTP] Send WA Voice Note",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
       }
     },
