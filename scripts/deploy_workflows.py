@@ -12,7 +12,8 @@ workflows_to_deploy = [
     "workflow/wa-conversation.json",
     "workflow/morning-audio-briefing.json",
     "workflow/wa-to-gcal-assistant.json",
-    "workflow/manda-gcal-assistant.json"
+    "workflow/manda-gcal-assistant.json",
+    "workflow/automatic-brone-task-notifier.json"
 ]
 
 host = "pg-bcc"
