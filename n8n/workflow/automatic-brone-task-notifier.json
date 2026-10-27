@@ -142,8 +142,9 @@
         "id": "372a55b2-72d8-4375-b886-bfe6c4d63f5e",
         "name": "[HTTP] Gemini Build Message",
         "retryOnFail": true,
-        "maxTries": 2,
-        "waitBetweenTries": 1000
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput"
       },
       {
         "parameters": {
@@ -350,7 +351,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const items = $input.all();\n\nconst messages = items.map(item => {\n  return item.json.candidates?.[0]?.content?.parts?.[0]?.text || item.json.message || \"\";\n}).filter(msg => msg.trim() !== \"\");\n\nif (messages.length === 0) {\n  return [\n    {\n      json: {\n        message: \"🎉 Nggak ada tugas Brone yang aktif coi! Santai dulu aja 😴\"\n      }\n    }\n  ];\n}\n\nconst combined = messages.join(\"\\n\\n━━━━━━━━━━━━━━\\n\\n\");\nreturn [\n  {\n    json: {\n      message: combined,\n      mode: \"combined\"\n    }\n  }\n];"
+          "jsCode": "const items = $input.all();\n\nconst messages = items.map(item => {\n  return item.json.candidates?.[0]?.content?.parts?.[0]?.text || item.json.message || \"\";\n}).filter(msg => msg.trim() !== \"\");\n\nif (messages.length === 0) {\n  try {\n    const rawEvents = $('Split Out').all();\n    if (rawEvents.length > 0) {\n      const fallbackList = rawEvents.map(e => {\n        const j = e.json;\n        return `🚨 *DEADLINE TUGAS: ${j.coursefullname || j.coursename || '-'}*\\n📚 *Tugas:* ${j.name || '-'}\\n⏰ *Batas Waktu:* ${j.formattedtime || '-'}\\n🔗 ${j.action?.url || j.url || '-'}`;\n      }).join(\"\\n\\n━━━━━━━━━━━━━━\\n\\n\");\n      return [{\n        json: {\n          message: `📢 *Reminder Tugas Brone!*\\n\\n${fallbackList}`,\n          mode: \"combined\"\n        }\n      }];\n    }\n  } catch (e) {}\n\n  return [\n    {\n      json: {\n        message: \"🎉 Nggak ada tugas Brone yang aktif coi! Santai dulu aja 😴\"\n      }\n    }\n  ];\n}\n\nconst combined = messages.join(\"\\n\\n━━━━━━━━━━━━━━\\n\\n\");\nreturn [\n  {\n    json: {\n      message: combined,\n      mode: \"combined\"\n    }\n  }\n];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -376,7 +377,7 @@
               },
               {
                 "name": "text",
-                "value": "={{ .message || .candidates?.[0]?.content?.parts?.[0]?.text }}"
+                "value": "={{ $json.message }}"
               }
             ]
           },

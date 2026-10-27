@@ -341,7 +341,7 @@
             "conditions": [
               {
                 "id": "cond-cmd-text",
-                "leftValue": "={{ (() => { const t = (.body?.data?.message?.conversation || .body?.data?.message?.extendedTextMessage?.text || \"\").toLowerCase(); return Boolean(t.includes(\"hadir\") || t.includes(\"daring\") || t.includes(\"izin\") || t.includes(\"sakit\") || t.includes(\"absen\") || t.includes(\"/presensi\")); })() }}",
+                "leftValue": "={{ (() => { const t = ($json.body?.data?.message?.conversation || $json.body?.data?.message?.extendedTextMessage?.text || \"\").toLowerCase(); return Boolean(t.includes(\"hadir\") || t.includes(\"daring\") || t.includes(\"izin\") || t.includes(\"sakit\") || t.includes(\"absen\") || t.includes(\"/presensi\")); })() }}",
                 "rightValue": "",
                 "operator": {
                   "type": "boolean",
@@ -451,7 +451,7 @@
           "bodyParameters": {
             "parameters": [
               {
-                "name": "=number",
+                "name": "number",
                 "value": "={{ $env.WA_GROUP_SHARED }}"
               },
               {
@@ -495,7 +495,7 @@
               },
               {
                 "name": "text",
-                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+                "value": "={{ $json.text }}"
               }
             ]
           },

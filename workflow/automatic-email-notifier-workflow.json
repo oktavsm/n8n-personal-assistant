@@ -30,7 +30,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nconst randomKey = apiKeys.length > 0 \n  ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n  : '';\n\nfor (const item of $input.all()) {\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
+          "jsCode": "const envKeys = $env.GEMINI_API_KEY || '';\nconst apiKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean);\n\nfor (const item of $input.all()) {\n  const randomKey = apiKeys.length > 0 \n    ? apiKeys[Math.floor(Math.random() * apiKeys.length)] \n    : '';\n  item.json.selected_key = randomKey;\n}\n\nreturn $input.all();"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -44,7 +44,7 @@
       {
         "parameters": {
           "authentication": "webhook",
-          "content": "={{ $json.candidates[0].content.parts[0].text }}",
+          "content": "={{ $json.candidates?.[0]?.content?.parts?.[0]?.text || ('📧 **ADA EMAIL BARU!**\\n**PENGIRIM:** ' + ($('Email Trigger (IMAP)').item.json.from || '-') + '\\n**SUBJEK:** ' + ($('Email Trigger (IMAP)').item.json.subject || '-')) }}",
           "options": {
             "username": "n8n-notifier-oktaavsm"
           }
@@ -80,12 +80,12 @@
               },
               {
                 "name": "text",
-                "value": "={{ $json.candidates[0].content.parts[0].text }}"
+                "value": "={{ $json.candidates?.[0]?.content?.parts?.[0]?.text || ('📧 *ADA EMAIL BARU!*\\n📌 *PENGIRIM:* ' + ($('Email Trigger (IMAP)').item.json.from || '-') + '\\n📝 *SUBJEK:* ' + ($('Email Trigger (IMAP)').item.json.subject || '-') + '\\n\\n' + (($('Email Trigger (IMAP)').item.json.textPlain || '').slice(0, 300)) + '...') }}"
               }
             ]
           },
           "options": {
-            "timeout": 15000
+            "timeout": 60000
           }
         },
         "type": "n8n-nodes-base.httpRequest",
@@ -112,9 +112,9 @@
           "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={{ $json.selected_key }}",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah asisten email pribadi yang cerdas dan kontekstual. Tugas mu adalah merangkum email dan memberikan insight berdasarkan siapa pengirimnya.\n\nBerikut email yang masuk:\n\nDARI: ${$json.from}\nSUBJEK: ${$json.subject}\nISI: ${$json.textPlain}\n\nInstruksi:\n1. Ringkas isi email jadi 1–2 kalimat yang jelas dan padat.\n2. Tentukan tingkat urgensi dari 1–10 (10 paling urgent).\n3. Kenali siapa pengirimnya dan berikan sentuhan personal sesuai kategori berikut:\n\n- Jika dari \"Amanda Syalwa Nadira\":\n  → Tambahkan kalimat lucu / gemes / couple vibes karena ini adalah pacarku <3, oh ya berikan urgensi paling tinggi ya (10).\n\n- Jika dari \"Oktavianus Samuel\":\n  → Tandai bahwa ini email dari diri sendiri (self-reminder / system / testing)\n\n- Jika dari Google Classroom / praktikan / mahasiswa:\n  → Fokus ke tugas, deadline, atau hal yang perlu dicek sebagai asisten praktikum\n\n- Jika dari LinkedIn:\n  → Identifikasi apakah itu job opportunity, koneksi baru, atau notifikasi karir\n\n- Jika dari Tanoto Foundation:\n  → Tandai sebagai hal penting terkait beasiswa / program TELADAN\n\n- Selain itu:\n  → Gunakan tone profesional biasa\n\n4. PRIORITAS:\n- Jika urgensi ≥ 8 → tambahkan label: 🔥 *CEK SEKARANG!*\n- Jika urgensi 5–7 → tambahkan label: ⏳ *SEGERA*\n- Jika urgensi ≤ 4 → tambahkan label: 💤 *SANTAI*\n\nOutput WAJIB dalam format berikut:\n\n📧 *ADA EMAIL BARU!*\n📌 *PENGIRIM:* (Nama Pengirim + keterangan personal kalau ada)\n📝 *RINGKASAN:* (Ringkasan 1–2 kalimat)\n🚨 *URGENSI:* (Skor 1–10)\n⚡ *PRIORITAS:* (Label prioritas sesuai aturan)\n💡 *CATATAN:* (Insight / tindakan yang disarankan, opsional tapi diusahakan ada)\n\nGunakan bahasa santai tapi tetap jelas dan informatif.`\n          }\n        ]\n      }\n    ]\n  }\n}}",
+          "jsonBody": "={{\n  {\n    \"contents\": [\n      {\n        \"parts\": [\n          {\n            \"text\": `Kamu adalah asisten email pribadi yang cerdas dan kontekstual. Tugas mu adalah merangkum email dan memberikan insight berdasarkan siapa pengirimnya.\n\nBerikut email yang masuk:\n\nDARI: ${$json.from}\nSUBJEK: ${$json.subject}\nISI: ${($json.textPlain || \"\").slice(0, 5000)}\n\nInstruksi:\n1. Ringkas isi email jadi 1–2 kalimat yang jelas dan padat.\n2. Tentukan tingkat urgensi dari 1–10 (10 paling urgent).\n3. Kenali siapa pengirimnya dan berikan sentuhan personal sesuai kategori berikut:\n\n- Jika dari \"Amanda Syalwa Nadira\":\n  → Tambahkan kalimat lucu / gemes / couple vibes karena ini adalah pacarku <3, oh ya berikan urgensi paling tinggi ya (10).\n\n- Jika dari \"Oktavianus Samuel\":\n  → Tandai bahwa ini email dari diri sendiri (self-reminder / system / testing)\n\n- Jika dari Google Classroom / praktikan / mahasiswa:\n  → Fokus ke tugas, deadline, atau hal yang perlu dicek sebagai asisten praktikum\n\n- Jika dari LinkedIn:\n  → Identifikasi apakah itu job opportunity, koneksi baru, atau notifikasi karir\n\n- Jika dari Tanoto Foundation:\n  → Tandai sebagai hal penting terkait beasiswa / program TELADAN\n\n- Selain itu:\n  → Gunakan tone profesional biasa\n\n4. PRIORITAS:\n- Jika urgensi ≥ 8 → tambahkan label: 🔥 *CEK SEKARANG!*\n- Jika urgensi 5–7 → tambahkan label: ⏳ *SEGERA*\n- Jika urgensi ≤ 4 → tambahkan label: 💤 *SANTAI*\n\nOutput WAJIB dalam format berikut:\n\n📧 *ADA EMAIL BARU!*\n📌 *PENGIRIM:* (Nama Pengirim + keterangan personal kalau ada)\n📝 *RINGKASAN:* (Ringkasan 1–2 kalimat)\n🚨 *URGENSI:* (Skor 1–10)\n⚡ *PRIORITAS:* (Label prioritas sesuai aturan)\n💡 *CATATAN:* (Insight / tindakan yang disarankan, opsional tapi diusahakan ada)\n\nGunakan bahasa santai tapi tetap jelas dan informatif.`\n          }\n        ]\n      }\n    ]\n  }\n}}",
           "options": {
-            "timeout": 15000
+            "timeout": 60000
           }
         },
         "type": "n8n-nodes-base.httpRequest",
@@ -126,8 +126,9 @@
         "id": "2257154a-126c-48ce-8789-d2cf4a29c418",
         "name": "[HTTP] Gemini Email",
         "retryOnFail": true,
-        "maxTries": 2,
-        "waitBetweenTries": 1000
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
