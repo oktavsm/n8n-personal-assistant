@@ -23,40 +23,9 @@
       },
       {
         "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "strict",
-              "version": 2
-            },
-            "conditions": [
-              {
-                "leftValue": "={{ $json.body?.action }}",
-                "rightValue": "create_event",
-                "operator": {
-                  "type": "string",
-                  "operation": "equals"
-                }
-              }
-            ],
-            "combinator": "and"
-          }
-        },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.2,
-        "position": [
-          -50,
-          200
-        ],
-        "id": "node-if-create-event",
-        "name": "If: Is Create Event"
-      },
-      {
-        "parameters": {
           "calendar": {
             "__rl": true,
-            "value": "={{ $json.body.calendar || $env.GCAL_OKTA_AGENDA }}",
+            "value": "={{ ($json.body?.category === 'Kuliah' ? $env.GCAL_OKTA_KULIAH : ($json.body?.category === 'Tugas' ? $env.GCAL_OKTA_TUGAS : $env.GCAL_OKTA_AGENDA)) || $env.GCAL_OKTA_AGENDA }}",
             "mode": "id"
           },
           "start": "={{ $json.body.start }}",
@@ -79,35 +48,6 @@
             "name": "Google Calendar account"
           }
         }
-      },
-      {
-        "parameters": {
-          "respondWith": "json",
-          "responseBody": "={{ { status: 'success', action: 'created', event: $json } }}",
-          "options": {
-            "responseCode": 201,
-            "responseHeaders": {
-              "entries": [
-                {
-                  "name": "Content-Type",
-                  "value": "application/json"
-                },
-                {
-                  "name": "Access-Control-Allow-Origin",
-                  "value": "*"
-                }
-              ]
-            }
-          }
-        },
-        "type": "n8n-nodes-base.respondToWebhook",
-        "typeVersion": 1.5,
-        "position": [
-          500,
-          50
-        ],
-        "id": "node-respond-created",
-        "name": "Respond: Event Created"
       },
       {
         "parameters": {
@@ -357,6 +297,185 @@
       },
       {
         "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "e3eda222-f71e-4f90-8581-0a8b82288299",
+                      "leftValue": "={{ ($json.body?.action || '').trim() === 'create_event' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "create_event"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "d32fb9a6-d8c7-4bf4-8d47-0b0b3eaeb264",
+                      "leftValue": "={{ ($json.body?.action || '').trim() === 'check_presensi' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "check_presensi"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "f250ee54-ba7a-4d4a-9686-2315b4509fc7",
+                      "leftValue": "={{ ($json.body?.action || '').trim() === 'submit_presensi' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "submit_presensi"
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -50,
+          200
+        ],
+        "id": "node-action-router-switch",
+        "name": "Switch: Action Router"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://brone-auth:3000/get-siam-presensi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\"\n}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          250
+        ],
+        "id": "node-http-check-siam-presensi",
+        "name": "HTTP Check SIAM Presensi",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "jsCode": "const resData = $input.first().json;\nconst rawList = resData.data || [];\nconst presensiList = rawList.map(p => ({\n  mata_kuliah: p.MATA_KULIAH || \"\",\n  kode_materi: p.K_MATERI_AJAR || \"\",\n  jam_mulai: p.JAM_MULAI || \"\",\n  jam_selesai: p.JAM_SELESAI || \"\",\n  ruang: p.RUANG || \"\",\n  k_absensi: p.K_ABSENSI || \"\",\n  sudah_absen: (p.K_ABSENSI || \"\").trim() !== \"\"\n}));\nconst activeList = presensiList.filter(p => !p.sudah_absen);\nreturn [{\n  json: {\n    status: \"success\",\n    action: \"check_presensi\",\n    has_active_presensi: activeList.length > 0,\n    active_count: activeList.length,\n    active_presensi: activeList,\n    all_presensi: presensiList\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          250
+        ],
+        "id": "node-format-presensi-response",
+        "name": "Format Presensi Response"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://brone-auth:3000/submit-siam-presensi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\",\n  \"kode_materi\": \"{{ $('Webhook').item.json.body?.kode_materi }}\",\n  \"kode_absensi\": \"{{ $('Webhook').item.json.body?.kode_absensi || 'H' }}\",\n  \"is_daring\": \"{{ $('Webhook').item.json.body?.is_daring || '0' }}\"\n}",
+          "options": {
+            "timeout": 20000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          450
+        ],
+        "id": "node-http-submit-siam-presensi",
+        "name": "HTTP Submit SIAM Presensi",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "jsCode": "const res = $input.first().json;\nreturn [{\n  json: {\n    status: \"success\",\n    action: \"submit_presensi\",\n    result: res\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          450
+        ],
+        "id": "node-format-submit-response",
+        "name": "Format Submit Response"
+      },
+      {
+        "parameters": {
+          "jsCode": "const event = $input.first().json;\nreturn [{\n  json: {\n    status: \"success\",\n    action: \"create_event\",\n    event: event\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          50
+        ],
+        "id": "node-format-event-created",
+        "name": "Format Event Created"
+      },
+      {
+        "parameters": {
           "respondWith": "json",
           "responseBody": "={{ $json }}",
           "options": {
@@ -378,11 +497,11 @@
         "type": "n8n-nodes-base.respondToWebhook",
         "typeVersion": 1.5,
         "position": [
-          2400,
-          350
+          2650,
+          200
         ],
-        "id": "node-respond-agenda",
-        "name": "Respond: Agenda Data"
+        "id": "node-unified-respond",
+        "name": "Respond to Webhook"
       }
     ],
     "connections": {
@@ -390,18 +509,32 @@
         "main": [
           [
             {
-              "node": "If: Is Create Event",
+              "node": "Switch: Action Router",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "If: Is Create Event": {
+      "Switch: Action Router": {
         "main": [
           [
             {
               "node": "Create GCal Event",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Check SIAM Presensi",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Submit SIAM Presensi",
               "type": "main",
               "index": 0
             }
@@ -419,7 +552,62 @@
         "main": [
           [
             {
-              "node": "Respond: Event Created",
+              "node": "Format Event Created",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Event Created": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Check SIAM Presensi": {
+        "main": [
+          [
+            {
+              "node": "Format Presensi Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Presensi Response": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Submit SIAM Presensi": {
+        "main": [
+          [
+            {
+              "node": "Format Submit Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Submit Response": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
               "type": "main",
               "index": 0
             }
@@ -540,7 +728,7 @@
         "main": [
           [
             {
-              "node": "Respond: Agenda Data",
+              "node": "Respond to Webhook",
               "type": "main",
               "index": 0
             }
