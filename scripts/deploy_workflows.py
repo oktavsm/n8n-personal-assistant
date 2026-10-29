@@ -16,7 +16,7 @@ workflows_to_deploy = [
     "workflow/automatic-brone-task-notifier.json",
     "workflow/siam-announcement-notifier.json",
     "workflow/siam-presensi-notifier.json",
-    "workflow/automatic-email-notifier-workflow.json"
+    "workflow/gcal-to-wa-assistant.json"
 ]
 
 host = "pg-bcc"

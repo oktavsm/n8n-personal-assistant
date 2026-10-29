@@ -1133,45 +1133,6 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 1000
-      },
-      {
-        "parameters": {
-          "method": "POST",
-          "url": "http://evolution-api:8080/message/sendText/okta_wa",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "=httpHeaderAuth",
-          "sendBody": true,
-          "bodyParameters": {
-            "parameters": [
-              {
-                "name": "number",
-                "value": "={{ $env.MANDA_WA_NUMBER }}"
-              },
-              {
-                "name": "text",
-                "value": "={{ $json.candidates[0].content.parts[0].text }}"
-              }
-            ]
-          },
-          "options": {}
-        },
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.4,
-        "position": [
-          1776,
-          2928
-        ],
-        "id": "eadaa926-a3ad-4078-a395-ae4323ab8dd1",
-        "name": "[HTTP Whatsapp]",
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "GEmHpHffIDZKhtvn",
-            "name": "Header Auth account"
-          }
-        },
-        "retryOnFail": true,
-        "maxTries": 2,
-        "waitBetweenTries": 1000
       }
     ],
     "connections": {
@@ -1575,11 +1536,6 @@
           [
             {
               "node": "[HTTP Whatsapp]2",
-              "type": "main",
-              "index": 0
-            },
-            {
-              "node": "[HTTP Whatsapp]",
               "type": "main",
               "index": 0
             }

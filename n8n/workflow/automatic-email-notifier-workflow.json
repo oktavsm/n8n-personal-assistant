@@ -181,7 +181,7 @@
     },
     "staticData": {
       "node:Email Trigger (IMAP)": {
-        "lastMessageUid": 13612
+        "lastMessageUid": 13834
       },
       "node:Schedule Trigger": {
         "recurrenceRules": []
