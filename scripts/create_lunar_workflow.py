@@ -27,23 +27,118 @@ const cleanText = (text) => {
 };
 
 const parseTitle = (summary) => {
-  const title = cleanText(summary);
-  const match = title.match(/^\\[(.*?)\\]\\s*(.*?)\\s*(?:\\((.*?)\\))?\\s*-\\s*(.*)$/);
-  if (match) {
+  const text = cleanText(summary);
+  if (!text) {
     return {
-      room: cleanText(match[1]),
-      course: cleanText(match[2]),
-      code: cleanText(match[3]),
-      type: cleanText(match[4]),
-      cleanTitle: title
+      title: "Tanpa Judul",
+      task_name: "",
+      course: "",
+      code: "",
+      course_name: "",
+      room: "",
+      cleanTitle: "",
+      is_task: false
     };
   }
+
+  // Pattern 1: [Tugas] Course Name (CODE) - Task Detail
+  // E.g. [Tugas] Pengembangan Aplikasi Perangkat Bergerak (PAPB) - Laporan Praktikum
+  const mTaskWithCode = text.match(/^\\[(.*?)\\]\\s*(.*?)\\s*\\((.*?)\\)\\s*[-–]\\s*(.*)$/);
+  if (mTaskWithCode) {
+    const tag = cleanText(mTaskWithCode[1]);
+    const courseName = cleanText(mTaskWithCode[2]);
+    const courseCode = cleanText(mTaskWithCode[3]);
+    const taskDetail = cleanText(mTaskWithCode[4]);
+    return {
+      title: taskDetail,
+      task_name: taskDetail,
+      course: courseCode || courseName,
+      code: courseCode,
+      course_name: courseName,
+      room: "",
+      cleanTitle: text,
+      is_task: true
+    };
+  }
+
+  // Pattern 2: [Tugas] Course Name - Task Detail (no parentheses code)
+  const mTaskNoCode = text.match(/^\\[(.*?)\\]\\s*(.*?)\\s*[-–]\\s*(.*)$/);
+  if (mTaskNoCode) {
+    const tag = cleanText(mTaskNoCode[1]);
+    const courseName = cleanText(mTaskNoCode[2]);
+    const taskDetail = cleanText(mTaskNoCode[3]);
+    return {
+      title: taskDetail,
+      task_name: taskDetail,
+      course: courseName,
+      code: "",
+      course_name: courseName,
+      room: "",
+      cleanTitle: text,
+      is_task: tag.toLowerCase().includes("tugas")
+    };
+  }
+
+  // Pattern 3: Tugas: Task Name (from Google Classroom)
+  // E.g. Tugas: UTP Pengembangan Aplikasi Perangkat Bergerak
+  const mClassroomTask = text.match(/^Tugas:\\s*(.*)$/i);
+  if (mClassroomTask) {
+    const taskDetail = cleanText(mClassroomTask[1]);
+    return {
+      title: taskDetail,
+      task_name: taskDetail,
+      course: "PAPB",
+      code: "PAPB",
+      course_name: "Pengembangan Aplikasi Perangkat Bergerak",
+      room: "",
+      cleanTitle: text,
+      is_task: true
+    };
+  }
+
+  // Pattern 4: Room - Course Name (e.g. G1.4 - Praktikum PAPB, F3.1 - Jaringan Nirkabel)
+  const mRoom = text.match(/^([A-Za-z][0-9]\\.[0-9]+[A-Za-z0-9]*)\\s*[-–]\\s*(.*)$/);
+  if (mRoom) {
+    const room = cleanText(mRoom[1]);
+    const course = cleanText(mRoom[2]);
+    return {
+      title: text,
+      task_name: "",
+      course: course,
+      code: "",
+      course_name: course,
+      room: room,
+      cleanTitle: text,
+      is_task: false
+    };
+  }
+
+  // Pattern 5: [TAG] Something (e.g. [ASPRAK] Menginfokan Materi...)
+  const mTagOnly = text.match(/^\\[(.*?)\\]\\s*(.*)$/);
+  if (mTagOnly) {
+    const tag = cleanText(mTagOnly[1]);
+    const subject = cleanText(mTagOnly[2]);
+    return {
+      title: text,
+      task_name: "",
+      course: subject,
+      code: tag,
+      course_name: subject,
+      room: "",
+      cleanTitle: text,
+      is_task: tag.toLowerCase().includes("tugas")
+    };
+  }
+
   return {
-    room: "",
-    course: title,
+    title: text,
+    task_name: "",
+    course: text,
     code: "",
-    type: "",
-    cleanTitle: title
+    course_name: text,
+    room: "",
+    cleanTitle: text,
+    is_task: false
   };
 };
 
@@ -119,7 +214,8 @@ const papbItems = safeGetItems("Collect PAPB");
 const allRawEvents = [];
 
 const processGCalItem = (j, defaultCategory, sourceName) => {
-  if (!j || (!j.summary && !j.name)) return;
+  if (!j) return;
+  if (!j.summary && !j.name && !j.id) return;
 
   const isAllDay = !j.start?.dateTime && !!j.start?.date;
   const startDt = j.start?.dateTime ? new Date(j.start.dateTime) : (j.start?.date ? new Date(`${j.start.date}T00:00:00+07:00`) : null);
@@ -127,11 +223,17 @@ const processGCalItem = (j, defaultCategory, sourceName) => {
 
   if (!startDt) return;
 
-  const titleInfo = parseTitle(j.summary || j.name);
+  const rawSummary = cleanText(j.summary || j.name || "(Kegiatan Tanpa Judul)");
+  const titleInfo = parseTitle(rawSummary);
   const descInfo = parseDescription(j.description || "");
 
   const location = cleanText(j.location || titleInfo.room || descInfo.ruang || "");
-  const course = titleInfo.course || j.summary || "Tanpa Judul";
+  const isTaskCategory = titleInfo.is_task || defaultCategory === "Tugas";
+  const category = isTaskCategory ? "Tugas" : defaultCategory;
+
+  const eventTitle = isTaskCategory
+    ? (titleInfo.task_name || titleInfo.title || rawSummary)
+    : (titleInfo.title || titleInfo.course || rawSummary);
 
   const diffMs = startDt.getTime() - now.getTime();
   const minutesUntil = Math.round(diffMs / 60000);
@@ -147,11 +249,14 @@ const processGCalItem = (j, defaultCategory, sourceName) => {
 
   allRawEvents.push({
     id: j.id || `gcal-${Math.random()}`,
-    title: course,
-    raw_title: cleanText(j.summary || j.name),
-    code: titleInfo.code,
-    type: titleInfo.type,
-    category: defaultCategory,
+    title: eventTitle,
+    raw_title: rawSummary,
+    course: titleInfo.course || (category === "Kuliah" ? "Kuliah" : "Agenda"),
+    code: titleInfo.code || "",
+    course_name: titleInfo.course_name || titleInfo.course || "",
+    task_name: titleInfo.task_name || "",
+    type: titleInfo.code || titleInfo.type || "",
+    category: category,
     source: sourceName,
     start_time: startDt.toISOString(),
     end_time: endDt ? endDt.toISOString() : startDt.toISOString(),
@@ -175,11 +280,11 @@ agendaItems.forEach(it => processGCalItem(it, "Agenda", "gcal_agenda"));
 tugasItems.forEach(it => processGCalItem(it, "Tugas", "gcal_tugas"));
 papbItems.forEach(it => processGCalItem(it, "Kuliah", "gcal_papb"));
 
-// De-duplicate by title + start_time
+// De-duplicate by raw_title + start_time
 const seenKeys = new Set();
 const uniqueEvents = [];
 for (const ev of allRawEvents) {
-  const key = `${ev.title}|${ev.start_time}`;
+  const key = `${ev.raw_title}|${ev.start_time}`;
   if (!seenKeys.has(key)) {
     seenKeys.add(key);
     uniqueEvents.push(ev);
@@ -189,9 +294,9 @@ for (const ev of allRawEvents) {
 // Sort chronologically
 uniqueEvents.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
-const todayEvents = uniqueEvents.filter(e => e.is_today);
-const tomorrowEvents = uniqueEvents.filter(e => e.is_tomorrow);
-const upcomingEvents = uniqueEvents.filter(e => !e.is_today);
+const todayEvents = uniqueEvents.filter(e => e.is_today && e.category !== "Tugas");
+const tomorrowEvents = uniqueEvents.filter(e => e.is_tomorrow && e.category !== "Tugas");
+const upcomingEvents = uniqueEvents.filter(e => !e.is_today && e.category !== "Tugas");
 
 // Process Brone LMS Tasks
 const academicTasks = [];
@@ -206,11 +311,19 @@ try {
     const timestamp = b.timesort || b.timestart;
     const deadlineDt = timestamp ? new Date(timestamp * 1000) : null;
     const hoursLeft = deadlineDt ? Math.round((deadlineDt.getTime() - now.getTime()) / 3600000) : null;
+    const courseFullName = cleanText(b.course?.fullname || b.course?.shortname || "Kuliah UB");
+
+    let courseCode = cleanText(b.course?.shortname || "");
+    const mCode = courseFullName.match(/\\((.*?)\\)/);
+    if (!courseCode && mCode) courseCode = mCode[1];
 
     academicTasks.push({
       id: `brone-${b.id || Math.random()}`,
       title: cleanText(b.name || "Tugas Tanpa Judul"),
-      course: cleanText(b.course?.fullname || b.course?.shortname || "Kuliah UB"),
+      course: courseCode || courseFullName,
+      code: courseCode,
+      course_name: courseFullName,
+      raw_title: cleanText(b.name || "Tugas Tanpa Judul"),
       category: "Academic",
       source: "brone_lms",
       deadline: deadlineDt ? deadlineDt.toISOString() : null,
@@ -231,10 +344,13 @@ for (const t of uniqueEvents.filter(e => e.category === "Tugas")) {
   const hoursLeft = Math.round((deadlineDt.getTime() - now.getTime()) / 3600000);
   academicTasks.push({
     id: t.id,
-    title: t.title,
-    course: t.code || "Tugas",
+    title: t.task_name || t.title,
+    course: t.code || t.course || "Tugas",
+    code: t.code || "",
+    course_name: t.course_name || t.course || "",
+    raw_title: t.raw_title,
     category: "Academic",
-    source: "gcal_tugas",
+    source: t.source || "gcal_tugas",
     deadline: t.start_time,
     deadline_formatted: t.date_formatted,
     time_formatted: t.time_formatted,
@@ -251,6 +367,64 @@ academicTasks.sort((a, b) => {
   return new Date(a.deadline) - new Date(b.deadline);
 });
 
+// Process SIAM Announcements
+const announcements = [];
+try {
+  const siamResp = $("HTTP SIAM Announcements").first()?.json;
+  let rawAnnouncements = [];
+  if (siamResp && Array.isArray(siamResp.data)) {
+    rawAnnouncements = siamResp.data;
+  }
+
+  const todayStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+
+  for (const m of rawAnnouncements) {
+    const courseName = cleanText(m.matkul || "Mata Kuliah");
+    const courseCode = cleanText(m.kode || "");
+    const courseKelas = cleanText(m.kelas || "");
+
+    for (const p of (m.daftar_pengumuman || [])) {
+      const content = cleanText(p.isi || "");
+      if (!content) continue;
+
+      const dateStr = cleanText(p.tanggal || "");
+      let dateFormatted = dateStr;
+      if (dateStr) {
+        try {
+          const d = new Date(`${dateStr}T00:00:00+07:00`);
+          dateFormatted = formatDateWIB(d);
+        } catch (e) {}
+      }
+
+      const isTodayAnnounce = dateStr === todayStr;
+
+      let hash = 0;
+      const keyStr = `${courseCode}_${courseKelas}_${dateStr}_${content.slice(0, 40)}`;
+      for (let i = 0; i < keyStr.length; i++) {
+        hash = ((hash << 5) - hash) + keyStr.charCodeAt(i);
+        hash |= 0;
+      }
+      const itemKey = `siam-${Math.abs(hash)}`;
+
+      announcements.push({
+        id: itemKey,
+        course: courseName,
+        code: courseCode,
+        kelas: courseKelas,
+        date: dateStr,
+        date_formatted: dateFormatted,
+        content: content,
+        is_today: isTodayAnnounce
+      });
+    }
+  }
+} catch (e) {
+  // Graceful fallback
+}
+
+// Sort announcements newest date first
+announcements.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
 return [{
   json: {
     status: "success",
@@ -259,11 +433,14 @@ return [{
     tomorrow_events: tomorrowEvents,
     upcoming_events: upcomingEvents.slice(0, 10),
     academic_tasks: academicTasks,
+    announcements: announcements,
     stats: {
       today_events_count: todayEvents.length,
       upcoming_count: upcomingEvents.length,
       tasks_count: academicTasks.length,
-      due_soon_count: academicTasks.filter(t => t.is_due_soon).length
+      due_soon_count: academicTasks.filter(t => t.is_due_soon).length,
+      announcements_count: announcements.length,
+      today_announcements_count: announcements.filter(a => a.is_today).length
     }
   }
 }];
@@ -320,14 +497,16 @@ workflow = {
             "parameters": {
                 "calendar": {
                     "__rl": True,
-                    "value": "={{ $json.body.calendar || $env.GCAL_OKTA_AGENDA }}",
+                    "value": "={{ $json.body.calendar || ($json.body.category === 'Kuliah' ? $env.GCAL_OKTA_KULIAH : ($json.body.category === 'Tugas' ? $env.GCAL_OKTA_TUGAS : $env.GCAL_OKTA_AGENDA)) }}",
                     "mode": "id"
                 },
                 "start": "={{ $json.body.start }}",
                 "end": "={{ $json.body.end }}",
-                "summary": "={{ $json.body.summary || $json.body.title }}",
-                "description": "={{ $json.body.description || '' }}",
-                "location": "={{ $json.body.location || '' }}"
+                "additionalFields": {
+                    "summary": "={{ $json.body.summary || $json.body.title }}",
+                    "description": "={{ $json.body.description || '' }}",
+                    "location": "={{ $json.body.location || '' }}"
+                }
             },
             "type": "n8n-nodes-base.googleCalendar",
             "typeVersion": 1.3,
@@ -344,7 +523,7 @@ workflow = {
         {
             "parameters": {
                 "respondWith": "json",
-                "responseBody": "={{ { status: 'success', action: 'created', event: $json } }}",
+                "responseBody": "={{ { status: 'success', action: 'created', event: $json, id: $json.id, summary: $json.summary || $('Webhook').first().json.body.summary, start: $json.start?.dateTime || $('Webhook').first().json.body.start, end: $json.end?.dateTime || $('Webhook').first().json.body.end, location: $json.location || $('Webhook').first().json.body.location || '', category: $('Webhook').first().json.body.category || 'Agenda' } }}",
                 "options": {
                     "responseCode": 201,
                     "responseHeaders": {
@@ -360,6 +539,77 @@ workflow = {
             "position": [500, 50],
             "id": "node-respond-created",
             "name": "Respond: Event Created"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": True,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "leftValue": "={{ $json.body?.action }}",
+                            "rightValue": "delete_event",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [-50, 350],
+            "id": "node-if-delete-event",
+            "name": "If: Is Delete Event"
+        },
+        {
+            "parameters": {
+                "operation": "delete",
+                "calendar": {
+                    "__rl": True,
+                    "value": "={{ $json.body.calendar || ($json.body.category === 'Kuliah' ? $env.GCAL_OKTA_KULIAH : ($json.body.category === 'Tugas' ? $env.GCAL_OKTA_TUGAS : $env.GCAL_OKTA_AGENDA)) }}",
+                    "mode": "id"
+                },
+                "eventId": "={{ $json.body.eventId || $json.body.id }}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleCalendar",
+            "typeVersion": 1.3,
+            "position": [250, 200],
+            "id": "node-delete-gcal-event",
+            "name": "Delete GCal Event",
+            "credentials": {
+                "googleCalendarOAuth2Api": {
+                    "id": "kXkpk4YfItv3zvuT",
+                    "name": "Google Calendar account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ { status: 'success', action: 'deleted', id: $('Webhook').first().json.body.eventId || $('Webhook').first().json.body.id } }}",
+                "options": {
+                    "responseCode": 200,
+                    "responseHeaders": {
+                        "entries": [
+                            {"name": "Content-Type", "value": "application/json"},
+                            {"name": "Access-Control-Allow-Origin", "value": "*"}
+                        ]
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.5,
+            "position": [500, 200],
+            "id": "node-respond-deleted",
+            "name": "Respond: Event Deleted"
         },
         {
             "parameters": {
@@ -566,11 +816,28 @@ workflow = {
         },
         {
             "parameters": {
+                "method": "POST",
+                "url": "http://brone-auth:3000/get-siam-pengumuman",
+                "sendBody": True,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"username\": \"{{ $env.BRONE_USERNAME }}\",\n  \"password\": \"{{ $env.BRONE_PASSWORD }}\"\n}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.4,
+            "position": [2200, 350],
+            "id": "node-siam-announcements",
+            "name": "HTTP SIAM Announcements",
+            "alwaysOutputData": True,
+            "continueOnFail": True
+        },
+        {
+            "parameters": {
                 "jsCode": aggregate_code.strip()
             },
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
-            "position": [2200, 350],
+            "position": [2400, 350],
             "id": "node-aggregate-agenda",
             "name": "Aggregate & Format Agenda"
         },
@@ -590,7 +857,7 @@ workflow = {
             },
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1.5,
-            "position": [2400, 350],
+            "position": [2600, 350],
             "id": "node-respond-agenda",
             "name": "Respond: Agenda Data"
         }
@@ -618,7 +885,7 @@ workflow = {
                 ],
                 [
                     {
-                        "node": "Get GCal Kuliah",
+                        "node": "If: Is Delete Event",
                         "type": "main",
                         "index": 0
                     }
@@ -630,6 +897,35 @@ workflow = {
                 [
                     {
                         "node": "Respond: Event Created",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If: Is Delete Event": {
+            "main": [
+                [
+                    {
+                        "node": "Delete GCal Event",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Get GCal Kuliah",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Delete GCal Event": {
+            "main": [
+                [
+                    {
+                        "node": "Respond: Event Deleted",
                         "type": "main",
                         "index": 0
                     }
@@ -736,6 +1032,17 @@ workflow = {
             ]
         },
         "HTTP Brone Get Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP SIAM Announcements",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP SIAM Announcements": {
             "main": [
                 [
                     {
